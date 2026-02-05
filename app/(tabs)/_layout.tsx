@@ -1,59 +1,99 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs } from 'expo-router';
+import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../../src/lib/theme';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+function TabIcon({ name, focused }: { name: string; focused: boolean }) {
+  const icons: Record<string, string> = {
+    index: '🏠',
+    licenses: '📋',
+    courses: '📚',
+    certificates: '📜',
+    agent: '🤖',
+    settings: '⚙️',
+  };
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return (
+    <Text style={[styles.icon, focused && styles.iconFocused]}>
+      {icons[name] || '•'}
+    </Text>
+  );
 }
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        headerShown: false,
+        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: styles.tabLabel,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: 'Home',
+          tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="licenses"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Licenses',
+          tabBarIcon: ({ focused }) => <TabIcon name="licenses" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="courses"
+        options={{
+          title: 'Courses',
+          tabBarIcon: ({ focused }) => <TabIcon name="courses" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="certificates"
+        options={{
+          title: 'Certs',
+          tabBarIcon: ({ focused }) => <TabIcon name="certificates" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="agent"
+        options={{
+          title: 'Agent',
+          tabBarIcon: ({ focused }) => <TabIcon name="agent" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ focused }) => <TabIcon name="settings" focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: colors.card,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    paddingTop: 8,
+    paddingBottom: 8,
+    height: 70,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  icon: {
+    fontSize: 24,
+    opacity: 0.6,
+  },
+  iconFocused: {
+    opacity: 1,
+  },
+});

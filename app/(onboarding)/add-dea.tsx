@@ -1,0 +1,204 @@
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../../src/lib/supabase';
+import { useAuth } from '../../src/hooks/useAuth';
+import { Button, Card, Input } from '../../src/components/ui';
+import { colors, spacing, typography } from '../../src/lib/theme';
+
+export default function AddDEAScreen() {
+  const { user } = useAuth();
+  const [deaNumber, setDeaNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [skipDEA, setSkipDEA] = useState(false);
+
+  async function handleContinue() {
+    if (!deaNumber && !skipDEA) {
+      router.push('/(onboarding)/setup-complete');
+      return;
+    }
+
+    if (deaNumber) {
+      setLoading(true);
+
+      // Get user's licenses to link DEA
+      const { data: licenses } = await supabase
+        .from('licenses')
+        .select('state')
+        .eq('user_id', user!.id);
+
+      const linkedStates = licenses?.map(l => l.state) || [];
+
+      await supabase.from('dea_registrations').insert({
+        user_id: user!.id,
+        dea_number: deaNumber,
+        expiry_date: expiryDate || null,
+        linked_states: linkedStates,
+      });
+
+      setLoading(false);
+    }
+
+    router.push('/(onboarding)/setup-complete');
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        {/* Progress */}
+        <View style={styles.progress}>
+          <View style={styles.progressDot} />
+          <View style={styles.progressDot} />
+          <View style={[styles.progressDot, styles.progressActive]} />
+          <View style={styles.progressDot} />
+        </View>
+
+        {/* Header */}
+        <Text style={styles.title}>DEA Registration</Text>
+        <Text style={styles.subtitle}>
+          Add your DEA registration for controlled substances tracking
+        </Text>
+
+        {/* DEA Form */}
+        <Card style={styles.card}>
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>🏥</Text>
+          </View>
+
+          <Input
+            label="DEA Number"
+            value={deaNumber}
+            onChangeText={setDeaNumber}
+            placeholder="AB1234567"
+            autoCapitalize="characters"
+            containerStyle={styles.input}
+          />
+
+          <Input
+            label="Expiry Date (Optional)"
+            value={expiryDate}
+            onChangeText={setExpiryDate}
+            placeholder="2027-06-30"
+            containerStyle={styles.input}
+          />
+        </Card>
+
+        {/* Info Box */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoTitle}>Why add your DEA?</Text>
+          <Text style={styles.infoText}>
+            Many states require controlled substances CME credits tied to your DEA registration.
+            Adding it helps us track these requirements automatically.
+          </Text>
+        </View>
+      </ScrollView>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Button
+          title="Continue"
+          onPress={handleContinue}
+          loading={loading}
+          size="lg"
+        />
+        <TouchableOpacity
+          onPress={() => {
+            setSkipDEA(true);
+            router.push('/(onboarding)/setup-complete');
+          }}
+          style={styles.skipButton}
+        >
+          <Text style={styles.skipText}>I don't have a DEA registration</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  progress: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.sand[300],
+  },
+  progressActive: {
+    backgroundColor: colors.accent,
+    width: 24,
+  },
+  title: {
+    fontSize: typography.h1.fontSize,
+    fontWeight: typography.h1.fontWeight,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: typography.body.fontSize,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
+  },
+  card: {
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  icon: {
+    fontSize: 48,
+  },
+  input: {
+    marginBottom: spacing.md,
+  },
+  infoBox: {
+    backgroundColor: colors.sand[200],
+    padding: spacing.md,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+  },
+  infoTitle: {
+    fontSize: typography.label.fontSize,
+    fontWeight: typography.label.fontWeight,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  infoText: {
+    fontSize: typography.bodySmall.fontSize,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  footer: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+    backgroundColor: colors.background,
+  },
+  skipButton: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  skipText: {
+    color: colors.textSecondary,
+    fontSize: typography.body.fontSize,
+  },
+});
