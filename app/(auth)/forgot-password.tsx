@@ -10,9 +10,24 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { supabase } from '../../src/lib/supabase';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+
+// Get the correct redirect URL based on platform
+function getResetRedirectUrl(): string {
+  if (Platform.OS === 'web') {
+    // For web, use the actual site URL
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/reset-password`;
+    }
+    // Fallback for SSR
+    return 'https://cme-agent.vercel.app/reset-password';
+  }
+  // For native apps, use deep link
+  return 'cme-agent://reset-password';
+}
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -30,7 +45,7 @@ export default function ForgotPasswordScreen() {
     setError('');
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'cme-agent://reset-password',
+      redirectTo: getResetRedirectUrl(),
     });
 
     if (resetError) {
