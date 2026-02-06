@@ -4,8 +4,16 @@ import { Redirect } from 'expo-router';
 import { useAuth } from '../src/hooks/useAuth';
 import { colors } from '../src/lib/theme';
 
+// TEMPORARY: Set to true to bypass auth for testing
+const BYPASS_AUTH = true;
+
 export default function Index() {
   const { session, profile, loading } = useAuth();
+
+  // TEMPORARY: Skip auth check entirely
+  if (BYPASS_AUTH) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   if (loading) {
     return (
@@ -15,17 +23,14 @@ export default function Index() {
     );
   }
 
-  // Not logged in -> Auth flow
   if (!session) {
     return <Redirect href="/(auth)/login" />;
   }
 
-  // Logged in but no degree type set -> Onboarding
   if (!profile?.degree_type) {
     return <Redirect href="/(onboarding)/welcome" />;
   }
 
-  // Fully set up -> Dashboard
   return <Redirect href="/(tabs)" />;
 }
 
