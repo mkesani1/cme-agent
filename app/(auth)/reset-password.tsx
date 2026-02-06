@@ -197,19 +197,56 @@ export default function ResetPasswordScreen() {
     setLoading(true);
     setError('');
 
-    try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
-      });
+    // Retry logic for flaky mobile connections
+    const maxRetries = 3;
+    let lastError: any = null;
 
-      if (updateError) {
-        setError(updateError.message);
-      } else {
-        setSuccess(true);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Password update attempt ${attempt}/${maxRetries}`);
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: password,
+        });
+
+        if (updateError) {
+          lastError = updateError;
+          console.error(`Attempt ${attempt} failed:`, updateError.message);
+
+          // Don't retry on certain errors
+          if (updateError.message.includes('expired') ||
+              updateError.message.includes('invalid') ||
+              updateError.message.includes('weak')) {
+            setError(updateError.message);
+            setLoading(false);
+            return;
+          }
+
+          // Wait before retry
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+        } else {
+          // Success!
+          console.log('Password updated successfully');
+          setSuccess(true);
+          setLoading(false);
+          return;
+        }
+      } catch (e: any) {
+        lastError = e;
+        console.error(`Attempt ${attempt} error:`, e?.message);
+
+        // Wait before retry
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
       }
-    } catch (e: any) {
-      setError(e?.message || 'Something went wrong. Please try again.');
     }
+
+    // All retries failed
+    setError(lastError?.message || 'Failed to update password. Please try again.');
     setLoading(false);
   }
 
