@@ -26,68 +26,60 @@ export default function ResetPasswordScreen() {
 
   useEffect(() => {
     let isMounted = true;
-    let authSubscription: { unsubscribe: () => void } | null = null;
-    let timeoutId: NodeJS.Timeout;
 
-    async function setupAuthListener() {
-      // Safety timeout - if nothing happens in 30 seconds, show error
-      timeoutId = setTimeout(() => {
-        if (isMounted && verifying) {
-          setError('Connection timed out. Please check your internet and try again.');
-          setVerifying(false);
-        }
-      }, 30000);
+    async function verifyToken() {
+      // Get token_hash from query params (from email link)
+      const tokenHash = params.token_hash as string;
+      const type = params.type as string;
 
-      // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
+      console.log('Query params - token_hash:', !!tokenHash, 'type:', type);
+
+      // If we have token_hash in query params, verify it using verifyOtp
+      if (tokenHash && type === 'recovery') {
+        try {
+          console.log('Verifying token with verifyOtp...');
+          const { data, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
+          });
+
           if (!isMounted) return;
 
-          console.log('Auth event:', event, 'Session:', !!session);
-
-          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-            if (session) {
-              clearTimeout(timeoutId);
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                window.history.replaceState(null, '', window.location.pathname);
-              }
-              setSessionValid(true);
-              setVerifying(false);
-            }
-          } else if (event === 'TOKEN_REFRESHED' && session) {
-            clearTimeout(timeoutId);
-            setSessionValid(true);
-            setVerifying(false);
-          }
-        }
-      );
-
-      authSubscription = subscription;
-
-      // For web, check if there's a hash fragment that Supabase needs to process
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        const hash = window.location.hash;
-        console.log('URL hash present:', !!hash, hash?.substring(0, 50));
-
-        if (hash && hash.includes('access_token')) {
-          // Parse the hash and set session manually
-          const hashParams = new URLSearchParams(hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
-          const errorCode = hashParams.get('error');
-          const errorDescription = hashParams.get('error_description');
-
-          // Check for error in the hash (Supabase returns errors this way)
-          if (errorCode) {
-            clearTimeout(timeoutId);
-            setError(errorDescription || `Error: ${errorCode}`);
+          if (verifyError) {
+            console.error('Token verification error:', verifyError);
+            setError(verifyError.message || 'Invalid or expired reset link.');
             setVerifying(false);
             return;
           }
 
+          if (data.session) {
+            console.log('Token verified successfully, session created');
+            setSessionValid(true);
+            setVerifying(false);
+            return;
+          }
+        } catch (e: any) {
+          console.error('Error verifying token:', e);
+          if (!isMounted) return;
+          setError(e?.message || 'Failed to verify reset link.');
+          setVerifying(false);
+          return;
+        }
+      }
+
+      // Fallback: Check for hash tokens (legacy flow)
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const hash = window.location.hash;
+        console.log('URL hash present:', !!hash);
+
+        if (hash && hash.includes('access_token')) {
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
           if (accessToken && refreshToken) {
             try {
-              console.log('Setting session with tokens...');
+              console.log('Setting session with hash tokens...');
               const { data, error: sessionError } = await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken
@@ -95,88 +87,44 @@ export default function ResetPasswordScreen() {
 
               if (!isMounted) return;
 
-              if (sessionError) {
-                console.error('Session set error:', sessionError);
-                clearTimeout(timeoutId);
-                setError(sessionError.message || 'Failed to verify reset link.');
-                setVerifying(false);
-                return;
-              }
-
-              if (data.session) {
-                console.log('Session set successfully');
-                clearTimeout(timeoutId);
+              if (!sessionError && data.session) {
                 window.history.replaceState(null, '', window.location.pathname);
                 setSessionValid(true);
                 setVerifying(false);
                 return;
               }
-            } catch (e: any) {
-              console.error('Error setting session:', e);
-              if (!isMounted) return;
-              clearTimeout(timeoutId);
-              setError(e?.message || 'Failed to verify reset link.');
-              setVerifying(false);
-              return;
+            } catch (e) {
+              console.error('Error with hash tokens:', e);
             }
           }
         }
-
-        // Check for existing session as fallback
-        try {
-          console.log('Checking for existing session...');
-          const { data: { session } } = await supabase.auth.getSession();
-
-          if (!isMounted) return;
-
-          clearTimeout(timeoutId);
-          if (session) {
-            console.log('Found existing session');
-            setSessionValid(true);
-          } else {
-            console.log('No session found');
-            setError('Invalid or expired reset link. Please request a new one.');
-          }
-          setVerifying(false);
-        } catch (e: any) {
-          if (!isMounted) return;
-          clearTimeout(timeoutId);
-          setError(e?.message || 'Failed to check session.');
-          setVerifying(false);
-        }
-      } else {
-        // For native
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!isMounted) return;
-
-          clearTimeout(timeoutId);
-          if (session) {
-            setSessionValid(true);
-          } else {
-            setError('Invalid or expired reset link. Please request a new one.');
-          }
-          setVerifying(false);
-        } catch (e: any) {
-          if (!isMounted) return;
-          clearTimeout(timeoutId);
-          setError(e?.message || 'Failed to check session.');
-          setVerifying(false);
-        }
       }
+
+      // No valid token found - check for existing session
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        if (session) {
+          console.log('Found existing session');
+          setSessionValid(true);
+        } else {
+          console.log('No valid token or session found');
+          setError('Invalid or expired reset link. Please request a new one.');
+        }
+      } catch (e: any) {
+        if (!isMounted) return;
+        setError(e?.message || 'Failed to check session.');
+      }
+      setVerifying(false);
     }
 
-    setupAuthListener();
+    verifyToken();
 
-    // Cleanup
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
-      if (authSubscription) {
-        authSubscription.unsubscribe();
-      }
     };
-  }, []);
+  }, [params.token_hash, params.type]);
 
   async function handleResetPassword() {
     if (!password || !confirmPassword) {
