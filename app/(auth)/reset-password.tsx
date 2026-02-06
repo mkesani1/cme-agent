@@ -25,95 +25,104 @@ export default function ResetPasswordScreen() {
   const [sessionValid, setSessionValid] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid recovery session
-    checkRecoverySession();
-  }, []);
+    let isMounted = true;
+    let authSubscription: { unsubscribe: () => void } | null = null;
 
-  async function checkRecoverySession() {
-    // Create a timeout promise to prevent indefinite hanging
-    const timeoutMs = 10000;
-    let timeoutId: NodeJS.Timeout;
+    async function setupAuthListener() {
+      // Set up auth state change listener FIRST
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (!isMounted) return;
 
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('timeout')), timeoutMs);
-    });
+          console.log('Auth event:', event, 'Session:', !!session);
 
-    try {
+          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+            if (session) {
+              // Clear the hash from URL for cleaner appearance
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                window.history.replaceState(null, '', window.location.pathname);
+              }
+              setSessionValid(true);
+              setVerifying(false);
+            }
+          } else if (event === 'TOKEN_REFRESHED' && session) {
+            setSessionValid(true);
+            setVerifying(false);
+          }
+        }
+      );
+
+      authSubscription = subscription;
+
+      // For web, check if there's a hash fragment that Supabase needs to process
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const hash = window.location.hash;
 
-        // If there's a hash with access tokens, manually set the session
         if (hash && hash.includes('access_token')) {
+          // Parse the hash and set session manually
           const params = new URLSearchParams(hash.substring(1));
           const accessToken = params.get('access_token');
           const refreshToken = params.get('refresh_token');
 
           if (accessToken && refreshToken) {
             try {
-              const { data, error } = await Promise.race([
-                supabase.auth.setSession({
-                  access_token: accessToken,
-                  refresh_token: refreshToken
-                }),
-                timeoutPromise
-              ]);
+              const { data, error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+              });
 
-              clearTimeout(timeoutId!);
+              if (!isMounted) return;
 
               if (!error && data.session) {
-                // Clear the hash from URL for cleaner appearance
                 window.history.replaceState(null, '', window.location.pathname);
                 setSessionValid(true);
                 setVerifying(false);
                 return;
+              } else {
+                console.error('Session set error:', error);
               }
-            } catch (e: any) {
-              if (e.message === 'timeout') {
-                setError('Connection timed out. Please check your internet connection and try again.');
-                setVerifying(false);
-                return;
-              }
+            } catch (e) {
+              console.error('Error setting session:', e);
             }
           }
         }
 
-        // Fallback: check for existing session with timeout
-        try {
-          const { data: { session } } = await Promise.race([
-            supabase.auth.getSession(),
-            timeoutPromise
-          ]);
-
-          clearTimeout(timeoutId!);
-
-          if (session) {
-            setSessionValid(true);
-          } else {
-            setError('Invalid or expired reset link. Please request a new one.');
-          }
-        } catch (e: any) {
-          clearTimeout(timeoutId!);
-          if (e.message === 'timeout') {
-            setError('Connection timed out. Please check your internet connection and try again.');
-          } else {
-            setError('Something went wrong. Please try again.');
-          }
-        }
-      } else {
-        // For native, check for existing session
+        // Check for existing session as fallback
         const { data: { session } } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
+        if (session) {
+          setSessionValid(true);
+        } else if (!hash || !hash.includes('access_token')) {
+          // Only show error if there was no hash to process
+          setError('Invalid or expired reset link. Please request a new one.');
+        }
+        setVerifying(false);
+      } else {
+        // For native
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
         if (session) {
           setSessionValid(true);
         } else {
           setError('Invalid or expired reset link. Please request a new one.');
         }
+        setVerifying(false);
       }
-    } catch (e) {
-      console.error('Error checking recovery session:', e);
-      setError('Something went wrong. Please try again.');
     }
-    setVerifying(false);
-  }
+
+    setupAuthListener();
+
+    // Cleanup
+    return () => {
+      isMounted = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
+  }, []);
 
   async function handleResetPassword() {
     if (!password || !confirmPassword) {
