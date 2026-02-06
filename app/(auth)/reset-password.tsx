@@ -30,25 +30,73 @@ export default function ResetPasswordScreen() {
   }, []);
 
   async function checkRecoverySession() {
+    // Create a timeout promise to prevent indefinite hanging
+    const timeoutMs = 10000;
+    let timeoutId: NodeJS.Timeout;
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('timeout')), timeoutMs);
+    });
+
     try {
-      // For web, check if there's a hash fragment with tokens
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const hash = window.location.hash;
-        if (hash && hash.includes('type=recovery')) {
-          // The Supabase client will automatically handle the hash
-          const { data: { session }, error } = await supabase.auth.getSession();
-          if (session && !error) {
+
+        // If there's a hash with access tokens, manually set the session
+        if (hash && hash.includes('access_token')) {
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            try {
+              const { data, error } = await Promise.race([
+                supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken
+                }),
+                timeoutPromise
+              ]);
+
+              clearTimeout(timeoutId!);
+
+              if (!error && data.session) {
+                // Clear the hash from URL for cleaner appearance
+                window.history.replaceState(null, '', window.location.pathname);
+                setSessionValid(true);
+                setVerifying(false);
+                return;
+              }
+            } catch (e: any) {
+              if (e.message === 'timeout') {
+                setError('Connection timed out. Please check your internet connection and try again.');
+                setVerifying(false);
+                return;
+              }
+            }
+          }
+        }
+
+        // Fallback: check for existing session with timeout
+        try {
+          const { data: { session } } = await Promise.race([
+            supabase.auth.getSession(),
+            timeoutPromise
+          ]);
+
+          clearTimeout(timeoutId!);
+
+          if (session) {
             setSessionValid(true);
           } else {
             setError('Invalid or expired reset link. Please request a new one.');
           }
-        } else {
-          // Check if there's already a session (user came from email link)
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            setSessionValid(true);
+        } catch (e: any) {
+          clearTimeout(timeoutId!);
+          if (e.message === 'timeout') {
+            setError('Connection timed out. Please check your internet connection and try again.');
           } else {
-            setError('No reset token found. Please request a new password reset link.');
+            setError('Something went wrong. Please try again.');
           }
         }
       } else {
