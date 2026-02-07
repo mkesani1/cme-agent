@@ -1,118 +1,126 @@
-# CME Agent - Claude Development Guidelines
+# Claude Instructions
 
-## LOCKED DESIGN SPECIFICATION
-> **Status: LOCKED** - Design finalized February 2026
-> Do not modify visual design without explicit user approval
+## ⚠️ CRITICAL: Mandatory Verification (Ralph Loop)
 
----
+**EVERY task that involves code, fixes, or deployments MUST follow this loop:**
 
-## Design System Colors
-
-### Navy Palette (Primary Background)
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Navy 900 | `#0D1321` | App background |
-| Navy 700 | `#1D2A3F` | Card backgrounds |
-| Navy 600 | `#2A3A52` | Secondary surfaces |
-
-### Sand/Gold Palette (Accent)
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Sand 500 | `#A68B5B` | Primary gold accent |
-| Sand 400 | `#D4C4B0` | Secondary gold/text |
-| Sand 50 | `#FDFCFB` | Light text on dark |
-
-### Gold Gradient (Hero Cards)
-```typescript
-colors={['#C4A574', '#A68B5B', '#8B7349', '#705C3A']}
-start={{ x: 0, y: 0 }}
-end={{ x: 1, y: 1 }}
 ```
-> **IMPORTANT**: Use muted brownish-gold tones, NOT bright yellow (#D4AF37)
-
----
-
-## Component Specifications
-
-### Hero Card (California License)
-- **Background**: Gold gradient with bubble/bokeh overlay
-- **Circular Progress**: Position `top-right`, aligned with license label
-- **Category Pills**: Rounded with semi-transparent background
-- **Typography**: White text on gold gradient
-
-### Secondary Cards (Texas, etc.)
-- **Background**: Same gold gradient, more subtle
-- **Checkmark**: Green success indicator
-- **Layout**: Horizontal with chevron navigation
-
-### Tab Bar
-- **Tabs**: Exactly 5 tabs (Home, Licenses, Certs, Courses, Profile)
-- **Icons**: Ionicons only, no emojis
-- **Active State**: Sand 500 gold accent
-- **Inactive State**: Gray muted
-
-### Quick Actions
-- **Background**: Navy 700 cards
-- **Icons**: Ionicons in white
-- **Border**: Subtle border with navy tones
-
----
-
-## Visual Effects
-
-### Bubble/Bokeh Overlay
-```typescript
-// SVG circles with low opacity for luxury feel
-<Circle cx="80%" cy="20%" r="60" fill="rgba(255,255,255,0.08)" />
-<Circle cx="20%" cy="70%" r="40" fill="rgba(255,255,255,0.05)" />
-<Circle cx="90%" cy="80%" r="25" fill="rgba(255,255,255,0.06)" />
+BUILD → TEST → VERIFY → If fails, REPEAT → Only say "done" when ALL pass
 ```
 
----
+**You are NOT allowed to say a task is complete unless you have:**
+1. Actually RUN the code (not just written it)
+2. Actually TESTED the functionality (not assumed it works)
+3. Actually VERIFIED the output (screenshots, logs, query results)
+4. Actually COMPARED against requirements
 
-## Development Protocol
+**Banned phrases until verification is complete:**
+- ❌ "This should work"
+- ❌ "I've made the changes"
+- ❌ "The code looks correct"
 
-### Ralph Loops
-When making UI changes, follow:
-```
-BUILD → TEST → VERIFY → REPEAT
-```
-1. Make code changes
-2. Build with `npx expo export --platform web`
-3. Deploy via git push (Vercel auto-deploys)
-4. Verify with browser screenshot against mockup
-
----
-
-## File Structure
-
-### Key Files
-- `app/(tabs)/index.tsx` - Dashboard/Home screen
-- `app/(tabs)/profile.tsx` - Profile screen with gold card
-- `app/(tabs)/licenses.tsx` - Licenses list
-- `app/(tabs)/certifications.tsx` - Certifications
-- `app/(tabs)/courses.tsx` - Courses browser
-- `components/CustomTabBar.tsx` - 5-tab navigation
+**Required evidence when reporting done:**
+- What was built
+- How it was tested (specific commands/actions)
+- Proof it works (screenshots, test output, console logs)
 
 ---
 
-## Tech Stack
-- **Framework**: Expo SDK 54 + React Native
-- **Navigation**: Expo Router with custom tab bar
-- **Styling**: StyleSheet + expo-linear-gradient
-- **Icons**: @expo/vector-icons (Ionicons)
-- **SVG**: react-native-svg for overlays
-- **Deployment**: Vercel (static export from `dist/`)
+## Available Integrations
+
+Act independently using these services without asking for permission:
+
+| Service | Capabilities |
+|---------|-------------|
+| **Supabase** | SQL queries, migrations, edge functions, schema management |
+| **GitHub** | Issues, PRs, commits, repo management via `gh` CLI |
+| **Vercel** | Deploy, list deployments, check build logs |
+| **File System** | Full read/write access to this folder |
+
+Chain operations across services when tasks require it (e.g., code → commit → deploy → verify).
 
 ---
 
-## Deployment
-```bash
-# Build
-npx expo export --platform web
+## Verification Checklist (Reference)
 
-# Deploy (auto via git)
-git add . && git commit -m "message" && git push origin main
-```
+Before saying "done", confirm:
 
-Production URL: https://cme-agent.vercel.app
+- [ ] Code compiles/runs without errors
+- [ ] Tests pass (actually run them)
+- [ ] Feature works as specified (manually test it)
+- [ ] UI matches design exactly (screenshot)
+- [ ] No console errors or warnings
+- [ ] Database state correct (query to verify)
+- [ ] Deployment succeeded (check logs)
+
+---
+
+## Design Lock
+
+Once a design element is agreed upon, it is **locked** and must not change without explicit permission.
+
+### Rules
+
+1. When user says "lock this" or "this is final" → add to `PROJECT_DESIGN.md`
+2. Before delivering ANY work, check `PROJECT_DESIGN.md` and verify locked elements unchanged
+3. If a fix seems to require changing a locked element → **ASK first**, don't just change it
+4. Only modify what was specifically requested
+
+### Locked elements include:
+- Colors / color scheme
+- Fonts / typography
+- Icons / icon style
+- Layout / spacing
+- Component styles
+- Any element explicitly marked as approved
+
+### Project Design File
+
+Each project should have a `PROJECT_DESIGN.md` that tracks locked decisions. When locking an element, record: what it is, the specific values, and the date locked.
+
+---
+
+## Security Audit (Pre-Deploy)
+
+**Run security checks before ANY deployment.**
+
+### Mandatory Checks
+
+1. **Dependency Scan**
+   ```bash
+   npm audit          # Node.js
+   pip-audit          # Python
+   ```
+
+2. **Secrets Detection**
+   - No hardcoded API keys, passwords, tokens
+   - .env files not committed to git
+   - Environment variables used for all secrets
+
+3. **Code Vulnerabilities**
+   - No SQL injection (use parameterized queries)
+   - No XSS (sanitize user input)
+   - Input validation on all endpoints
+
+4. **Supabase Security**
+   - RLS enabled on all tables
+   - RLS policies reviewed
+   - Service role key NOT exposed to client
+
+### Pre-Deploy Security Checklist
+
+- [ ] `npm audit` shows 0 critical/high vulnerabilities
+- [ ] No secrets in code (grep for api_key, secret, password)
+- [ ] RLS enabled and policies verified (Supabase projects)
+- [ ] Security headers configured
+- [ ] SECURITY_AUDIT.md updated
+
+### When to Run Full Audit
+
+- Before production deployments
+- After adding new dependencies
+- After implementing authentication/authorization
+- When handling sensitive data
+- User requests security review
+
+Use the **security-auditor** skill for comprehensive scanning.
