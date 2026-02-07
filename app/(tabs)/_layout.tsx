@@ -1,21 +1,28 @@
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../src/lib/theme';
 
+type IconName = keyof typeof Ionicons.glyphMap;
+
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    index: '🏠',
-    licenses: '📋',
-    courses: '📚',
-    certificates: '📜',
-    agent: '🤖',
-    settings: '⚙️',
+  const icons: Record<string, { outline: IconName; filled: IconName }> = {
+    index: { outline: 'home-outline', filled: 'home' },
+    licenses: { outline: 'document-text-outline', filled: 'document-text' },
+    courses: { outline: 'book-outline', filled: 'book' },
+    certificates: { outline: 'ribbon-outline', filled: 'ribbon' },
+    agent: { outline: 'sparkles-outline', filled: 'sparkles' },
+    settings: { outline: 'settings-outline', filled: 'settings' },
   };
 
+  const iconSet = icons[name] || { outline: 'ellipse-outline', filled: 'ellipse' };
+  const iconName = focused ? iconSet.filled : iconSet.outline;
+  const color = focused ? colors.accent : colors.textMuted;
+
   return (
-    <Text style={[styles.icon, focused && styles.iconFocused]}>
-      {icons[name] || '•'}
-    </Text>
+    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
+      <Ionicons name={iconName} size={22} color={color} />
+    </View>
   );
 }
 
@@ -26,7 +33,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
@@ -84,7 +91,7 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.backgroundElevated,
     borderTopColor: colors.border,
     borderTopWidth: 1,
     paddingTop: 8,
@@ -94,12 +101,13 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     fontWeight: '500',
+    marginTop: 2,
   },
-  icon: {
-    fontSize: 24,
-    opacity: 0.6,
+  iconContainer: {
+    padding: 4,
   },
-  iconFocused: {
-    opacity: 1,
+  iconContainerFocused: {
+    backgroundColor: 'rgba(166, 139, 91, 0.1)',
+    borderRadius: 8,
   },
 });

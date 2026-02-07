@@ -1,39 +1,57 @@
-// CME Agent - Sand Theme
+// CME Agent - Premium Sand & Navy Theme
 // Design System Colors and Constants
 
 export const colors = {
-  // Sand palette
-  sand: {
-    50: '#FDFCFB',
-    100: '#FAF8F5',  // Background
-    200: '#F5F0E8',
-    300: '#E8E0D5',
-    400: '#D4C4B0',
-    500: '#A68B5B',  // Accent
-    600: '#8B7349',
-    700: '#705C3A',
-    800: '#554530',
-    900: '#3D3D3D',  // Text
+  // Navy palette - for backgrounds, cards, depth
+  navy: {
+    900: '#0D1321',  // Deepest background
+    800: '#151E2F',  // Card backgrounds
+    700: '#1D2A3F',  // Elevated surfaces
+    600: '#2A3A52',  // Borders, dividers
+    500: '#3D4F6A',  // Secondary text
+    400: '#5A6F8A',  // Muted text
   },
 
-  // Semantic colors
-  background: '#FAF8F5',
-  text: '#3D3D3D',
-  textSecondary: '#6B6B6B',
-  accent: '#A68B5B',
+  // Sand palette - for accents, highlights
+  sand: {
+    50: '#FDFCFB',   // Lightest
+    100: '#FAF8F5',  // Light background
+    200: '#F5F0E8',  // Subtle highlight
+    300: '#E8E0D5',  // Border light
+    400: '#D4C4B0',  // Muted accent
+    500: '#A68B5B',  // Primary accent
+    600: '#8B7349',  // Darker accent
+    700: '#705C3A',  // Deep accent
+  },
 
-  // Status colors
+  // Semantic colors (dark mode - navy backgrounds)
+  background: '#0D1321',
+  backgroundElevated: '#151E2F',
+  backgroundCard: '#1D2A3F',
+  text: '#FAF8F5',
+  textSecondary: '#D4C4B0',
+  textMuted: '#5A6F8A',
+  accent: '#A68B5B',
+  accentLight: '#D4C4B0',
+
+  // Status colors - slightly muted for elegance
   success: '#5D8A66',
-  successLight: '#7AA882',
+  successLight: 'rgba(93, 138, 102, 0.15)',
   warning: '#C4883A',
-  warningLight: '#D9A25C',
+  warningLight: 'rgba(196, 136, 58, 0.15)',
   risk: '#B85C5C',
-  riskLight: '#CF7A7A',
+  riskLight: 'rgba(184, 92, 92, 0.15)',
 
   // UI colors
-  card: '#FFFFFF',
-  border: '#E8E0D5',
-  divider: '#F5F0E8',
+  card: '#1D2A3F',
+  cardHover: '#2A3A52',
+  border: '#2A3A52',
+  borderLight: 'rgba(166, 139, 91, 0.2)',
+  divider: '#1D2A3F',
+
+  // Special
+  glow: 'rgba(166, 139, 91, 0.3)',
+  overlay: 'rgba(13, 19, 33, 0.8)',
 } as const;
 
 export const spacing = {

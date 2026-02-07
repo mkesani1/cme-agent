@@ -8,14 +8,17 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
-import { Card, ProgressBar, CategoryTag } from '../../src/components/ui';
+import { Card, ProgressBar, CategoryTag, SmartSuggestions, AISuggestion } from '../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../src/lib/theme';
 import { DEMO_MODE, demoProfile, getDemoLicensesFormatted } from '../../src/lib/demoData';
+import { useFadeInUp, usePulseGlow } from '../../src/lib/animations';
 
 interface LicenseWithProgress {
   id: string;
@@ -32,12 +35,47 @@ interface LicenseWithProgress {
   }[];
 }
 
+// AI-powered course suggestions based on user's requirements
+const mockAISuggestions: AISuggestion[] = [
+  {
+    id: 'ai-1',
+    title: 'Advanced Pain Management & Opioid Prescribing',
+    provider: 'Stanford Medicine',
+    hours: 12,
+    categories: ['Pain Mgmt', 'Ctrl Subst'],
+    efficiencyScore: 92,
+    insight: 'Completes 2 requirements in one course - your best efficiency match',
+  },
+  {
+    id: 'ai-2',
+    title: 'Medical Ethics in Modern Practice',
+    provider: 'Harvard Medical',
+    hours: 6,
+    categories: ['Ethics', 'Risk Mgmt'],
+    efficiencyScore: 88,
+    insight: 'Covers your incomplete Ethics requirement with 2 hours to spare',
+  },
+  {
+    id: 'ai-3',
+    title: 'Clinical Risk Assessment Strategies',
+    provider: 'Mayo Clinic',
+    hours: 5,
+    categories: ['Risk Mgmt'],
+    efficiencyScore: 85,
+    insight: 'Exactly matches your remaining Risk Management credits needed',
+  },
+];
+
 export default function DashboardScreen() {
   const { user, profile } = useAuth();
   const [licenses, setLicenses] = useState<LicenseWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Animations
+  const headerAnim = useFadeInUp(0);
+  const glowOpacity = usePulseGlow();
 
   useEffect(() => {
     loadDashboard();
@@ -195,8 +233,8 @@ export default function DashboardScreen() {
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Header with Animation */}
+        <Animated.View style={[styles.header, headerAnim]}>
           <View>
             <Text style={styles.greeting}>
               {getGreeting()}, Dr. {displayProfile?.full_name?.split(' ').pop()}
@@ -208,10 +246,12 @@ export default function DashboardScreen() {
           <TouchableOpacity
             style={styles.agentButton}
             onPress={() => router.push('/(tabs)/agent')}
+            activeOpacity={0.8}
           >
-            <Text style={styles.agentIcon}>🤖</Text>
+            <Animated.View style={[styles.agentGlow, { opacity: glowOpacity }]} />
+            <Ionicons name="sparkles" size={22} color={colors.navy[900]} />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Error State */}
         {error && (
@@ -312,26 +352,43 @@ export default function DashboardScreen() {
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/courses')}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>📚</Text>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="book-outline" size={22} color={colors.accent} />
+              </View>
               <Text style={styles.actionText}>Find Courses</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/certificates/upload')}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>📤</Text>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="cloud-upload-outline" size={22} color={colors.accent} />
+              </View>
               <Text style={styles.actionText}>Upload Cert</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/agent')}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>💬</Text>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.accent} />
+              </View>
               <Text style={styles.actionText}>Ask Agent</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* AI Smart Suggestions */}
+        <SmartSuggestions
+          suggestions={mockAISuggestions}
+          onSuggestionPress={(suggestion) => {
+            router.push('/(tabs)/courses');
+          }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -417,6 +474,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  agentGlow: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.glow,
   },
   agentIcon: {
     fontSize: 24,
@@ -536,11 +601,17 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
   actionIcon: {
     fontSize: 24,

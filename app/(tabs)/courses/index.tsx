@@ -8,10 +8,14 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { Card, CategoryTag, Button } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../../src/lib/theme';
+import { useFadeInUp } from '../../../src/lib/animations';
 
 // Mock course data - in production, this would come from an API
 const MOCK_COURSES = [
@@ -220,14 +224,21 @@ export default function CoursesScreen() {
         ) : null}
 
         {/* AI Recommendation CTA */}
-        <TouchableOpacity style={styles.aiCta}>
-          <Text style={styles.aiIcon}>🤖</Text>
+        <TouchableOpacity
+          style={styles.aiCta}
+          onPress={() => router.push('/(tabs)/agent')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.aiIconContainer}>
+            <Ionicons name="sparkles" size={24} color={colors.accent} />
+          </View>
           <View style={styles.aiText}>
             <Text style={styles.aiTitle}>Get AI Recommendations</Text>
             <Text style={styles.aiSubtitle}>
               Ask the CME Agent for personalized course suggestions
             </Text>
           </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -419,10 +430,21 @@ const styles = StyleSheet.create({
   aiCta: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.accent + '10',
+    backgroundColor: colors.backgroundCard,
     padding: spacing.md,
     borderRadius: 12,
     marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  aiIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   aiIcon: {
     fontSize: 32,
@@ -438,6 +460,7 @@ const styles = StyleSheet.create({
   },
   aiSubtitle: {
     fontSize: typography.caption.fontSize,
-    color: colors.textSecondary,
+    color: colors.textMuted,
+    marginTop: 2,
   },
 });

@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   track: {
-    backgroundColor: colors.sand[200],
+    backgroundColor: colors.navy[600],
     borderRadius: borderRadius.full,
     overflow: 'hidden',
   },
