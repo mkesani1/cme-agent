@@ -334,7 +334,7 @@ export default function DashboardScreen() {
               onPress={() => router.push(`/(tabs)/licenses/${primaryLicense.id}`)}
             >
               <LinearGradient
-                colors={['#D4AF37', '#C9A227', '#A68B5B', '#8B7349']}
+                colors={['#C4A574', '#A68B5B', '#8B7349', '#705C3A']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -376,9 +376,11 @@ export default function DashboardScreen() {
                   </View>
 
                   <View style={styles.heroRight}>
-                    <CircularProgress
-                      progress={(primaryLicense.creditsEarned / (primaryLicense.totalRequired || 1)) * 100}
-                    />
+                    <View style={styles.circularProgressContainer}>
+                      <CircularProgress
+                        progress={(primaryLicense.creditsEarned / (primaryLicense.totalRequired || 1)) * 100}
+                      />
+                    </View>
                   </View>
                 </View>
               </LinearGradient>
@@ -529,8 +531,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heroRight: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+  },
+  circularProgressContainer: {
+    marginTop: 0,
   },
   heroState: {
     fontSize: 12,

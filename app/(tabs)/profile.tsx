@@ -125,7 +125,7 @@ export default function ProfileScreen() {
         {/* Profile Card with Gradient */}
         <Animated.View style={cardAnim}>
           <LinearGradient
-            colors={['#D4AF37', '#C9A227', '#A68B5B', '#8B7349']}
+            colors={['#C4A574', '#A68B5B', '#8B7349', '#705C3A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileCard}
