@@ -4,7 +4,7 @@ export const DEMO_MODE = true;
 // Demo user profile
 export const demoProfile = {
   id: 'demo-user-123',
-  full_name: 'Jane Smith',
+  full_name: 'Chandrasekhar',
   degree_type: 'MD',
   specialty: 'Internal Medicine',
   email: 'demo@cmeagent.com',
