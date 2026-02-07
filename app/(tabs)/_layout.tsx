@@ -9,10 +9,9 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, { outline: IconName; filled: IconName }> = {
     index: { outline: 'home-outline', filled: 'home' },
     licenses: { outline: 'document-text-outline', filled: 'document-text' },
-    courses: { outline: 'book-outline', filled: 'book' },
     certificates: { outline: 'ribbon-outline', filled: 'ribbon' },
-    agent: { outline: 'sparkles-outline', filled: 'sparkles' },
-    settings: { outline: 'settings-outline', filled: 'settings' },
+    courses: { outline: 'book-outline', filled: 'book' },
+    profile: { outline: 'person-outline', filled: 'person' },
   };
 
   const iconSet = icons[name] || { outline: 'ellipse-outline', filled: 'ellipse' };
@@ -52,13 +51,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="courses"
-        options={{
-          title: 'Courses',
-          tabBarIcon: ({ focused }) => <TabIcon name="courses" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
         name="certificates"
         options={{
           title: 'Certs',
@@ -66,21 +58,25 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="agent"
+        name="courses"
         options={{
-          title: 'Agent',
-          tabBarIcon: ({ focused }) => <TabIcon name="agent" focused={focused} />,
+          title: 'Courses',
+          tabBarIcon: ({ focused }) => <TabIcon name="courses" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="profile"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ focused }) => <TabIcon name="settings" focused={focused} />,
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => <TabIcon name="profile" focused={focused} />,
         }}
       />
 
-      {/* Hidden nested routes - these should not appear in tab bar */}
+      {/* Hidden tabs - keep routes but hide from tab bar */}
+      <Tabs.Screen name="agent" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
+
+      {/* Hidden nested routes */}
       <Tabs.Screen name="licenses/add" options={{ href: null }} />
       <Tabs.Screen name="licenses/add-dea" options={{ href: null }} />
       <Tabs.Screen name="licenses/[id]" options={{ href: null }} />

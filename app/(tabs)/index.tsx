@@ -13,12 +13,13 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
-import { Card, ProgressBar, CategoryTag, SmartSuggestions, AISuggestion } from '../../src/components/ui';
-import { colors, spacing, typography, CMECategory } from '../../src/lib/theme';
+import { colors, spacing, typography, CMECategory, cmeCategories } from '../../src/lib/theme';
 import { DEMO_MODE, demoProfile, getDemoLicensesFormatted } from '../../src/lib/demoData';
-import { useFadeInUp, usePulseGlow } from '../../src/lib/animations';
+import { useFadeInUp } from '../../src/lib/animations';
 
 interface LicenseWithProgress {
   id: string;
@@ -35,36 +36,78 @@ interface LicenseWithProgress {
   }[];
 }
 
-// AI-powered course suggestions based on user's requirements
-const mockAISuggestions: AISuggestion[] = [
-  {
-    id: 'ai-1',
-    title: 'Advanced Pain Management & Opioid Prescribing',
-    provider: 'Stanford Medicine',
-    hours: 12,
-    categories: ['Pain Mgmt', 'Ctrl Subst'],
-    efficiencyScore: 92,
-    insight: 'Completes 2 requirements in one course - your best efficiency match',
-  },
-  {
-    id: 'ai-2',
-    title: 'Medical Ethics in Modern Practice',
-    provider: 'Harvard Medical',
-    hours: 6,
-    categories: ['Ethics', 'Risk Mgmt'],
-    efficiencyScore: 88,
-    insight: 'Covers your incomplete Ethics requirement with 2 hours to spare',
-  },
-  {
-    id: 'ai-3',
-    title: 'Clinical Risk Assessment Strategies',
-    provider: 'Mayo Clinic',
-    hours: 5,
-    categories: ['Risk Mgmt'],
-    efficiencyScore: 85,
-    insight: 'Exactly matches your remaining Risk Management credits needed',
-  },
-];
+// Circular progress component
+function CircularProgress({ progress, size = 70 }: { progress: number; size?: number }) {
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+        {/* Background circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        {/* Progress circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#FFFFFF"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </Svg>
+      <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+        <Ionicons name="bar-chart-outline" size={24} color="rgba(255,255,255,0.8)" />
+      </View>
+    </View>
+  );
+}
+
+// Category pill component
+function CategoryPill({
+  label,
+  earned,
+  required,
+  isComplete
+}: {
+  label: string;
+  earned: number;
+  required: number;
+  isComplete: boolean;
+}) {
+  const isWarning = earned === 0 && required > 0;
+
+  return (
+    <View style={[
+      styles.categoryPill,
+      isComplete && styles.categoryPillComplete,
+      isWarning && styles.categoryPillWarning,
+    ]}>
+      {isComplete && (
+        <Ionicons name="checkmark" size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
+      )}
+      <Text style={[
+        styles.categoryPillText,
+        isComplete && styles.categoryPillTextComplete,
+        isWarning && styles.categoryPillTextWarning,
+      ]}>
+        {label} {earned}/{required}
+      </Text>
+    </View>
+  );
+}
 
 export default function DashboardScreen() {
   const { user, profile } = useAuth();
@@ -73,16 +116,15 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Animations
   const headerAnim = useFadeInUp(0);
-  const glowOpacity = usePulseGlow();
+  const cardAnim = useFadeInUp(100);
+  const actionsAnim = useFadeInUp(200);
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
   async function loadDashboard() {
-    // Demo mode: Use mock data when no authenticated user
     if (!user && DEMO_MODE) {
       const demoLicenses = getDemoLicensesFormatted();
       const withProgress: LicenseWithProgress[] = demoLicenses.map(l => ({
@@ -104,7 +146,6 @@ export default function DashboardScreen() {
       return;
     }
 
-    // No user and not in demo mode
     if (!user) {
       setLoading(false);
       return;
@@ -117,22 +158,13 @@ export default function DashboardScreen() {
       const { data: licensesData, error: licensesError } = await supabase
         .from('licenses')
         .select(`
-          id,
-          state,
-          license_number,
-          expiry_date,
-          total_credits_required,
-          license_requirements (
-            id,
-            category,
-            credits_required
-          )
+          id, state, license_number, expiry_date, total_credits_required,
+          license_requirements (id, category, credits_required)
         `)
         .eq('user_id', user!.id);
 
       if (licensesError) throw licensesError;
 
-      // Get certificates and allocations to calculate earned credits
       const { data: allocations, error: allocError } = await supabase
         .from('credit_allocations')
         .select('license_id, requirement_id, credits_applied')
@@ -146,7 +178,6 @@ export default function DashboardScreen() {
       allocations?.forEach(a => {
         const current = allocationMap.get(a.license_id) || 0;
         allocationMap.set(a.license_id, current + a.credits_applied);
-
         if (a.requirement_id) {
           const reqCurrent = reqAllocationMap.get(a.requirement_id) || 0;
           reqAllocationMap.set(a.requirement_id, reqCurrent + a.credits_applied);
@@ -192,21 +223,32 @@ export default function DashboardScreen() {
     return 'Good evening';
   }
 
-  // Get display profile - use demo data if in demo mode without auth
   const displayProfile = (!user && DEMO_MODE) ? demoProfile : profile;
 
-  function formatDate(dateStr: string | null) {
-    if (!dateStr) return 'No expiry set';
+  function formatExpiry(dateStr: string | null) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  function formatShortDate(dateStr: string | null) {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }
 
-  function getDaysUntil(dateStr: string | null) {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return diff;
+  // Find incomplete requirement for recommended action
+  function getIncompleteRequirement() {
+    for (const license of licenses) {
+      for (const req of license.requirements) {
+        if (req.earned < req.required) {
+          const needed = req.required - req.earned;
+          const catInfo = cmeCategories[req.category];
+          return { category: catInfo?.label || req.category, needed };
+        }
+      }
+    }
+    return null;
   }
 
   if (loading && licenses.length === 0) {
@@ -220,142 +262,131 @@ export default function DashboardScreen() {
     );
   }
 
+  // Separate primary (incomplete) and completed licenses
+  const primaryLicense = licenses.find(l => {
+    const total = l.totalRequired ?? 0;
+    return l.creditsEarned < total;
+  }) || licenses[0];
+
+  const completedLicenses = licenses.filter(l => {
+    const total = l.totalRequired ?? 0;
+    return l.creditsEarned >= total && l.id !== primaryLicense?.id;
+  });
+
+  const incompleteReq = getIncompleteRequirement();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.accent}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
-        {/* Header with Animation */}
+        {/* Header */}
         <Animated.View style={[styles.header, headerAnim]}>
-          <View>
-            <Text style={styles.greeting}>
-              {getGreeting()}, Dr. {displayProfile?.full_name?.split(' ').pop()}
-            </Text>
-            <Text style={styles.subtitle}>
-              {displayProfile?.degree_type || 'MD'} • {licenses.length} Active License{licenses.length !== 1 ? 's' : ''}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={styles.agentButton}
-            onPress={() => router.push('/(tabs)/agent')}
-            activeOpacity={0.8}
-          >
-            <Animated.View style={[styles.agentGlow, { opacity: glowOpacity }]} />
-            <Ionicons name="sparkles" size={22} color={colors.navy[900]} />
-          </TouchableOpacity>
+          <Text style={styles.greetingSmall}>{getGreeting()}</Text>
+          <Text style={styles.doctorName}>Dr. {displayProfile?.full_name?.split(' ').pop() || 'Chandrasekhar'}</Text>
+          <Text style={styles.specialty}>{displayProfile?.degree_type || 'MD'} · Internal Medicine</Text>
         </Animated.View>
 
-        {/* Error State */}
-        {error && (
-          <Card style={[styles.errorCard]}>
-            <Text style={styles.errorIcon}>⚠️</Text>
-            <Text style={styles.errorTitle}>Something went wrong</Text>
-            <Text style={styles.errorText}>{error}</Text>
+        {/* Primary License - Hero Card with Gold Gradient */}
+        {primaryLicense && (
+          <Animated.View style={cardAnim}>
             <TouchableOpacity
-              style={styles.retryButton}
-              onPress={loadDashboard}
+              activeOpacity={0.9}
+              onPress={() => router.push(`/(tabs)/licenses/${primaryLicense.id}`)}
             >
-              <Text style={styles.retryButtonText}>Try Again</Text>
-            </TouchableOpacity>
-          </Card>
-        )}
-
-        {/* License Cards */}
-        {licenses.length === 0 && !loading ? (
-          <Card style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyTitle}>No licenses yet</Text>
-            <Text style={styles.emptyText}>
-              Add your state medical licenses to start tracking your CME requirements
-            </Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push('/(tabs)/licenses')}
-            >
-              <Text style={styles.addButtonText}>+ Add License</Text>
-            </TouchableOpacity>
-          </Card>
-        ) : (
-          licenses.map((license) => {
-            const totalRequired = license.totalRequired ?? 0;
-            const progress = totalRequired > 0
-              ? (license.creditsEarned / totalRequired) * 100
-              : 0;
-            const daysUntil = getDaysUntil(license.expiryDate);
-
-            return (
-              <TouchableOpacity
-                key={license.id}
-                onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
-                activeOpacity={0.7}
+              <LinearGradient
+                colors={['#C9A227', '#A68B5B', '#8B7349']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroCard}
               >
-                <Card style={styles.licenseCard}>
-                  <View style={styles.licenseHeader}>
-                    <View>
-                      <Text style={styles.licenseState}>{license.state} License</Text>
-                      <Text style={styles.licenseNumber}>#{license.licenseNumber}</Text>
+                <View style={styles.heroContent}>
+                  <View style={styles.heroLeft}>
+                    <Text style={styles.heroState}>{primaryLicense.state.toUpperCase()}</Text>
+                    <View style={styles.heroPercentage}>
+                      <Text style={styles.heroPercentNum}>
+                        {Math.round((primaryLicense.creditsEarned / (primaryLicense.totalRequired || 1)) * 100)}
+                      </Text>
+                      <Text style={styles.heroPercentSign}>%</Text>
                     </View>
-                    <View style={styles.expiryBadge}>
-                      {daysUntil !== null && daysUntil <= 90 ? (
-                        <View style={[styles.badge, styles.badgeWarning]}>
-                          <Text style={styles.badgeText}>{daysUntil} days</Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.expiryText}>
-                          Expires {formatDate(license.expiryDate)}
-                        </Text>
-                      )}
+                    <Text style={styles.heroCredits}>
+                      {primaryLicense.creditsEarned} of {primaryLicense.totalRequired} credits · {(primaryLicense.totalRequired || 0) - primaryLicense.creditsEarned} to go
+                    </Text>
+
+                    {/* Category Pills */}
+                    <View style={styles.heroPills}>
+                      {primaryLicense.requirements.map((req) => {
+                        const catInfo = cmeCategories[req.category];
+                        return (
+                          <CategoryPill
+                            key={req.id}
+                            label={catInfo?.label || req.category}
+                            earned={req.earned}
+                            required={req.required}
+                            isComplete={req.earned >= req.required}
+                          />
+                        );
+                      })}
+                    </View>
+
+                    <View style={styles.heroExpiry}>
+                      <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.7)" />
+                      <Text style={styles.heroExpiryText}>Expires {formatExpiry(primaryLicense.expiryDate)}</Text>
                     </View>
                   </View>
 
-                  <ProgressBar
-                    progress={progress}
-                    size="lg"
-                    style={styles.progressBar}
-                  />
-                  <Text style={styles.creditsText}>
-                    {license.creditsEarned}/{totalRequired} credits
-                  </Text>
-
-                  {/* Category breakdown */}
-                  <View style={styles.categories}>
-                    {license.requirements.map((req) => (
-                      <View key={req.id} style={styles.categoryItem}>
-                        <CategoryTag category={req.category} size="sm" />
-                        <Text style={styles.categoryProgress}>
-                          {req.earned}/{req.required}
-                        </Text>
-                        {req.earned >= req.required && (
-                          <Text style={styles.checkmark}>✓</Text>
-                        )}
-                      </View>
-                    ))}
+                  <View style={styles.heroRight}>
+                    <CircularProgress
+                      progress={(primaryLicense.creditsEarned / (primaryLicense.totalRequired || 1)) * 100}
+                    />
                   </View>
-                </Card>
-              </TouchableOpacity>
-            );
-          })
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
         )}
+
+        {/* Completed Licenses - Compact Row */}
+        {completedLicenses.map((license) => (
+          <TouchableOpacity
+            key={license.id}
+            style={styles.completedRow}
+            onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.completedLeft}>
+              <View style={styles.completedCheck}>
+                <Ionicons name="checkmark" size={20} color={colors.success} />
+              </View>
+              <View>
+                <Text style={styles.completedState}>{license.state}</Text>
+                <Text style={styles.completedStatus}>
+                  Complete · {license.creditsEarned}/{license.totalRequired}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.completedRight}>
+              <Text style={styles.completedDate}>{formatShortDate(license.expiryDate)}</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            </View>
+          </TouchableOpacity>
+        ))}
 
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Animated.View style={[styles.quickActions, actionsAnim]}>
+          <Text style={styles.sectionLabel}>QUICK ACTIONS</Text>
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/courses')}
               activeOpacity={0.8}
             >
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="book-outline" size={22} color={colors.accent} />
+              <View style={styles.actionIconCircle}>
+                <Ionicons name="laptop-outline" size={22} color={colors.text} />
               </View>
               <Text style={styles.actionText}>Find Courses</Text>
             </TouchableOpacity>
@@ -364,8 +395,8 @@ export default function DashboardScreen() {
               onPress={() => router.push('/(tabs)/certificates/upload')}
               activeOpacity={0.8}
             >
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="cloud-upload-outline" size={22} color={colors.accent} />
+              <View style={styles.actionIconCircle}>
+                <Ionicons name="arrow-up-outline" size={22} color={colors.text} />
               </View>
               <Text style={styles.actionText}>Upload Cert</Text>
             </TouchableOpacity>
@@ -374,21 +405,34 @@ export default function DashboardScreen() {
               onPress={() => router.push('/(tabs)/agent')}
               activeOpacity={0.8}
             >
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.accent} />
+              <View style={styles.actionIconCircle}>
+                <Ionicons name="sparkles-outline" size={22} color={colors.text} />
               </View>
-              <Text style={styles.actionText}>Ask Agent</Text>
+              <Text style={styles.actionText}>AI Assistant</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
 
-        {/* AI Smart Suggestions */}
-        <SmartSuggestions
-          suggestions={mockAISuggestions}
-          onSuggestionPress={(suggestion) => {
-            router.push('/(tabs)/courses');
-          }}
-        />
+        {/* Recommended Action */}
+        {incompleteReq && (
+          <View style={styles.recommendedCard}>
+            <View style={styles.recommendedIcon}>
+              <Ionicons name="sparkles" size={22} color={colors.accent} />
+            </View>
+            <View style={styles.recommendedContent}>
+              <Text style={styles.recommendedTitle}>Recommended Action</Text>
+              <Text style={styles.recommendedText}>
+                You need <Text style={styles.recommendedHighlight}>{incompleteReq.needed} {incompleteReq.category}</Text> credits. I found 3 accredited courses under 2 hours each.
+              </Text>
+              <TouchableOpacity
+                style={styles.recommendedButton}
+                onPress={() => router.push('/(tabs)/courses')}
+              >
+                <Text style={styles.recommendedButtonText}>View Courses</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -402,193 +446,175 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  loadingText: {
-    fontSize: typography.body.fontSize,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-  },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
-  errorCard: {
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.risk,
-  },
-  errorIcon: {
-    fontSize: 40,
-    marginBottom: spacing.md,
-  },
-  errorTitle: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  errorText: {
-    fontSize: typography.body.fontSize,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  retryButton: {
-    backgroundColor: colors.risk,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 20,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: typography.bodySmall.fontSize,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.xl,
-  },
-  greeting: {
-    fontSize: typography.h2.fontSize,
-    fontWeight: typography.h2.fontWeight,
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: typography.body.fontSize,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  agentButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.accent,
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
   },
-  agentGlow: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.glow,
-  },
-  agentIcon: {
-    fontSize: 24,
-  },
-  emptyCard: {
-    padding: spacing.xl,
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  emptyText: {
-    fontSize: typography.body.fontSize,
+  loadingText: {
     color: colors.textSecondary,
-    textAlign: 'center',
+    marginTop: spacing.md,
+  },
+  header: {
     marginBottom: spacing.lg,
   },
-  addButton: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.accent,
+  greetingSmall: {
+    fontSize: 14,
+    color: colors.accent,
+    marginBottom: 4,
+  },
+  doctorName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  specialty: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  heroCard: {
     borderRadius: 20,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  licenseCard: {
+    padding: spacing.lg,
     marginBottom: spacing.md,
-    padding: spacing.md,
   },
-  licenseHeader: {
+  heroContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.md,
   },
-  licenseState: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
-    color: colors.text,
+  heroLeft: {
+    flex: 1,
   },
-  licenseNumber: {
-    fontSize: typography.bodySmall.fontSize,
-    color: colors.textSecondary,
-    marginTop: 2,
+  heroRight: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  expiryBadge: {
-    alignItems: 'flex-end',
-  },
-  badge: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-  },
-  badgeWarning: {
-    backgroundColor: colors.warningLight + '30',
-  },
-  badgeText: {
+  heroState: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.warning,
+    color: 'rgba(255,255,255,0.8)',
+    letterSpacing: 1,
+    marginBottom: 8,
   },
-  expiryText: {
-    fontSize: typography.caption.fontSize,
-    color: colors.textSecondary,
+  heroPercentage: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
-  progressBar: {
-    marginBottom: spacing.xs,
+  heroPercentNum: {
+    fontSize: 56,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 60,
   },
-  creditsText: {
-    fontSize: typography.bodySmall.fontSize,
-    color: colors.textSecondary,
+  heroPercentSign: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 8,
+  },
+  heroCredits: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
     marginBottom: spacing.md,
   },
-  categories: {
+  heroPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: 8,
+    marginBottom: spacing.md,
   },
-  categoryItem: {
+  categoryPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
-  categoryProgress: {
-    fontSize: 11,
-    color: colors.textSecondary,
+  categoryPillComplete: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'transparent',
   },
-  checkmark: {
+  categoryPillWarning: {
+    backgroundColor: 'rgba(184, 92, 92, 0.3)',
+    borderColor: 'transparent',
+  },
+  categoryPillText: {
     fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
+  },
+  categoryPillTextComplete: {
+    color: '#FFFFFF',
+  },
+  categoryPillTextWarning: {
+    color: '#FFFFFF',
+  },
+  heroExpiry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroExpiryText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  completedRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  completedLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  completedCheck: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(93, 138, 102, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completedState: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  completedStatus: {
+    fontSize: 13,
     color: colors.success,
   },
-  quickActions: {
-    marginTop: spacing.lg,
+  completedRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  sectionTitle: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
-    color: colors.text,
+  completedDate: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  quickActions: {
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: 1,
     marginBottom: spacing.md,
   },
   actionButtons: {
@@ -597,29 +623,75 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: colors.card,
+    backgroundColor: colors.backgroundCard,
     padding: spacing.md,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
-  actionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  actionIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.backgroundElevated,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   actionText: {
-    fontSize: typography.caption.fontSize,
+    fontSize: 12,
     color: colors.text,
     fontWeight: '500',
+  },
+  recommendedCard: {
+    flexDirection: 'row',
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 16,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  recommendedIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  recommendedContent: {
+    flex: 1,
+  },
+  recommendedTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  recommendedText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.md,
+  },
+  recommendedHighlight: {
+    color: colors.accent,
+    fontWeight: '600',
+  },
+  recommendedButton: {
+    backgroundColor: colors.accent,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  recommendedButtonText: {
+    color: colors.navy[900],
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
