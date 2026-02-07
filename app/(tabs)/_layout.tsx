@@ -76,11 +76,15 @@ export default function TabsLayout() {
       <Tabs.Screen name="agent" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
 
-      {/* Hidden nested routes */}
+      {/* Hidden nested routes - including index files that appear as separate tabs */}
+      <Tabs.Screen name="licenses/index" options={{ href: null }} />
       <Tabs.Screen name="licenses/add" options={{ href: null }} />
       <Tabs.Screen name="licenses/add-dea" options={{ href: null }} />
       <Tabs.Screen name="licenses/[id]" options={{ href: null }} />
+      <Tabs.Screen name="certificates/index" options={{ href: null }} />
       <Tabs.Screen name="certificates/upload" options={{ href: null }} />
+      <Tabs.Screen name="courses/index" options={{ href: null }} />
+      <Tabs.Screen name="settings/index" options={{ href: null }} />
     </Tabs>
   );
 }
