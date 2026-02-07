@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../src/lib/theme';
@@ -34,6 +34,41 @@ interface LicenseWithProgress {
     required: number;
     earned: number;
   }[];
+}
+
+// Subtle bubble/bokeh overlay for luxury feel
+function BubbleOverlay({ variant = 'gold' }: { variant?: 'gold' | 'navy' }) {
+  const bubbles = [
+    { cx: '15%', cy: '20%', r: 40, opacity: 0.08 },
+    { cx: '85%', cy: '15%', r: 60, opacity: 0.06 },
+    { cx: '75%', cy: '70%', r: 35, opacity: 0.07 },
+    { cx: '25%', cy: '80%', r: 50, opacity: 0.05 },
+    { cx: '50%', cy: '40%', r: 25, opacity: 0.04 },
+    { cx: '90%', cy: '50%', r: 45, opacity: 0.06 },
+    { cx: '10%', cy: '60%', r: 30, opacity: 0.05 },
+    { cx: '60%', cy: '85%', r: 55, opacity: 0.04 },
+    { cx: '40%', cy: '10%', r: 35, opacity: 0.06 },
+    { cx: '70%', cy: '30%', r: 20, opacity: 0.05 },
+  ];
+
+  const fillColor = variant === 'gold' ? 'rgba(255, 255, 255, 1)' : 'rgba(166, 139, 91, 1)';
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        {bubbles.map((bubble, index) => (
+          <Circle
+            key={index}
+            cx={bubble.cx}
+            cy={bubble.cy}
+            r={bubble.r}
+            fill={fillColor}
+            opacity={bubble.opacity}
+          />
+        ))}
+      </Svg>
+    </View>
+  );
 }
 
 // Circular progress component
@@ -299,11 +334,12 @@ export default function DashboardScreen() {
               onPress={() => router.push(`/(tabs)/licenses/${primaryLicense.id}`)}
             >
               <LinearGradient
-                colors={['#C9A227', '#A68B5B', '#8B7349']}
+                colors={['#D4AF37', '#C9A227', '#A68B5B', '#8B7349']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
               >
+                <BubbleOverlay variant="gold" />
                 <View style={styles.heroContent}>
                   <View style={styles.heroLeft}>
                     <Text style={styles.heroState}>{primaryLicense.state.toUpperCase()}</Text>
@@ -358,6 +394,7 @@ export default function DashboardScreen() {
             onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
             activeOpacity={0.7}
           >
+            <BubbleOverlay variant="navy" />
             <View style={styles.completedLeft}>
               <View style={styles.completedCheck}>
                 <Ionicons name="checkmark" size={20} color={colors.success} />
@@ -416,6 +453,7 @@ export default function DashboardScreen() {
         {/* Recommended Action */}
         {incompleteReq && (
           <View style={styles.recommendedCard}>
+            <BubbleOverlay variant="navy" />
             <View style={styles.recommendedIcon}>
               <Ionicons name="sparkles" size={22} color={colors.accent} />
             </View>
@@ -481,6 +519,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    overflow: 'hidden',
   },
   heroContent: {
     flexDirection: 'row',
@@ -574,6 +613,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
   },
   completedLeft: {
     flexDirection: 'row',
@@ -653,6 +693,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
   },
   recommendedIcon: {
     width: 44,

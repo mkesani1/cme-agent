@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { supabase } from '../../src/lib/supabase';
 import { Card } from '../../src/components/ui';
@@ -244,7 +245,7 @@ export default function AgentScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.agentAvatar}>
-            <Text style={styles.agentIcon}>🤖</Text>
+            <Ionicons name="sparkles" size={24} color="#FFFFFF" />
           </View>
           <View>
             <Text style={styles.agentName}>CME Agent</Text>
@@ -262,7 +263,7 @@ export default function AgentScreen() {
           {messages.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>
-                Hi Dr. {((!user && DEMO_MODE) ? demoProfile : profile)?.full_name?.split(' ').pop()}! 👋
+                Hi Dr. {((!user && DEMO_MODE) ? demoProfile : profile)?.full_name?.split(' ').pop()}!
               </Text>
               <Text style={styles.emptyText}>
                 I'm your CME Agent. I can help you understand your requirements,

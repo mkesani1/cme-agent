@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, CategoryTag } from '../../../src/components/ui';
@@ -157,7 +158,7 @@ export default function CertificatesScreen() {
         {/* Error State */}
         {error && (
           <Card style={[styles.errorCard]}>
-            <Text style={styles.errorIcon}>⚠️</Text>
+            <Ionicons name="alert-circle" size={40} color={colors.risk} style={styles.errorIconStyle} />
             <Text style={styles.errorTitle}>Failed to load certificates</Text>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity
@@ -175,15 +176,21 @@ export default function CertificatesScreen() {
             style={styles.actionCard}
             onPress={() => router.push('/(tabs)/certificates/upload')}
           >
-            <Text style={styles.actionIcon}>📤</Text>
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="cloud-upload-outline" size={22} color={colors.accent} />
+            </View>
             <Text style={styles.actionText}>Upload</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>📷</Text>
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="camera-outline" size={22} color={colors.accent} />
+            </View>
             <Text style={styles.actionText}>Scan</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>🔗</Text>
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="sync-outline" size={22} color={colors.accent} />
+            </View>
             <Text style={styles.actionText}>Sync</Text>
           </TouchableOpacity>
         </View>
@@ -191,7 +198,7 @@ export default function CertificatesScreen() {
         {/* Certificates List */}
         {certificates.length === 0 && !loading ? (
           <Card style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>📜</Text>
+            <Ionicons name="ribbon-outline" size={48} color={colors.textMuted} style={styles.emptyIconStyle} />
             <Text style={styles.emptyTitle}>No certificates yet</Text>
             <Text style={styles.emptyText}>
               Upload your CME certificates to track your credits
@@ -247,7 +254,9 @@ export default function CertificatesScreen() {
           <Text style={styles.sectionTitle}>Connected Providers</Text>
           <Card style={styles.providerCard}>
             <View style={styles.providerRow}>
-              <Text style={styles.providerIcon}>🏥</Text>
+              <View style={styles.providerIconContainer}>
+                <Ionicons name="business-outline" size={20} color={colors.accent} />
+              </View>
               <View style={styles.providerInfo}>
                 <Text style={styles.providerName}>AMA Ed Hub</Text>
                 <Text style={styles.providerStatus}>Not connected</Text>
@@ -258,7 +267,9 @@ export default function CertificatesScreen() {
             </View>
             <View style={styles.divider} />
             <View style={styles.providerRow}>
-              <Text style={styles.providerIcon}>🏥</Text>
+              <View style={styles.providerIconContainer}>
+                <Ionicons name="business-outline" size={20} color={colors.accent} />
+              </View>
               <View style={styles.providerInfo}>
                 <Text style={styles.providerName}>AAFP CME</Text>
                 <Text style={styles.providerStatus}>Not connected</Text>
@@ -304,8 +315,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.risk,
   },
-  errorIcon: {
-    fontSize: 40,
+  errorIconStyle: {
     marginBottom: spacing.md,
   },
   errorTitle: {
@@ -375,8 +385,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  actionIcon: {
-    fontSize: 24,
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.xs,
   },
   actionText: {
@@ -388,8 +403,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
   },
-  emptyIcon: {
-    fontSize: 48,
+  emptyIconStyle: {
     marginBottom: spacing.md,
   },
   emptyTitle: {
@@ -497,8 +511,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
   },
-  providerIcon: {
-    fontSize: 24,
+  providerIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   providerInfo: {

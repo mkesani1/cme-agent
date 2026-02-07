@@ -1,14 +1,17 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
 
-const features = [
-  { icon: '📋', text: 'Track all your state licenses in one place' },
-  { icon: '🔄', text: 'Auto-sync certificates from CME providers' },
-  { icon: '🤖', text: 'AI agent to guide your compliance' },
-  { icon: '⏰', text: 'Never miss a deadline again' },
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const features: { icon: IconName; text: string }[] = [
+  { icon: 'document-text-outline', text: 'Track all your state licenses in one place' },
+  { icon: 'sync-outline', text: 'Auto-sync certificates from CME providers' },
+  { icon: 'sparkles-outline', text: 'AI agent to guide your compliance' },
+  { icon: 'alarm-outline', text: 'Never miss a deadline again' },
 ];
 
 export default function WelcomeScreen() {
@@ -32,7 +35,9 @@ export default function WelcomeScreen() {
         <View style={styles.features}>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureRow}>
-              <Text style={styles.featureIcon}>{feature.icon}</Text>
+              <View style={styles.featureIconContainer}>
+                <Ionicons name={feature.icon} size={22} color={colors.accent} />
+              </View>
               <Text style={styles.featureText}>{feature.text}</Text>
             </View>
           ))}
@@ -100,8 +105,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
   },
-  featureIcon: {
-    fontSize: 24,
+  featureIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   featureText: {

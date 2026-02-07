@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card, Input } from '../../src/components/ui';
@@ -64,7 +65,7 @@ export default function AddDEAScreen() {
         {/* DEA Form */}
         <Card style={styles.card}>
           <View style={styles.iconContainer}>
-            <Text style={styles.icon}>🏥</Text>
+            <Ionicons name="medkit" size={32} color={colors.accent} />
           </View>
 
           <Input

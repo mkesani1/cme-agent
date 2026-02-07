@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../src/lib/supabase';
 import { Card, ProgressBar, CategoryTag, Button } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../../src/lib/theme';
@@ -177,7 +178,7 @@ export default function LicenseDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>⚠️</Text>
+          <Ionicons name="alert-circle" size={48} color={colors.risk} style={styles.errorIconStyle} />
           <Text style={styles.errorTitle}>Unable to load</Text>
           <Text style={styles.errorText}>{error || 'License not found'}</Text>
           <View style={styles.errorActions}>
@@ -349,8 +350,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
   },
-  errorIcon: {
-    fontSize: 48,
+  errorIconStyle: {
     marginBottom: spacing.md,
   },
   errorTitle: {

@@ -13,9 +13,45 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { useAuth } from '../../src/hooks/useAuth';
 import { colors, spacing, typography, degreeTypes } from '../../src/lib/theme';
 import { useFadeInUp } from '../../src/lib/animations';
+
+// Subtle bubble/bokeh overlay for luxury feel
+function BubbleOverlay({ variant = 'gold' }: { variant?: 'gold' | 'navy' }) {
+  const bubbles = [
+    { cx: '15%', cy: '20%', r: 40, opacity: 0.08 },
+    { cx: '85%', cy: '15%', r: 60, opacity: 0.06 },
+    { cx: '75%', cy: '70%', r: 35, opacity: 0.07 },
+    { cx: '25%', cy: '80%', r: 50, opacity: 0.05 },
+    { cx: '50%', cy: '40%', r: 25, opacity: 0.04 },
+    { cx: '90%', cy: '50%', r: 45, opacity: 0.06 },
+    { cx: '10%', cy: '60%', r: 30, opacity: 0.05 },
+    { cx: '60%', cy: '85%', r: 55, opacity: 0.04 },
+    { cx: '40%', cy: '10%', r: 35, opacity: 0.06 },
+    { cx: '70%', cy: '30%', r: 20, opacity: 0.05 },
+  ];
+
+  const fillColor = variant === 'gold' ? 'rgba(255, 255, 255, 1)' : 'rgba(166, 139, 91, 1)';
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        {bubbles.map((bubble, index) => (
+          <Circle
+            key={index}
+            cx={bubble.cx}
+            cy={bubble.cy}
+            r={bubble.r}
+            fill={fillColor}
+            opacity={bubble.opacity}
+          />
+        ))}
+      </Svg>
+    </View>
+  );
+}
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -89,11 +125,12 @@ export default function ProfileScreen() {
         {/* Profile Card with Gradient */}
         <Animated.View style={cardAnim}>
           <LinearGradient
-            colors={['#A68B5B', '#8B7349', '#705C3A']}
+            colors={['#D4AF37', '#C9A227', '#A68B5B', '#8B7349']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileCard}
           >
+            <BubbleOverlay variant="gold" />
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{initials}</Text>
@@ -201,6 +238,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
     marginBottom: spacing.xl,
+    overflow: 'hidden',
   },
   avatarContainer: {
     marginBottom: spacing.md,

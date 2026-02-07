@@ -1,10 +1,31 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card } from '../../../src/components/ui';
 import { colors, spacing, typography, degreeTypes } from '../../../src/lib/theme';
 import { useState } from 'react';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+interface SettingRowProps {
+  icon: IconName;
+  label: string;
+  onPress?: () => void;
+}
+
+function SettingRow({ icon, label, onPress }: SettingRowProps) {
+  return (
+    <TouchableOpacity style={styles.settingsRow} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.settingsIconContainer}>
+        <Ionicons name={icon} size={18} color={colors.accent} />
+      </View>
+      <Text style={styles.settingsLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+    </TouchableOpacity>
+  );
+}
 
 export default function SettingsScreen() {
   const { profile, signOut } = useAuth();
@@ -56,57 +77,29 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <Card padding="none">
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>👤</Text>
-              <Text style={styles.settingsLabel}>Edit Profile</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="person-outline" label="Edit Profile" />
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>🔔</Text>
-              <Text style={styles.settingsLabel}>Notifications</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="notifications-outline" label="Notifications" />
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>🔗</Text>
-              <Text style={styles.settingsLabel}>Connected Accounts</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="link-outline" label="Connected Accounts" />
           </Card>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data</Text>
           <Card padding="none">
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>📥</Text>
-              <Text style={styles.settingsLabel}>Export Data</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="download-outline" label="Export Data" />
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>📊</Text>
-              <Text style={styles.settingsLabel}>Reports</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="bar-chart-outline" label="Reports" />
           </Card>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           <Card padding="none">
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>❓</Text>
-              <Text style={styles.settingsLabel}>Help Center</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="help-circle-outline" label="Help Center" />
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.settingsRow}>
-              <Text style={styles.settingsIcon}>📧</Text>
-              <Text style={styles.settingsLabel}>Contact Support</Text>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <SettingRow icon="mail-outline" label="Contact Support" />
           </Card>
         </View>
 
@@ -122,7 +115,10 @@ export default function SettingsScreen() {
               <Text style={styles.signOutText}>Signing out...</Text>
             </>
           ) : (
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <>
+              <Ionicons name="log-out-outline" size={18} color={colors.risk} style={styles.spinner} />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </>
           )}
         </TouchableOpacity>
 
@@ -186,18 +182,25 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.label.fontSize,
     fontWeight: typography.label.fontWeight,
-    color: colors.textSecondary,
+    color: colors.textMuted,
     marginBottom: spacing.sm,
     marginLeft: spacing.xs,
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
+    paddingVertical: 14,
   },
-  settingsIcon: {
-    fontSize: 20,
+  settingsIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   settingsLabel: {
@@ -205,23 +208,21 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
     color: colors.text,
   },
-  chevron: {
-    fontSize: 20,
-    color: colors.textSecondary,
-  },
   divider: {
     height: 1,
     backgroundColor: colors.divider,
-    marginLeft: 52,
+    marginLeft: 56,
   },
   signOutButton: {
-    backgroundColor: colors.riskLight + '20',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     padding: spacing.md,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   signOutButtonDisabled: {
     opacity: 0.6,
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
   },
   version: {
     fontSize: typography.caption.fontSize,
-    color: colors.textSecondary,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xl,
   },

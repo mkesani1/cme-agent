@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
@@ -186,7 +187,9 @@ export default function UploadCertificateScreen() {
               <ActivityIndicator size="large" color={colors.accent} />
             ) : (
               <>
-                <Text style={styles.uploadIcon}>📷</Text>
+                <View style={styles.uploadIconContainer}>
+                  <Ionicons name="camera-outline" size={32} color={colors.accent} />
+                </View>
                 <Text style={styles.uploadText}>Add Certificate Image</Text>
               </>
             )}
@@ -348,8 +351,13 @@ const styles = StyleSheet.create({
     minHeight: 120,
     justifyContent: 'center',
   },
-  uploadIcon: {
-    fontSize: 32,
+  uploadIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   uploadText: {

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, ProgressBar, CategoryTag } from '../../../src/components/ui';
@@ -233,7 +234,7 @@ export default function LicensesScreen() {
         {/* Error State */}
         {error && (
           <Card style={[styles.errorCard]}>
-            <Text style={styles.errorIcon}>⚠️</Text>
+            <Ionicons name="alert-circle" size={40} color={colors.risk} style={styles.errorIconStyle} />
             <Text style={styles.errorTitle}>Failed to load licenses</Text>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity
@@ -250,7 +251,7 @@ export default function LicensesScreen() {
 
         {licenses.length === 0 && !loading ? (
           <Card style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>📋</Text>
+            <Ionicons name="document-text-outline" size={40} color={colors.textMuted} style={styles.emptyIconStyle} />
             <Text style={styles.emptyText}>No licenses added yet</Text>
             <Button
               title="Add Your First License"
@@ -277,12 +278,9 @@ export default function LicensesScreen() {
                 <Card style={styles.licenseCard}>
                   <View style={styles.licenseHeader}>
                     <View style={styles.stateContainer}>
-                      <Text style={styles.stateFlag}>
-                        {license.state === 'CA' ? '🐻' :
-                         license.state === 'TX' ? '🤠' :
-                         license.state === 'NY' ? '🗽' :
-                         license.state === 'FL' ? '🌴' : '🏥'}
-                      </Text>
+                      <View style={styles.stateIconContainer}>
+                        <Ionicons name="location" size={20} color={colors.accent} />
+                      </View>
                       <View>
                         <Text style={styles.stateName}>{license.state}</Text>
                         <Text style={styles.licenseNumber}>
@@ -343,7 +341,9 @@ export default function LicensesScreen() {
         {dea ? (
           <Card style={styles.deaCard}>
             <View style={styles.deaHeader}>
-              <Text style={styles.deaIcon}>🏥</Text>
+              <View style={styles.deaIconContainer}>
+                <Ionicons name="medkit" size={20} color={colors.accent} />
+              </View>
               <View style={styles.deaInfo}>
                 <Text style={styles.deaNumber}>DEA #{dea.dea_number}</Text>
                 <Text style={styles.deaExpiry}>
@@ -366,7 +366,7 @@ export default function LicensesScreen() {
           </Card>
         ) : (
           <Card style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🏥</Text>
+            <Ionicons name="medkit-outline" size={40} color={colors.textMuted} style={styles.emptyIconStyle} />
             <Text style={styles.emptyText}>No DEA registration</Text>
             <Button
               title="Add DEA Registration"
@@ -416,8 +416,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.risk,
   },
-  errorIcon: {
-    fontSize: 40,
+  errorIconStyle: {
     marginBottom: spacing.md,
   },
   errorTitle: {
@@ -476,8 +475,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
   },
-  emptyIcon: {
-    fontSize: 40,
+  emptyIconStyle: {
     marginBottom: spacing.sm,
   },
   emptyText: {
@@ -499,8 +497,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  stateFlag: {
-    fontSize: 32,
+  stateIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   stateName: {
@@ -568,8 +571,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  deaIcon: {
-    fontSize: 32,
+  deaIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   deaInfo: {
