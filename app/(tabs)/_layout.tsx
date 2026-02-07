@@ -1,26 +1,51 @@
 import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { usePathname, router } from 'expo-router';
 import { colors } from '../../src/lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, { outline: IconName; filled: IconName }> = {
-    index: { outline: 'home-outline', filled: 'home' },
-    licenses: { outline: 'document-text-outline', filled: 'document-text' },
-    certificates: { outline: 'ribbon-outline', filled: 'ribbon' },
-    courses: { outline: 'book-outline', filled: 'book' },
-    profile: { outline: 'person-outline', filled: 'person' },
+// Define exactly 5 tabs we want to show
+const TAB_CONFIG = [
+  { name: 'index', title: 'Home', icon: 'home', route: '/(tabs)' },
+  { name: 'licenses', title: 'Licenses', icon: 'document-text', route: '/(tabs)/licenses' },
+  { name: 'certificates', title: 'Certs', icon: 'ribbon', route: '/(tabs)/certificates' },
+  { name: 'courses', title: 'Courses', icon: 'book', route: '/(tabs)/courses' },
+  { name: 'profile', title: 'Profile', icon: 'person', route: '/(tabs)/profile' },
+] as const;
+
+function CustomTabBar() {
+  const pathname = usePathname();
+
+  const isActive = (tabName: string) => {
+    if (tabName === 'index') {
+      return pathname === '/' || pathname === '/(tabs)' || pathname === '';
+    }
+    return pathname.includes(`/${tabName}`);
   };
 
-  const iconSet = icons[name] || { outline: 'ellipse-outline', filled: 'ellipse' };
-  const iconName = focused ? iconSet.filled : iconSet.outline;
-  const color = focused ? colors.accent : colors.textMuted;
-
   return (
-    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-      <Ionicons name={iconName} size={22} color={color} />
+    <View style={styles.tabBar}>
+      {TAB_CONFIG.map((tab) => {
+        const active = isActive(tab.name);
+        const iconName = (active ? tab.icon : `${tab.icon}-outline`) as IconName;
+        const color = active ? colors.accent : colors.textMuted;
+
+        return (
+          <TouchableOpacity
+            key={tab.name}
+            style={styles.tabItem}
+            onPress={() => router.push(tab.route as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.iconContainer, active && styles.iconContainerFocused]}>
+              <Ionicons name={iconName} size={22} color={color} />
+            </View>
+            <Text style={[styles.tabLabel, { color }]}>{tab.title}</Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -28,86 +53,50 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
 export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={() => <CustomTabBar />}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarLabelStyle: styles.tabLabel,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="licenses"
-        options={{
-          title: 'Licenses',
-          tabBarIcon: ({ focused }) => <TabIcon name="licenses" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="certificates"
-        options={{
-          title: 'Certs',
-          tabBarIcon: ({ focused }) => <TabIcon name="certificates" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="courses"
-        options={{
-          title: 'Courses',
-          tabBarIcon: ({ focused }) => <TabIcon name="courses" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon name="profile" focused={focused} />,
-        }}
-      />
+      {/* Main visible tabs */}
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="licenses" />
+      <Tabs.Screen name="certificates" />
+      <Tabs.Screen name="courses" />
+      <Tabs.Screen name="profile" />
 
-      {/* Hidden tabs - keep routes but hide from tab bar */}
+      {/* Hidden routes - still accessible but not in tab bar */}
       <Tabs.Screen name="agent" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
-
-      {/* Hidden nested routes - including index files that appear as separate tabs */}
-      <Tabs.Screen name="licenses/index" options={{ href: null }} />
-      <Tabs.Screen name="licenses/add" options={{ href: null }} />
-      <Tabs.Screen name="licenses/add-dea" options={{ href: null }} />
-      <Tabs.Screen name="licenses/[id]" options={{ href: null }} />
-      <Tabs.Screen name="certificates/index" options={{ href: null }} />
-      <Tabs.Screen name="certificates/upload" options={{ href: null }} />
-      <Tabs.Screen name="courses/index" options={{ href: null }} />
-      <Tabs.Screen name="settings/index" options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
+    flexDirection: 'row',
     backgroundColor: colors.backgroundElevated,
     borderTopColor: colors.border,
     borderTopWidth: 1,
     paddingTop: 8,
-    paddingBottom: 8,
-    height: 70,
+    paddingBottom: 24,
+    paddingHorizontal: 8,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    padding: 6,
+    borderRadius: 10,
+    marginBottom: 2,
+  },
+  iconContainerFocused: {
+    backgroundColor: 'rgba(166, 139, 91, 0.15)',
   },
   tabLabel: {
     fontSize: 11,
     fontWeight: '500',
-    marginTop: 2,
-  },
-  iconContainer: {
-    padding: 4,
-  },
-  iconContainerFocused: {
-    backgroundColor: 'rgba(166, 139, 91, 0.1)',
-    borderRadius: 8,
   },
 });
