@@ -72,6 +72,12 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => <TabIcon name="settings" focused={focused} />,
         }}
       />
+
+      {/* Hidden nested routes - these should not appear in tab bar */}
+      <Tabs.Screen name="licenses/add" options={{ href: null }} />
+      <Tabs.Screen name="licenses/add-dea" options={{ href: null }} />
+      <Tabs.Screen name="licenses/[id]" options={{ href: null }} />
+      <Tabs.Screen name="certificates/upload" options={{ href: null }} />
     </Tabs>
   );
 }

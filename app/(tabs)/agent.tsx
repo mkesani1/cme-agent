@@ -16,6 +16,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { supabase } from '../../src/lib/supabase';
 import { Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { DEMO_MODE, demoProfile } from '../../src/lib/demoData';
 
 interface Message {
   id: string;
@@ -36,6 +37,73 @@ const SUGGESTED_PROMPTS = [
   'Explain opioid CME requirements',
   'How many credits do I have left?',
 ];
+
+// Mock AI responses for demo mode
+const DEMO_RESPONSES: Record<string, string> = {
+  'What do I need for my CA renewal?': `Based on your California license (expiring Dec 2026), you need:
+
+**Total Progress:** 35/50 credits completed
+
+**Remaining Requirements:**
+• General CME: 10 more hours needed (25/35)
+• Risk Management: 5 more hours needed (0/5)
+• Controlled Substances: ✓ Complete! (10/10)
+
+I recommend focusing on Risk Management first, as you have 0 credits in that category. Would you like me to find some courses?`,
+
+  'Find courses for controlled substances': `Here are some recommended controlled substances courses:
+
+1. **Opioid Prescribing: Safe Practices** - AMA Ed Hub
+   • 3 credits, $0 (free)
+   • Self-paced online
+
+2. **Pain Management Essentials** - AAFP
+   • 4 credits, $75
+   • Interactive case studies
+
+3. **DEA-Approved Training** - ACCME
+   • 2 credits, $50
+   • Counts for CA requirements
+
+Would you like me to help you enroll in any of these?`,
+
+  'Explain opioid CME requirements': `**California Opioid CME Requirements:**
+
+All California physicians with DEA registration must complete CME on opioid prescribing. Here's what you need:
+
+• **12 hours** of CME on pain management and opioid prescribing per renewal cycle
+• This is part of your controlled substances requirement
+• Must be AMA PRA Category 1 Credit™
+
+✓ Good news! You've already completed 10 hours of controlled substances CME.
+
+Would you like me to recommend courses to complete your remaining requirements?`,
+
+  'How many credits do I have left?': `Here's your CME credit summary:
+
+**California License:**
+• Total: 35/50 credits (70% complete)
+• Due: December 15, 2026
+
+**By Category:**
+• General CME: 25/35 (10 remaining)
+• Risk Management: 0/5 (5 remaining) ⚠️
+• Controlled Substances: 10/10 ✓
+
+**Texas License:**
+• Total: 24/24 credits (100% complete) ✓
+
+You're doing great! Focus on Risk Management for CA - that's your biggest gap.`,
+
+  'default': `I can help you with your CME requirements! Here are some things I can assist with:
+
+• Check your progress toward license renewal
+• Find courses that match your requirements
+• Explain state-specific CME rules
+• Track your certificates and credits
+
+What would you like to know?`,
+};
 
 export default function AgentScreen() {
   const { user, profile } = useAuth();
@@ -90,6 +158,25 @@ export default function AgentScreen() {
     setMessages(updatedMessages);
     setInput('');
     setLoading(true);
+
+    // Demo mode: Use mock responses
+    if (!user && DEMO_MODE) {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500));
+
+      // Find matching response or use default
+      const responseText = DEMO_RESPONSES[text] || DEMO_RESPONSES['default'];
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: responseText,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setLoading(false);
+      return;
+    }
 
     try {
       // Build user context for the AI
@@ -175,7 +262,7 @@ export default function AgentScreen() {
           {messages.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>
-                Hi Dr. {profile?.full_name?.split(' ').pop()}! 👋
+                Hi Dr. {((!user && DEMO_MODE) ? demoProfile : profile)?.full_name?.split(' ').pop()}! 👋
               </Text>
               <Text style={styles.emptyText}>
                 I'm your CME Agent. I can help you understand your requirements,

@@ -15,6 +15,7 @@ import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Card, ProgressBar, CategoryTag } from '../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../src/lib/theme';
+import { DEMO_MODE, demoProfile, getDemoLicensesFormatted } from '../../src/lib/demoData';
 
 interface LicenseWithProgress {
   id: string;
@@ -43,6 +44,34 @@ export default function DashboardScreen() {
   }, []);
 
   async function loadDashboard() {
+    // Demo mode: Use mock data when no authenticated user
+    if (!user && DEMO_MODE) {
+      const demoLicenses = getDemoLicensesFormatted();
+      const withProgress: LicenseWithProgress[] = demoLicenses.map(l => ({
+        id: l.id,
+        state: l.state,
+        licenseNumber: l.license_number,
+        expiryDate: l.expiry_date,
+        totalRequired: l.total_credits_required,
+        creditsEarned: l.creditsEarned,
+        requirements: l.requirements.map(r => ({
+          id: r.id,
+          category: r.category as CMECategory,
+          required: r.required,
+          earned: r.earned,
+        })),
+      }));
+      setLicenses(withProgress);
+      setLoading(false);
+      return;
+    }
+
+    // No user and not in demo mode
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setError(null);
       setLoading(true);
@@ -125,6 +154,9 @@ export default function DashboardScreen() {
     return 'Good evening';
   }
 
+  // Get display profile - use demo data if in demo mode without auth
+  const displayProfile = (!user && DEMO_MODE) ? demoProfile : profile;
+
   function formatDate(dateStr: string | null) {
     if (!dateStr) return 'No expiry set';
     const date = new Date(dateStr);
@@ -167,10 +199,10 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>
-              {getGreeting()}, Dr. {profile?.full_name?.split(' ').pop()}
+              {getGreeting()}, Dr. {displayProfile?.full_name?.split(' ').pop()}
             </Text>
             <Text style={styles.subtitle}>
-              {profile?.degree_type} • {licenses.length} Active License{licenses.length !== 1 ? 's' : ''}
+              {displayProfile?.degree_type || 'MD'} • {licenses.length} Active License{licenses.length !== 1 ? 's' : ''}
             </Text>
           </View>
           <TouchableOpacity
