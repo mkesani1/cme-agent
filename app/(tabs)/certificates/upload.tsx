@@ -13,10 +13,27 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../../../src/lib/supabase';
+import { supabase, callEdgeFunction } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, Input } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../../src/lib/theme';
+
+// Type for AI scan results (matches edge function response)
+interface ScanResponse {
+  success: boolean;
+  extracted: {
+    course_name?: string;
+    provider?: string;
+    credit_hours?: number;
+    category?: string;
+    completion_date?: string;
+    confidence?: number;
+    accreditation?: string;
+    certificate_id?: string;
+  };
+  message?: string;
+  error?: string;
+}
 
 const CATEGORIES: CMECategory[] = ['general', 'controlled_substances', 'risk_management', 'ethics', 'pain_management'];
 
@@ -30,6 +47,8 @@ export default function UploadCertificateScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanConfidence, setScanConfidence] = useState<number | null>(null);
 
   async function pickImage() {
     try {
@@ -42,10 +61,76 @@ export default function UploadCertificateScreen() {
 
       if (!result.canceled && result.assets.length > 0) {
         setSelectedImage(result.assets[0]);
+        // Reset scan confidence when new image is selected
+        setScanConfidence(null);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image. Please try again.');
       console.error('Image picker error:', error);
+    }
+  }
+
+  async function scanCertificateWithAI() {
+    if (!selectedImage || !user) return;
+
+    setScanning(true);
+    try {
+      // Convert image to base64 for the edge function
+      const imageResponse = await fetch(selectedImage.uri);
+      const blob = await imageResponse.blob();
+
+      // Convert blob to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix to get pure base64
+          const base64Data = result.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Call the scan-certificate edge function (camelCase params match server)
+      const scanResponse = await callEdgeFunction<ScanResponse>('scanCertificate', {
+        imageBase64: base64,
+        mimeType: 'image/jpeg',
+      });
+
+      if (!scanResponse.success || !scanResponse.extracted) {
+        throw new Error(scanResponse.error || 'Failed to extract certificate data');
+      }
+
+      const result = scanResponse.extracted;
+
+      // Pre-fill form fields with extracted data
+      if (result.course_name) setCourseName(result.course_name);
+      if (result.provider) setProvider(result.provider);
+      if (result.credit_hours) setCreditHours(result.credit_hours.toString());
+      if (result.category && CATEGORIES.includes(result.category as CMECategory)) {
+        setCategory(result.category as CMECategory);
+      }
+      if (result.completion_date) setCompletionDate(result.completion_date);
+      if (result.confidence) setScanConfidence(result.confidence / 100); // Convert 0-100 to 0-1
+
+      // Show success with confidence indicator (result.confidence is already 0-100)
+      const confidenceText = result.confidence
+        ? ` (${Math.round(result.confidence)}% confident)`
+        : '';
+
+      Alert.alert(
+        'Scan Complete',
+        `Certificate data extracted${confidenceText}. Please review and correct any fields if needed.`
+      );
+    } catch (error) {
+      console.error('AI scan error:', error);
+      Alert.alert(
+        'Scan Failed',
+        'Could not extract certificate data. Please enter the information manually.'
+      );
+    } finally {
+      setScanning(false);
     }
   }
 
@@ -195,17 +280,46 @@ export default function UploadCertificateScreen() {
             )}
           </TouchableOpacity>
           {selectedImage && (
-            <View style={styles.imagePreview}>
-              <Image
-                source={{ uri: selectedImage.uri }}
-                style={styles.previewImage}
-              />
+            <View style={styles.imagePreviewContainer}>
+              <View style={styles.imagePreview}>
+                <Image
+                  source={{ uri: selectedImage.uri }}
+                  style={styles.previewImage}
+                />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => {
+                    setSelectedImage(null);
+                    setScanConfidence(null);
+                  }}
+                >
+                  <Text style={styles.removeButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => setSelectedImage(null)}
+                style={[styles.scanButton, scanning && styles.scanButtonDisabled]}
+                onPress={scanCertificateWithAI}
+                disabled={scanning}
               >
-                <Text style={styles.removeButtonText}>✕</Text>
+                {scanning ? (
+                  <>
+                    <ActivityIndicator size="small" color={colors.background} />
+                    <Text style={styles.scanButtonText}>Scanning...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="sparkles" size={18} color={colors.background} />
+                    <Text style={styles.scanButtonText}>Scan with AI</Text>
+                  </>
+                )}
               </TouchableOpacity>
+              {scanConfidence !== null && (
+                <View style={styles.confidenceBadge}>
+                  <Text style={styles.confidenceText}>
+                    {Math.round(scanConfidence * 100)}% match
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -293,8 +407,9 @@ export default function UploadCertificateScreen() {
         <View style={styles.infoBox}>
           <Text style={styles.infoTitle}>💡 Tip</Text>
           <Text style={styles.infoText}>
-            Certificates will be automatically matched to your license requirements
-            based on the category you select.
+            Upload a photo of your certificate and tap "Scan with AI" to automatically
+            extract the course details. Credits will be matched to your license
+            requirements based on the category.
           </Text>
         </View>
       </ScrollView>
@@ -365,8 +480,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '500',
   },
-  imagePreview: {
+  imagePreviewContainer: {
     flex: 1,
+    gap: spacing.sm,
+  },
+  imagePreview: {
     backgroundColor: colors.card,
     borderRadius: 12,
     overflow: 'hidden',
@@ -394,6 +512,36 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  scanButton: {
+    backgroundColor: colors.accent,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: 8,
+    gap: spacing.xs,
+  },
+  scanButtonDisabled: {
+    opacity: 0.7,
+  },
+  scanButtonText: {
+    color: colors.background,
+    fontSize: typography.bodySmall.fontSize,
+    fontWeight: '600',
+  },
+  confidenceBadge: {
+    backgroundColor: colors.success + '20',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  confidenceText: {
+    color: colors.success,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '500',
   },
   dividerRow: {
     flexDirection: 'row',

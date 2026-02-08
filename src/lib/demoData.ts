@@ -111,6 +111,70 @@ export const demoCertificates = [
   },
 ];
 
+// Demo courses
+export const demoCourses = [
+  {
+    id: 'course-1',
+    name: 'Opioid Prescribing: Safe Practices',
+    provider: 'AMA Ed Hub',
+    hours: 3,
+    category: 'controlled_substances',
+    price: 0,
+    url: 'https://edhub.ama-assn.org/',
+    description: 'Learn safe opioid prescribing practices and risk mitigation strategies.',
+  },
+  {
+    id: 'course-2',
+    name: 'Medical Ethics in the Digital Age',
+    provider: 'AAFP',
+    hours: 2,
+    category: 'ethics',
+    price: 0,
+    url: 'https://www.aafp.org/cme/',
+    description: 'Explore ethical considerations in telemedicine and digital health.',
+  },
+  {
+    id: 'course-3',
+    name: 'Risk Management for Physicians',
+    provider: 'MedPro',
+    hours: 4,
+    category: 'risk_management',
+    price: 49,
+    url: 'https://www.medpro.com/',
+    description: 'Strategies to reduce malpractice risk and improve patient safety.',
+  },
+  {
+    id: 'course-4',
+    name: 'Pain Management Update 2026',
+    provider: 'Stanford CME',
+    hours: 5,
+    category: 'pain_management',
+    price: 99,
+    url: 'https://med.stanford.edu/cme/',
+    description: 'Latest evidence-based approaches to chronic pain management.',
+  },
+  {
+    id: 'course-5',
+    name: 'General Internal Medicine Review',
+    provider: 'UpToDate',
+    hours: 10,
+    category: 'general',
+    price: 0,
+    url: 'https://www.uptodate.com/',
+    description: 'Comprehensive review of internal medicine topics with CME credits.',
+  },
+  {
+    id: 'course-6',
+    name: 'Controlled Substances: DEA Requirements',
+    provider: 'DEA Education',
+    hours: 2,
+    category: 'controlled_substances',
+    price: 0,
+    url: 'https://www.deadiversion.usdoj.gov/',
+    description: 'Understanding DEA requirements for controlled substance prescribing.',
+  },
+];
+
 // Helper function to format licenses for dashboard
 export function getDemoLicensesFormatted() {
   return demoLicenses.map(license => ({
