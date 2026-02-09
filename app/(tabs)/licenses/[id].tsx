@@ -240,8 +240,10 @@ export default function LicenseDetailScreen() {
           </View>
         </Card>
 
-        {/* Requirements Section */}
-        <Text style={styles.sectionTitle}>Category Requirements</Text>
+        {/* Requirements Section — "16/40 format" per Dr. Chandrasekhar */}
+        <Text style={styles.sectionTitle}>
+          Category Requirements · {license.expiry_date ? new Date(license.expiry_date).getFullYear() : ''} Renewal
+        </Text>
 
         {license.requirements.map((req) => {
           const progress = req.credits_required > 0
@@ -256,7 +258,8 @@ export default function LicenseDetailScreen() {
                 <CategoryTag category={req.category} />
                 {isComplete ? (
                   <View style={styles.completeBadge}>
-                    <Text style={styles.completeText}>✓ Complete</Text>
+                    <Ionicons name="checkmark" size={12} color={colors.success} style={{ marginRight: 2 }} />
+                    <Text style={styles.completeText}>Complete</Text>
                   </View>
                 ) : (
                   <Text style={styles.reqNeeded}>
@@ -274,7 +277,7 @@ export default function LicenseDetailScreen() {
 
               <View style={styles.reqFooter}>
                 <Text style={styles.reqCredits}>
-                  {req.credits_earned}/{req.credits_required} credits
+                  {req.credits_earned}/{req.credits_required} completed for {license.expiry_date ? new Date(license.expiry_date).getFullYear() : 'this'} renewal
                 </Text>
                 {req.due_date && (
                   <Text style={styles.reqDue}>

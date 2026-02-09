@@ -10,13 +10,28 @@ export const demoProfile = {
   email: 'demo@cmeagent.com',
 };
 
-// Demo licenses with requirements
+// Demo licenses with requirements — sorted by expiry (soonest first)
+// Dates are relative to current: Feb 2026
 export const demoLicenses = [
+  {
+    id: 'license-tx-1',
+    state: 'Texas',
+    license_number: 'TX-789012',
+    expiry_date: '2026-04-30',      // ~2 months out → RED (within 3 months)
+    total_credits_required: 48,
+    creditsEarned: 32,
+    requirements: [
+      { id: 'req-4', category: 'general', required: 24, earned: 20 },
+      { id: 'req-5', category: 'ethics', required: 4, earned: 4 },
+      { id: 'req-6', category: 'pain_management', required: 10, earned: 4 },
+      { id: 'req-7', category: 'controlled_substances', required: 10, earned: 4 },
+    ],
+  },
   {
     id: 'license-ca-1',
     state: 'California',
-    license_number: 'MD-123456',
-    expiry_date: '2026-12-15',
+    license_number: 'A-123456',
+    expiry_date: '2026-12-31',      // ~10 months out → YELLOW (due this year)
     total_credits_required: 50,
     creditsEarned: 35,
     requirements: [
@@ -26,15 +41,14 @@ export const demoLicenses = [
     ],
   },
   {
-    id: 'license-tx-1',
-    state: 'Texas',
-    license_number: 'TX-789012',
-    expiry_date: '2025-08-31',
-    total_credits_required: 24,
-    creditsEarned: 24,
+    id: 'license-ny-1',
+    state: 'New York',
+    license_number: 'NY-345678',
+    expiry_date: '2027-09-30',      // Next year → Normal (no highlight)
+    total_credits_required: 40,
+    creditsEarned: 40,
     requirements: [
-      { id: 'req-4', category: 'general', required: 20, earned: 20 },
-      { id: 'req-5', category: 'ethics', required: 4, earned: 4 },
+      { id: 'req-8', category: 'general', required: 40, earned: 40 },
     ],
   },
 ];

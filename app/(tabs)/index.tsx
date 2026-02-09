@@ -36,6 +36,35 @@ interface LicenseWithProgress {
   }[];
 }
 
+// Urgency classification for license expiry
+type UrgencyLevel = 'critical' | 'thisYear' | 'safe';
+
+function getUrgencyLevel(expiryDate: string | null): UrgencyLevel {
+  if (!expiryDate) return 'safe';
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  const daysUntil = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysUntil <= 90) return 'critical';       // Within 3 months → RED
+  if (expiry.getFullYear() === now.getFullYear()) return 'thisYear'; // This year → YELLOW
+  return 'safe';
+}
+
+function getDaysUntilExpiry(expiryDate: string | null): number | null {
+  if (!expiryDate) return null;
+  return Math.ceil((new Date(expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+// Sort licenses by expiry date (soonest first)
+function sortByExpiry(licenses: LicenseWithProgress[]): LicenseWithProgress[] {
+  return [...licenses].sort((a, b) => {
+    if (!a.expiryDate && !b.expiryDate) return 0;
+    if (!a.expiryDate) return 1;
+    if (!b.expiryDate) return -1;
+    return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+  });
+}
+
 // Subtle bubble/bokeh overlay for luxury feel
 function BubbleOverlay({ variant = 'gold' }: { variant?: 'gold' | 'navy' }) {
   const bubbles = [
@@ -140,6 +169,29 @@ function CategoryPill({
       ]}>
         {label} {earned}/{required}
       </Text>
+    </View>
+  );
+}
+
+// Urgency badge for license cards
+function UrgencyBadge({ urgency, daysLeft }: { urgency: UrgencyLevel; daysLeft: number | null }) {
+  if (urgency === 'safe' || daysLeft === null) return null;
+
+  if (urgency === 'critical') {
+    return (
+      <View style={styles.urgencyBadgeCritical}>
+        <Ionicons name="alert-circle" size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+        <Text style={styles.urgencyBadgeCriticalText}>
+          {daysLeft <= 0 ? 'EXPIRED' : `${daysLeft}d left`}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.urgencyBadgeYellow}>
+      <Ionicons name="time-outline" size={12} color={colors.navy[900]} style={{ marginRight: 3 }} />
+      <Text style={styles.urgencyBadgeYellowText}>Due this year</Text>
     </View>
   );
 }
@@ -274,7 +326,7 @@ export default function DashboardScreen() {
 
   // Find incomplete requirement for recommended action
   function getIncompleteRequirement() {
-    for (const license of licenses) {
+    for (const license of sortedLicenses) {
       for (const req of license.requirements) {
         if (req.earned < req.required) {
           const needed = req.required - req.earned;
@@ -297,16 +349,12 @@ export default function DashboardScreen() {
     );
   }
 
-  // Separate primary (incomplete) and completed licenses
-  const primaryLicense = licenses.find(l => {
-    const total = l.totalRequired ?? 0;
-    return l.creditsEarned < total;
-  }) || licenses[0];
+  // Sort all licenses by expiry date (soonest first) — Dr. Chandrasekhar's request
+  const sortedLicenses = sortByExpiry(licenses);
 
-  const completedLicenses = licenses.filter(l => {
-    const total = l.totalRequired ?? 0;
-    return l.creditsEarned >= total && l.id !== primaryLicense?.id;
-  });
+  // The hero card is always the soonest-expiring license
+  const heroLicense = sortedLicenses[0];
+  const remainingLicenses = sortedLicenses.slice(1);
 
   const incompleteReq = getIncompleteRequirement();
 
@@ -326,94 +374,155 @@ export default function DashboardScreen() {
           <Text style={styles.specialty}>{displayProfile?.degree_type || 'MD'} · Internal Medicine</Text>
         </Animated.View>
 
-        {/* Primary License - Hero Card with Gold Gradient */}
-        {primaryLicense && (
-          <Animated.View style={cardAnim}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => router.push(`/(tabs)/licenses/${primaryLicense.id}`)}
-            >
-              <LinearGradient
-                colors={['#C4A574', '#A68B5B', '#8B7349', '#705C3A']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.heroCard}
+        {/* Hero License Card — soonest expiring, with gold gradient */}
+        {heroLicense && (() => {
+          const heroUrgency = getUrgencyLevel(heroLicense.expiryDate);
+          const heroDaysLeft = getDaysUntilExpiry(heroLicense.expiryDate);
+
+          return (
+            <Animated.View style={cardAnim}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => router.push(`/(tabs)/licenses/${heroLicense.id}`)}
               >
-                <BubbleOverlay variant="gold" />
-                <View style={styles.heroContent}>
-                  <View style={styles.heroLeft}>
-                    <Text style={styles.heroState}>{primaryLicense.state.toUpperCase()}</Text>
-                    <View style={styles.heroPercentage}>
-                      <Text style={styles.heroPercentNum}>
-                        {Math.round((primaryLicense.creditsEarned / (primaryLicense.totalRequired || 1)) * 100)}
-                      </Text>
-                      <Text style={styles.heroPercentSign}>%</Text>
-                    </View>
-                    <Text style={styles.heroCredits}>
-                      {primaryLicense.creditsEarned} of {primaryLicense.totalRequired} credits · {(primaryLicense.totalRequired || 0) - primaryLicense.creditsEarned} to go
-                    </Text>
+                <View style={[
+                  styles.heroCardWrapper,
+                  heroUrgency === 'critical' && styles.heroCardCritical,
+                  heroUrgency === 'thisYear' && styles.heroCardThisYear,
+                ]}>
+                  <LinearGradient
+                    colors={['#C4A574', '#A68B5B', '#8B7349', '#705C3A']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.heroCard}
+                  >
+                    <BubbleOverlay variant="gold" />
+                    <View style={styles.heroContent}>
+                      <View style={styles.heroLeft}>
+                        <View style={styles.heroStateRow}>
+                          <Text style={styles.heroState}>{heroLicense.state.toUpperCase()}</Text>
+                          <UrgencyBadge urgency={heroUrgency} daysLeft={heroDaysLeft} />
+                        </View>
+                        <View style={styles.heroPercentage}>
+                          <Text style={styles.heroPercentNum}>
+                            {Math.round((heroLicense.creditsEarned / (heroLicense.totalRequired || 1)) * 100)}
+                          </Text>
+                          <Text style={styles.heroPercentSign}>%</Text>
+                        </View>
+                        <Text style={styles.heroCredits}>
+                          {heroLicense.creditsEarned} of {heroLicense.totalRequired} credits · {(heroLicense.totalRequired || 0) - heroLicense.creditsEarned} to go
+                        </Text>
 
-                    {/* Category Pills */}
-                    <View style={styles.heroPills}>
-                      {primaryLicense.requirements.map((req) => {
-                        const catInfo = cmeCategories[req.category];
-                        return (
-                          <CategoryPill
-                            key={req.id}
-                            label={catInfo?.label || req.category}
-                            earned={req.earned}
-                            required={req.required}
-                            isComplete={req.earned >= req.required}
+                        {/* Category Pills */}
+                        <View style={styles.heroPills}>
+                          {heroLicense.requirements.map((req) => {
+                            const catInfo = cmeCategories[req.category];
+                            return (
+                              <CategoryPill
+                                key={req.id}
+                                label={catInfo?.label || req.category}
+                                earned={req.earned}
+                                required={req.required}
+                                isComplete={req.earned >= req.required}
+                              />
+                            );
+                          })}
+                        </View>
+
+                        <View style={styles.heroExpiry}>
+                          <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.7)" />
+                          <Text style={styles.heroExpiryText}>Expires {formatExpiry(heroLicense.expiryDate)}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.heroRight}>
+                        <View style={styles.circularProgressContainer}>
+                          <CircularProgress
+                            progress={(heroLicense.creditsEarned / (heroLicense.totalRequired || 1)) * 100}
                           />
-                        );
-                      })}
+                        </View>
+                      </View>
                     </View>
+                  </LinearGradient>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })()}
 
-                    <View style={styles.heroExpiry}>
-                      <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.7)" />
-                      <Text style={styles.heroExpiryText}>Expires {formatExpiry(primaryLicense.expiryDate)}</Text>
-                    </View>
+        {/* Remaining License Cards — sorted by expiry, with urgency styling */}
+        {remainingLicenses.map((license) => {
+          const urgency = getUrgencyLevel(license.expiryDate);
+          const daysLeft = getDaysUntilExpiry(license.expiryDate);
+          const total = license.totalRequired ?? 0;
+          const isComplete = license.creditsEarned >= total;
+          const progress = total > 0 ? Math.round((license.creditsEarned / total) * 100) : 0;
+
+          return (
+            <TouchableOpacity
+              key={license.id}
+              style={[
+                styles.licenseRow,
+                urgency === 'critical' && styles.licenseRowCritical,
+                urgency === 'thisYear' && styles.licenseRowThisYear,
+              ]}
+              onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
+              activeOpacity={0.7}
+            >
+              <BubbleOverlay variant="navy" />
+              <View style={styles.licenseRowTop}>
+                <View style={styles.licenseRowLeft}>
+                  <View style={[
+                    styles.licenseIcon,
+                    isComplete && styles.licenseIconComplete,
+                    urgency === 'critical' && styles.licenseIconCritical,
+                    urgency === 'thisYear' && styles.licenseIconThisYear,
+                  ]}>
+                    {isComplete ? (
+                      <Ionicons name="checkmark" size={20} color={colors.success} />
+                    ) : urgency === 'critical' ? (
+                      <Ionicons name="alert-circle" size={20} color={colors.risk} />
+                    ) : (
+                      <Ionicons name="document-text" size={20} color={colors.accent} />
+                    )}
                   </View>
-
-                  <View style={styles.heroRight}>
-                    <View style={styles.circularProgressContainer}>
-                      <CircularProgress
-                        progress={(primaryLicense.creditsEarned / (primaryLicense.totalRequired || 1)) * 100}
-                      />
-                    </View>
+                  <View>
+                    <Text style={styles.licenseRowState}>{license.state}</Text>
+                    <Text style={styles.licenseRowCredits}>
+                      {isComplete
+                        ? `Complete · ${license.creditsEarned}/${total}`
+                        : `${license.creditsEarned}/${total} credits · ${total - license.creditsEarned} to go`
+                      }
+                    </Text>
                   </View>
                 </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+                <View style={styles.licenseRowRight}>
+                  {urgency !== 'safe' ? (
+                    <UrgencyBadge urgency={urgency} daysLeft={daysLeft} />
+                  ) : (
+                    <Text style={styles.licenseRowDate}>{formatShortDate(license.expiryDate)}</Text>
+                  )}
+                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                </View>
+              </View>
 
-        {/* Completed Licenses - Compact Row */}
-        {completedLicenses.map((license) => (
-          <TouchableOpacity
-            key={license.id}
-            style={styles.completedRow}
-            onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
-            activeOpacity={0.7}
-          >
-            <BubbleOverlay variant="navy" />
-            <View style={styles.completedLeft}>
-              <View style={styles.completedCheck}>
-                <Ionicons name="checkmark" size={20} color={colors.success} />
-              </View>
-              <View>
-                <Text style={styles.completedState}>{license.state}</Text>
-                <Text style={styles.completedStatus}>
-                  Complete · {license.creditsEarned}/{license.totalRequired}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.completedRight}>
-              <Text style={styles.completedDate}>{formatShortDate(license.expiryDate)}</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-            </View>
-          </TouchableOpacity>
-        ))}
+              {/* Mini progress bar */}
+              {!isComplete && (
+                <View style={styles.miniProgressContainer}>
+                  <View style={styles.miniProgressBg}>
+                    <View style={[
+                      styles.miniProgressFill,
+                      { width: `${Math.min(progress, 100)}%` },
+                      urgency === 'critical' && styles.miniProgressCritical,
+                      urgency === 'thisYear' && styles.miniProgressYellow,
+                    ]} />
+                  </View>
+                  <Text style={styles.miniProgressText}>{progress}%</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
 
         {/* Quick Actions */}
         <Animated.View style={[styles.quickActions, actionsAnim]}>
@@ -517,10 +626,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
   },
+
+  // Hero card — wrapper adds urgency border
+  heroCardWrapper: {
+    borderRadius: 22,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+  },
+  heroCardCritical: {
+    borderWidth: 2,
+    borderColor: colors.risk,
+    shadowColor: colors.risk,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  heroCardThisYear: {
+    borderWidth: 2,
+    borderColor: '#D4A636',
+    shadowColor: '#D4A636',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   heroCard: {
     borderRadius: 20,
     padding: spacing.lg,
-    marginBottom: spacing.md,
     overflow: 'hidden',
   },
   heroContent: {
@@ -537,12 +670,17 @@ const styles = StyleSheet.create({
   circularProgressContainer: {
     marginTop: 0,
   },
+  heroStateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   heroState: {
     fontSize: 12,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
     letterSpacing: 1,
-    marginBottom: 8,
   },
   heroPercentage: {
     flexDirection: 'row',
@@ -608,10 +746,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.7)',
   },
-  completedRow: {
+
+  // Urgency badges
+  urgencyBadgeCritical: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: colors.risk,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+  },
+  urgencyBadgeCriticalText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  urgencyBadgeYellow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D4A636',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+  },
+  urgencyBadgeYellowText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.navy[900],
+  },
+
+  // License rows — remaining licenses
+  licenseRow: {
     backgroundColor: colors.backgroundCard,
     borderRadius: 16,
     padding: spacing.md,
@@ -620,37 +785,104 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
   },
-  completedLeft: {
+  licenseRowCritical: {
+    borderWidth: 2,
+    borderColor: colors.risk,
+    shadowColor: colors.risk,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  licenseRowThisYear: {
+    borderWidth: 2,
+    borderColor: '#D4A636',
+    shadowColor: '#D4A636',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  licenseRowTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  licenseRowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    flex: 1,
   },
-  completedCheck: {
+  licenseIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(93, 138, 102, 0.15)',
+    backgroundColor: 'rgba(166, 139, 91, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  completedState: {
+  licenseIconComplete: {
+    backgroundColor: 'rgba(93, 138, 102, 0.15)',
+  },
+  licenseIconCritical: {
+    backgroundColor: 'rgba(184, 92, 92, 0.15)',
+  },
+  licenseIconThisYear: {
+    backgroundColor: 'rgba(212, 166, 54, 0.15)',
+  },
+  licenseRowState: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
   },
-  completedStatus: {
+  licenseRowCredits: {
     fontSize: 13,
-    color: colors.success,
+    color: colors.textSecondary,
   },
-  completedRight: {
+  licenseRowRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  completedDate: {
+  licenseRowDate: {
     fontSize: 13,
     color: colors.textMuted,
   },
+
+  // Mini progress bar for license rows
+  miniProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  miniProgressBg: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    overflow: 'hidden',
+  },
+  miniProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: colors.accent,
+  },
+  miniProgressCritical: {
+    backgroundColor: colors.risk,
+  },
+  miniProgressYellow: {
+    backgroundColor: '#D4A636',
+  },
+  miniProgressText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '500',
+    width: 32,
+    textAlign: 'right',
+  },
+
   quickActions: {
     marginTop: spacing.md,
     marginBottom: spacing.lg,

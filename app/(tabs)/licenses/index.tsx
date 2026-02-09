@@ -40,6 +40,34 @@ interface DEARegistration {
   linked_states: string[] | null;
 }
 
+// Urgency classification — matches dashboard logic
+type UrgencyLevel = 'critical' | 'thisYear' | 'safe';
+
+function getUrgencyLevel(expiryDate: string | null): UrgencyLevel {
+  if (!expiryDate) return 'safe';
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  const daysUntil = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysUntil <= 90) return 'critical';
+  if (expiry.getFullYear() === now.getFullYear()) return 'thisYear';
+  return 'safe';
+}
+
+function getDaysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+// Sort by expiry date (soonest first)
+function sortByExpiry(licenses: License[]): License[] {
+  return [...licenses].sort((a, b) => {
+    if (!a.expiry_date && !b.expiry_date) return 0;
+    if (!a.expiry_date) return 1;
+    if (!b.expiry_date) return -1;
+    return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+  });
+}
+
 export default function LicensesScreen() {
   const { user } = useAuth();
   const [licenses, setLicenses] = useState<License[]>([]);
@@ -106,8 +134,7 @@ export default function LicensesScreen() {
             credits_required
           )
         `)
-        .eq('user_id', user!.id)
-        .order('state');
+        .eq('user_id', user!.id);
 
       if (licensesError) throw licensesError;
 
@@ -171,14 +198,6 @@ export default function LicensesScreen() {
     });
   }
 
-  function getDaysUntil(dateStr: string | null) {
-    if (!dateStr) return null;
-    const diff = Math.ceil(
-      (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-    return diff;
-  }
-
   async function deleteLicense(id: string) {
     Alert.alert(
       'Delete License',
@@ -207,6 +226,9 @@ export default function LicensesScreen() {
       </SafeAreaView>
     );
   }
+
+  // Sort by expiry date (soonest first) — Dr. Chandrasekhar's request
+  const sortedLicenses = sortByExpiry(licenses);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -246,10 +268,10 @@ export default function LicensesScreen() {
           </Card>
         )}
 
-        {/* State Licenses */}
+        {/* State Licenses — sorted by expiry, with urgency highlighting */}
         <Text style={styles.sectionTitle}>State Medical Licenses</Text>
 
-        {licenses.length === 0 && !loading ? (
+        {sortedLicenses.length === 0 && !loading ? (
           <Card style={styles.emptyCard}>
             <Ionicons name="document-text-outline" size={40} color={colors.textMuted} style={styles.emptyIconStyle} />
             <Text style={styles.emptyText}>No licenses added yet</Text>
@@ -260,13 +282,13 @@ export default function LicensesScreen() {
             />
           </Card>
         ) : (
-          licenses.map((license) => {
+          sortedLicenses.map((license) => {
             const totalRequired = license.total_credits_required ?? 0;
             const progress = totalRequired > 0
               ? (license.credits_earned / totalRequired) * 100
               : 0;
+            const urgency = getUrgencyLevel(license.expiry_date);
             const daysUntil = getDaysUntil(license.expiry_date);
-            const isUrgent = daysUntil !== null && daysUntil <= 90;
 
             return (
               <TouchableOpacity
@@ -275,11 +297,23 @@ export default function LicensesScreen() {
                 onLongPress={() => deleteLicense(license.id)}
                 activeOpacity={0.7}
               >
-                <Card style={styles.licenseCard}>
+                <Card style={[
+                  styles.licenseCard,
+                  urgency === 'critical' && styles.licenseCardCritical,
+                  urgency === 'thisYear' && styles.licenseCardThisYear,
+                ]}>
                   <View style={styles.licenseHeader}>
                     <View style={styles.stateContainer}>
-                      <View style={styles.stateIconContainer}>
-                        <Ionicons name="location" size={20} color={colors.accent} />
+                      <View style={[
+                        styles.stateIconContainer,
+                        urgency === 'critical' && styles.stateIconCritical,
+                        urgency === 'thisYear' && styles.stateIconThisYear,
+                      ]}>
+                        {urgency === 'critical' ? (
+                          <Ionicons name="alert-circle" size={20} color={colors.risk} />
+                        ) : (
+                          <Ionicons name="location" size={20} color={colors.accent} />
+                        )}
                       </View>
                       <View>
                         <Text style={styles.stateName}>{license.state}</Text>
@@ -289,9 +323,17 @@ export default function LicensesScreen() {
                       </View>
                     </View>
 
-                    {isUrgent ? (
-                      <View style={styles.urgentBadge}>
-                        <Text style={styles.urgentText}>{daysUntil} days</Text>
+                    {urgency === 'critical' ? (
+                      <View style={styles.criticalBadge}>
+                        <Ionicons name="alert-circle" size={12} color="#FFFFFF" style={{ marginRight: 2 }} />
+                        <Text style={styles.criticalBadgeText}>
+                          {daysUntil !== null && daysUntil <= 0 ? 'EXPIRED' : `${daysUntil}d left`}
+                        </Text>
+                      </View>
+                    ) : urgency === 'thisYear' ? (
+                      <View style={styles.thisYearBadge}>
+                        <Ionicons name="time-outline" size={12} color={colors.navy[900]} style={{ marginRight: 2 }} />
+                        <Text style={styles.thisYearBadgeText}>Due this year</Text>
                       </View>
                     ) : (
                       <Text style={styles.expiryText}>
@@ -310,10 +352,15 @@ export default function LicensesScreen() {
                     <Text style={styles.creditsText}>
                       {license.credits_earned}/{totalRequired} credits
                     </Text>
-                    {progress >= 100 && (
+                    {progress >= 100 ? (
                       <View style={styles.completeBadge}>
-                        <Text style={styles.completeText}>✓ Complete</Text>
+                        <Ionicons name="checkmark" size={12} color={colors.success} style={{ marginRight: 2 }} />
+                        <Text style={styles.completeText}>Complete</Text>
                       </View>
+                    ) : (
+                      <Text style={styles.remainingText}>
+                        {totalRequired - license.credits_earned} to go
+                      </Text>
                     )}
                   </View>
 
@@ -327,6 +374,16 @@ export default function LicensesScreen() {
                       </Text>
                     )}
                   </View>
+
+                  {/* Expiry date footer for urgent licenses */}
+                  {urgency !== 'safe' && (
+                    <View style={styles.expiryFooter}>
+                      <Ionicons name="calendar-outline" size={12} color={colors.textMuted} />
+                      <Text style={styles.expiryFooterText}>
+                        Expires {formatDate(license.expiry_date)}
+                      </Text>
+                    </View>
+                  )}
                 </Card>
               </TouchableOpacity>
             );
@@ -483,10 +540,31 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.md,
   },
+
+  // License cards with urgency styling
   licenseCard: {
     marginBottom: spacing.md,
     padding: spacing.md,
   },
+  licenseCardCritical: {
+    borderWidth: 2,
+    borderColor: colors.risk,
+    shadowColor: colors.risk,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  licenseCardThisYear: {
+    borderWidth: 2,
+    borderColor: '#D4A636',
+    shadowColor: '#D4A636',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
   licenseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -506,6 +584,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.md,
   },
+  stateIconCritical: {
+    backgroundColor: 'rgba(184, 92, 92, 0.15)',
+  },
+  stateIconThisYear: {
+    backgroundColor: 'rgba(212, 166, 54, 0.15)',
+  },
   stateName: {
     fontSize: typography.h2.fontSize,
     fontWeight: typography.h2.fontWeight,
@@ -515,17 +599,35 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall.fontSize,
     color: colors.textSecondary,
   },
-  urgentBadge: {
-    backgroundColor: colors.warningLight + '30',
+
+  // Urgency badges
+  criticalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.risk,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
-  urgentText: {
-    color: colors.warning,
+  criticalBadgeText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  thisYearBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D4A636',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  thisYearBadgeText: {
+    color: colors.navy[900],
     fontWeight: '600',
     fontSize: 12,
   },
+
   expiryText: {
     fontSize: typography.caption.fontSize,
     color: colors.textSecondary,
@@ -544,6 +646,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   completeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.successLight + '30',
     paddingVertical: 2,
     paddingHorizontal: 8,
@@ -554,6 +658,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 11,
   },
+  remainingText: {
+    fontSize: typography.caption.fontSize,
+    color: colors.textMuted,
+  },
   categoriesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -563,6 +671,19 @@ const styles = StyleSheet.create({
   moreCategories: {
     fontSize: 11,
     color: colors.textSecondary,
+  },
+  expiryFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  expiryFooterText: {
+    fontSize: typography.caption.fontSize,
+    color: colors.textMuted,
   },
   deaCard: {
     padding: spacing.md,
