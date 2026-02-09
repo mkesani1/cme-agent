@@ -18,7 +18,7 @@ import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../src/lib/theme';
-import { DEMO_MODE, demoProfile, getDemoLicensesFormatted } from '../../src/lib/demoData';
+import { DEMO_MODE, demoProfile, getStateName } from '../../src/lib/demoData';
 import { useFadeInUp } from '../../src/lib/animations';
 
 interface LicenseWithProgress {
@@ -209,32 +209,12 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     loadDashboard();
-  }, []);
+  }, [user]);
 
   async function loadDashboard() {
-    if (!user && DEMO_MODE) {
-      const demoLicenses = getDemoLicensesFormatted();
-      const withProgress: LicenseWithProgress[] = demoLicenses.map(l => ({
-        id: l.id,
-        state: l.state,
-        licenseNumber: l.license_number,
-        expiryDate: l.expiry_date,
-        totalRequired: l.total_credits_required,
-        creditsEarned: l.creditsEarned,
-        requirements: l.requirements.map(r => ({
-          id: r.id,
-          category: r.category as CMECategory,
-          required: r.required,
-          earned: r.earned,
-        })),
-      }));
-      setLicenses(withProgress);
-      setLoading(false);
-      return;
-    }
-
     if (!user) {
-      setLoading(false);
+      // Still waiting for auth (demo auto-login in progress)
+      if (!DEMO_MODE) setLoading(false);
       return;
     }
 
@@ -274,7 +254,7 @@ export default function DashboardScreen() {
       if (licensesData) {
         const withProgress: LicenseWithProgress[] = licensesData.map(l => ({
           id: l.id,
-          state: l.state,
+          state: getStateName(l.state),
           licenseNumber: l.license_number || '',
           expiryDate: l.expiry_date,
           totalRequired: l.total_credits_required,

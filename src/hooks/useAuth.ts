@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types/database';
+import { DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD } from '../lib/demoData';
 
 interface AuthContextType {
   session: Session | null;
@@ -32,11 +33,22 @@ export function useAuthProvider() {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
+        setSession(session);
+        setUser(session.user);
         fetchProfile(session.user.id);
+      } else if (DEMO_MODE) {
+        // Auto-login with demo credentials
+        const { error } = await supabase.auth.signInWithPassword({
+          email: DEMO_EMAIL,
+          password: DEMO_PASSWORD,
+        });
+        if (error) {
+          console.warn('Demo auto-login failed:', error.message);
+          setLoading(false);
+        }
+        // onAuthStateChange will handle setting user/profile
       } else {
         setLoading(false);
       }

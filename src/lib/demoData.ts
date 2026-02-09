@@ -1,14 +1,41 @@
 // Demo mode flag - set to true to enable demo mode with mock data
 export const DEMO_MODE = true;
 
-// Demo user profile
+// Demo credentials for auto-login (backed by real Supabase data)
+export const DEMO_EMAIL = 'test.user.cme@example.com';
+export const DEMO_PASSWORD = 'demo123456';
+
+// Demo user profile (fallback while auth loads)
 export const demoProfile = {
-  id: 'demo-user-123',
-  full_name: 'Chandrasekhar',
+  id: '4dfed7c3-2512-4e35-9c18-22f523c1e69b',
+  full_name: 'Geetha Chandrasekhar',
   degree_type: 'MD',
   specialty: 'Internal Medicine',
-  email: 'demo@cmeagent.com',
+  email: DEMO_EMAIL,
 };
+
+// State code → full name mapping
+export const stateNames: Record<string, string> = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas',
+  CA: 'California', CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware',
+  FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho',
+  IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas',
+  KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+  MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+  MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada',
+  NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York',
+  NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma',
+  OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
+  SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah',
+  VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia',
+  WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia',
+};
+
+export function getStateName(code: string | null): string {
+  if (!code) return 'Unknown';
+  const trimmed = code.trim();
+  return stateNames[trimmed] || trimmed;
+}
 
 // Demo licenses with requirements — sorted by expiry (soonest first)
 // Dates are relative to current: Feb 2026

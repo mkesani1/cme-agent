@@ -16,7 +16,7 @@ import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, ProgressBar, CategoryTag } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../../src/lib/theme';
-import { DEMO_MODE, demoLicenses } from '../../../src/lib/demoData';
+import { DEMO_MODE, getStateName } from '../../../src/lib/demoData';
 
 interface License {
   id: string;
@@ -78,39 +78,11 @@ export default function LicensesScreen() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   async function loadData() {
-    // Demo mode: Use mock data when no authenticated user
-    if (!user && DEMO_MODE) {
-      const demoLicensesFormatted = demoLicenses.map(l => ({
-        id: l.id,
-        state: l.state,
-        license_number: l.license_number,
-        expiry_date: l.expiry_date,
-        total_credits_required: l.total_credits_required,
-        degree_type: 'MD' as const,
-        requirements: l.requirements.map(r => ({
-          id: r.id,
-          category: r.category as CMECategory,
-          credits_required: r.required,
-        })),
-        credits_earned: l.creditsEarned,
-      }));
-      setLicenses(demoLicensesFormatted);
-      setDea({
-        id: 'demo-dea-1',
-        dea_number: 'AB1234567',
-        expiry_date: '2027-06-30',
-        linked_states: ['California', 'Texas'],
-      });
-      setLoading(false);
-      return;
-    }
-
-    // No user and not in demo mode
     if (!user) {
-      setLoading(false);
+      if (!DEMO_MODE) setLoading(false);
       return;
     }
 
@@ -162,6 +134,7 @@ export default function LicensesScreen() {
       if (licensesData) {
         setLicenses(licensesData.map(l => ({
           ...l,
+          state: getStateName(l.state),
           requirements: (l.license_requirements || []).map(r => ({
             id: r.id,
             category: r.category as CMECategory,

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../src/lib/supabase';
 import { Card, ProgressBar, CategoryTag, Button } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../../src/lib/theme';
+import { getStateName } from '../../../src/lib/demoData';
 
 interface Requirement {
   id: string;
@@ -207,7 +208,7 @@ export default function LicenseDetailScreen() {
         <Card style={styles.headerCard}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.stateName}>{license.state} License</Text>
+              <Text style={styles.stateName}>{getStateName(license.state)} License</Text>
               <Text style={styles.licenseNumber}>
                 License #{license.license_number || 'N/A'}
               </Text>
