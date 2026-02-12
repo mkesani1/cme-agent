@@ -3,15 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { Database, TablesInsert, TablesUpdate } from './database.types';
 
-// Use environment variables for Supabase credentials
-// In development: create .env.local with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
-// In production: set these in Vercel environment variables
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found in environment variables');
-}
+// Supabase credentials
+// The anon key is a PUBLIC key by design - security comes from RLS policies, not hiding this key
+// Environment variables can override these defaults (set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY)
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://vsprqtkpwplnlrjbrldb.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzcHJxdGtwd3BsbmxyamJybGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNTQ0NDgsImV4cCI6MjA4NTczMDQ0OH0.ME78QGkPk_VD2E8p1xyIoFHjd3cKvYTlkVe7RHJQXDI';
 
 // Enable detectSessionInUrl for web to handle password reset links
 const isWeb = Platform.OS === 'web';
