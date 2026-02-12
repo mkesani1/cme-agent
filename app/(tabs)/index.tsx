@@ -216,24 +216,30 @@ export default function DashboardScreen() {
     console.log('[Dashboard] loadDashboard called, user:', user, 'DEMO_MODE:', DEMO_MODE);
     if (!user) {
       if (DEMO_MODE) {
-        // Use demo data when no user is authenticated
-        console.log('[Dashboard] Using demo data, setting licenses and loading=false');
-        const demoFormatted: LicenseWithProgress[] = demoLicenses.map(l => ({
-          id: l.id,
-          state: l.state,
-          licenseNumber: l.license_number,
-          expiryDate: l.expiry_date,
-          totalRequired: l.total_credits_required,
-          creditsEarned: l.creditsEarned,
-          requirements: l.requirements.map(r => ({
-            id: r.id,
-            category: r.category as CMECategory,
-            required: r.required,
-            earned: r.earned,
-          })),
-        }));
-        setLicenses(demoFormatted);
+        try {
+          // Use demo data when no user is authenticated
+          console.log('[Dashboard] Using demo data, demoLicenses:', demoLicenses);
+          const demoFormatted: LicenseWithProgress[] = demoLicenses.map(l => ({
+            id: l.id,
+            state: l.state,
+            licenseNumber: l.license_number,
+            expiryDate: l.expiry_date,
+            totalRequired: l.total_credits_required,
+            creditsEarned: l.creditsEarned,
+            requirements: l.requirements.map(r => ({
+              id: r.id,
+              category: r.category as CMECategory,
+              required: r.required,
+              earned: r.earned,
+            })),
+          }));
+          console.log('[Dashboard] Setting licenses:', demoFormatted.length, 'items');
+          setLicenses(demoFormatted);
+        } catch (err) {
+          console.error('[Dashboard] Error setting demo data:', err);
+        }
       }
+      console.log('[Dashboard] Setting loading to false');
       setLoading(false);
       return;
     }
