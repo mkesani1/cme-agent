@@ -5,3 +5,5 @@ export { CategoryTag } from './CategoryTag';
 export { Input } from './Input';
 export { SmartSuggestions } from './SmartSuggestions';
 export type { AISuggestion } from './SmartSuggestions';
+export { GapsSummaryCard } from './GapsSummaryCard';
+export { RecommendationCard } from './RecommendationCard';
