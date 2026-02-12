@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { Database, TablesInsert, TablesUpdate } from './database.types';
 
+// Build ID: 20250212-force-rebuild-v2
 // Supabase credentials
 // The anon key is a PUBLIC key by design - security comes from RLS policies, not hiding this key
 // Environment variables can override these defaults (set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY)
