@@ -16,7 +16,7 @@ import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, CategoryTag } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../../src/lib/theme';
-import { DEMO_MODE } from '../../../src/lib/demoData';
+import { DEMO_MODE, demoCertificates } from '../../../src/lib/demoData';
 
 interface Certificate {
   id: string;
@@ -41,8 +41,21 @@ export default function CertificatesScreen() {
   }, [user]);
 
   async function loadCertificates() {
+    // Demo mode fallback - use demo data when no user authenticated
     if (!user) {
-      if (!DEMO_MODE) setLoading(false);
+      if (DEMO_MODE) {
+        setCertificates(demoCertificates.map(c => ({
+          id: c.id,
+          course_name: c.course_name,
+          provider: c.provider,
+          credit_hours: c.credits,
+          category: c.category as CMECategory,
+          completion_date: c.completion_date,
+          verified: c.status === 'verified',
+          certificate_url: null,
+        })));
+      }
+      setLoading(false);
       return;
     }
 

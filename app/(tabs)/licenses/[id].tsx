@@ -12,9 +12,10 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../src/lib/supabase';
+import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, ProgressBar, CategoryTag, Button } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../../src/lib/theme';
-import { getStateName } from '../../../src/lib/demoData';
+import { getStateName, DEMO_MODE, demoLicenses, demoCertificates } from '../../../src/lib/demoData';
 
 interface Requirement {
   id: string;
@@ -47,6 +48,7 @@ interface Certificate {
 export default function LicenseDetailScreen() {
   const { id: rawId } = useLocalSearchParams();
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  const { user } = useAuth();
   const [license, setLicense] = useState<LicenseDetail | null>(null);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +56,52 @@ export default function LicenseDetailScreen() {
 
   useEffect(() => {
     if (id) loadLicense();
-  }, [id]);
+  }, [id, user]);
 
   async function loadLicense() {
     if (!id) return;
+
+    // Demo mode fallback - use demo data when no user authenticated
+    if (!user && DEMO_MODE) {
+      const demoLicense = demoLicenses.find(l => l.id === id);
+      if (demoLicense) {
+        setLicense({
+          id: demoLicense.id,
+          state: demoLicense.state,
+          license_number: demoLicense.license_number,
+          degree_type: 'MD',
+          expiry_date: demoLicense.expiry_date,
+          total_credits_required: demoLicense.total_credits_required,
+          requirements: demoLicense.requirements.map(r => ({
+            id: r.id,
+            category: r.category as CMECategory,
+            credits_required: r.required,
+            due_date: null,
+            credits_earned: r.earned,
+          })),
+          total_earned: demoLicense.creditsEarned,
+        });
+        // Get related demo certificates
+        setCertificates(demoCertificates.map(c => ({
+          id: c.id,
+          course_name: c.course_name,
+          provider: c.provider,
+          credit_hours: c.credits,
+          category: c.category as CMECategory,
+          completion_date: c.completion_date,
+        })));
+      } else {
+        setError('License not found');
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Real data fetch when user is authenticated
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setError(null);
