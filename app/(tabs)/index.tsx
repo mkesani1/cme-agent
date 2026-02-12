@@ -208,38 +208,29 @@ export default function DashboardScreen() {
   const actionsAnim = useFadeInUp(200);
 
   useEffect(() => {
-    console.log('[Dashboard] useEffect triggered, user:', user);
     loadDashboard();
   }, [user]);
 
   async function loadDashboard() {
-    console.log('[Dashboard] loadDashboard called, user:', user, 'DEMO_MODE:', DEMO_MODE);
     if (!user) {
       if (DEMO_MODE) {
-        try {
-          // Use demo data when no user is authenticated
-          console.log('[Dashboard] Using demo data, demoLicenses:', demoLicenses);
-          const demoFormatted: LicenseWithProgress[] = demoLicenses.map(l => ({
-            id: l.id,
-            state: l.state,
-            licenseNumber: l.license_number,
-            expiryDate: l.expiry_date,
-            totalRequired: l.total_credits_required,
-            creditsEarned: l.creditsEarned,
-            requirements: l.requirements.map(r => ({
-              id: r.id,
-              category: r.category as CMECategory,
-              required: r.required,
-              earned: r.earned,
-            })),
-          }));
-          console.log('[Dashboard] Setting licenses:', demoFormatted.length, 'items');
-          setLicenses(demoFormatted);
-        } catch (err) {
-          console.error('[Dashboard] Error setting demo data:', err);
-        }
+        // Use demo data when no user is authenticated
+        const demoFormatted: LicenseWithProgress[] = demoLicenses.map(l => ({
+          id: l.id,
+          state: l.state,
+          licenseNumber: l.license_number,
+          expiryDate: l.expiry_date,
+          totalRequired: l.total_credits_required,
+          creditsEarned: l.creditsEarned,
+          requirements: l.requirements.map(r => ({
+            id: r.id,
+            category: r.category as CMECategory,
+            required: r.required,
+            earned: r.earned,
+          })),
+        }));
+        setLicenses(demoFormatted);
       }
-      console.log('[Dashboard] Setting loading to false');
       setLoading(false);
       return;
     }
@@ -344,9 +335,7 @@ export default function DashboardScreen() {
     return null;
   }
 
-  console.log('[Dashboard] Render check - loading:', loading, 'licenses.length:', licenses.length);
   if (loading && licenses.length === 0) {
-    console.log('[Dashboard] Showing loading spinner');
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
