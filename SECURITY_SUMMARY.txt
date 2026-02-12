@@ -1,0 +1,48 @@
+CME AGENT - SECURITY AUDIT SUMMARY
+==================================
+
+AUDIT DATE: February 12, 2026
+SEVERITY: HIGH - Immediate remediation required
+
+CRITICAL ISSUES FOUND: 3
+HIGH PRIORITY: 1
+==================
+
+ISSUE #1: HARDCODED SUPABASE ANON KEY [CRITICAL]
+File: src/lib/supabase.ts (lines 6-7)
+Risk: Exposed to git history, compiled bundles, decompiled APK
+Action: Regenerate key, move to environment variables, clean git history
+
+ISSUE #2: NPM DEPENDENCY VULNERABILITIES [CRITICAL]
+- 2 critical vulnerabilities (form-data, axios)
+- 5 high vulnerabilities (axios, qs)
+- 1 moderate vulnerability (tough-cookie)
+Root Cause: surge package v0.24.6 dependency chain
+Action: npm audit fix --force, remove surge if not needed
+
+ISSUE #3: EDGE FUNCTIONS WITHOUT JWT VERIFICATION [CRITICAL]
+Functions at Risk:
+  - subscription-webhook (no JWT - needs signature verification)
+  - update-course-data (no JWT - should require verification)
+Action: Enable JWT on update-course-data, add webhook signature verification
+
+ISSUE #4: DISABLED PASSWORD PROTECTION [HIGH]
+Supabase Auth: Leaked password protection disabled
+Risk: Users can use compromised passwords
+Action: Enable in Supabase Auth settings
+
+GREEN CHECKS:
+✓ RLS enabled on all 17 tables
+✓ No service role key exposure
+✓ No other hardcoded secrets
+✓ .env files properly ignored
+✓ No SQL injection vulnerabilities
+
+IMMEDIATE ACTIONS REQUIRED:
+1. Regenerate Supabase anon key
+2. Update src/lib/supabase.ts to use environment variables
+3. Enable JWT verification on update-course-data Edge Function
+4. Run npm audit fix --force
+5. Implement webhook signature verification
+
+DETAILED REPORT: SECURITY_AUDIT.md

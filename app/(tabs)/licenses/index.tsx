@@ -16,7 +16,7 @@ import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, ProgressBar, CategoryTag } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../../src/lib/theme';
-import { DEMO_MODE, getStateName } from '../../../src/lib/demoData';
+import { DEMO_MODE, getStateName, demoLicenses } from '../../../src/lib/demoData';
 
 interface License {
   id: string;
@@ -82,7 +82,25 @@ export default function LicensesScreen() {
 
   async function loadData() {
     if (!user) {
-      if (!DEMO_MODE) setLoading(false);
+      if (DEMO_MODE) {
+        // Use demo data when no user is authenticated
+        const demoFormatted: License[] = demoLicenses.map(l => ({
+          id: l.id,
+          state: l.state,
+          license_number: l.license_number,
+          expiry_date: l.expiry_date,
+          total_credits_required: l.total_credits_required,
+          degree_type: 'MD',
+          requirements: l.requirements.map(r => ({
+            id: r.id,
+            category: r.category as CMECategory,
+            credits_required: r.required,
+          })),
+          credits_earned: l.creditsEarned,
+        }));
+        setLicenses(demoFormatted);
+      }
+      setLoading(false);
       return;
     }
 

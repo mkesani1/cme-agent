@@ -1,0 +1,199 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   CME AGENT - SECURITY AUDIT FINDINGS                      ║
+║                            February 12, 2026                               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+RISK ASSESSMENT
+═══════════════════════════════════════════════════════════════════════════════
+Overall Risk Level: 🔴 HIGH (Critical issues require immediate remediation)
+Production Ready: ❌ NOT SAFE TO DEPLOY
+
+ISSUES SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+[CRITICAL] #1 - Hardcoded Supabase Anon Key
+  Location: /src/lib/supabase.ts (lines 6-7)
+  Risk: CRITICAL
+  Impact: Credential exposure to anyone with access to code/compiled bundles
+  Visible in:
+    - Git repository (all branches and tags)
+    - Compiled web bundle (/dist/)
+    - Any decompiled APK (Android)
+    - Source code repositories
+  Status: ⚠️  EXPOSED
+  Recommendation: IMMEDIATE
+    1. Regenerate key in Supabase → Settings → API
+    2. Use environment variables (already configured in app.json)
+    3. Update src/lib/supabase.ts to use process.env
+    4. Clean git history with git-filter-repo
+    5. Notify Supabase security team if deployed publicly
+
+[CRITICAL] #2 - NPM Dependency Vulnerabilities
+  Total Vulnerabilities: 8
+    - CRITICAL: 2 (form-data, axios - unsafe random, SSRF)
+    - HIGH: 5 (axios - DoS, credential leak; qs - memory exhaustion)
+    - MODERATE: 1 (tough-cookie - prototype pollution)
+  
+  Vulnerable Package Chain:
+    surge@0.24.6 → request → 
+      ├── axios@1.13.4 (4 vulnerabilities)
+      ├── form-data@2.5.3 (1 critical)
+      ├── qs@6.11.0 (1 high)
+      └── tough-cookie@4.1.2 (1 moderate)
+  
+  Status: ⚠️  UNPATCHED
+  Recommendation: URGENT (before any deployment)
+    1. Run: npm audit fix --force
+    2. If surge is not critical:
+       - Remove surge from dependencies (rarely used in modern stack)
+       - Use Vercel, GitHub Pages, or rsync instead
+    3. Test all functionality after fixes
+    4. Add npm audit to CI/CD pipeline
+
+[CRITICAL] #3 - Edge Functions Without JWT Verification
+  Unprotected Functions:
+    ❌ subscription-webhook (verify_jwt: false)
+    ❌ update-course-data (verify_jwt: false)
+  
+  Protected Functions:
+    ✅ cme-chat (verify_jwt: true)
+    ✅ get-compliance-status (verify_jwt: true)
+    ✅ get-course-recommendations (verify_jwt: true)
+    ✅ scan-certificate (verify_jwt: true)
+  
+  Status: ⚠️  REQUIRES ATTENTION
+  Issues:
+    - subscription-webhook: Webhooks need unauthenticated access BUT lack
+      signature verification (HMAC-SHA256)
+    - update-course-data: Should DEFINITELY require JWT verification
+  
+  Recommendation: IMMEDIATE
+    1. Enable JWT on update-course-data immediately
+    2. For subscription-webhook:
+       - Implement HMAC-SHA256 signature verification
+       - Validate webhook source/origin
+       - Add rate limiting
+       - Store webhook secret in Supabase secrets
+
+[HIGH] #4 - Disabled Password Strength Protection
+  Supabase Setting: Leaked Password Protection (DISABLED)
+  Status: ⚠️  WARNING
+  Risk: Users can register with passwords from HaveIBeenPwned database
+  
+  Recommendation: SHORT TERM
+    1. Enable in Supabase Dashboard → Settings → Auth
+    2. Add client-side validation with zxcvbn library
+    3. Display password requirements to users
+
+═══════════════════════════════════════════════════════════════════════════════
+
+SECURITY STRENGTHS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ RLS ENABLED: All 17 tables have Row Level Security enabled
+   - profiles, licenses, certificates, subscriptions, etc.
+   - Prevents unauthorized data access
+   - Note: Verify policies are correctly configured in dashboard
+
+✅ NO SERVICE ROLE EXPOSURE: Service role key not found in client code
+   - All API calls use anon key or session JWT
+   - Database access protected by RLS
+
+✅ NO OTHER HARDCODED SECRETS: No API keys, passwords, tokens hardcoded
+   - Good practice for auth token management
+   - Session-based auth properly implemented
+
+✅ .ENV FILES PROTECTED: Properly in .gitignore
+   - .env*.local files excluded from git
+   - Configuration ready for environment-based secrets
+
+✅ NO SQL INJECTION: Parameterized queries used throughout
+   - Supabase PostgREST handles query building
+   - User input not concatenated into queries
+
+═══════════════════════════════════════════════════════════════════════════════
+
+REMEDIATION ROADMAP
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 1: IMMEDIATE (DO TODAY)
+  [ ] Regenerate Supabase anon key
+  [ ] Update src/lib/supabase.ts to use environment variables
+  [ ] Enable JWT verification on update-course-data
+  Estimated Time: 30-45 minutes
+
+PHASE 2: URGENT (BEFORE DEPLOYMENT)
+  [ ] Run npm audit fix --force
+  [ ] Test application after dependency fixes
+  [ ] Implement webhook signature verification
+  [ ] Clean git history with git-filter-repo
+  Estimated Time: 1-2 hours
+
+PHASE 3: SHORT TERM (BEFORE PRODUCTION)
+  [ ] Enable password protection in Supabase Auth
+  [ ] Add frontend password strength validation
+  [ ] Configure security headers
+  [ ] Add request rate limiting
+  Estimated Time: 2-4 hours
+
+PHASE 4: ONGOING (MONTHLY)
+  [ ] Run npm audit (automated in CI/CD)
+  [ ] Review and update dependencies
+  [ ] Security code review
+  [ ] Penetration testing
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FILES GENERATED
+═══════════════════════════════════════════════════════════════════════════════
+
+1. SECURITY_AUDIT.md (321 lines)
+   - Comprehensive audit report with all findings
+   - Detailed remediation guidance
+   - References and best practices
+
+2. SECURITY_SUMMARY.txt
+   - Quick reference summary
+   - Immediate action items
+
+3. AUDIT_FINDINGS.txt (this file)
+   - Visual presentation of findings
+   - Remediation roadmap
+
+═══════════════════════════════════════════════════════════════════════════════
+
+AUDIT COMPLETION
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ npm audit: Executed
+   → 8 vulnerabilities found (2 critical, 5 high, 1 moderate)
+
+✅ Hardcoded secrets: Searched
+   → 1 critical finding (Supabase anon key)
+
+✅ RLS verification: Checked
+   → All tables have RLS enabled (good)
+
+✅ Edge Function JWT: Reviewed
+   → 2 functions without JWT (issues identified)
+
+✅ .gitignore review: Examined
+   → Properly configured
+
+✅ Service role exposure: Scanned
+   → None found (good)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NEXT STEPS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. READ: SECURITY_AUDIT.md for detailed information
+2. PRIORITIZE: Address CRITICAL issues first (Phase 1)
+3. TEST: Verify functionality after each fix
+4. DEPLOY: Only after all CRITICAL issues resolved
+5. MONITOR: Set up automated security scanning
+
+Questions? Review SECURITY_AUDIT.md for detailed explanations and references.
+
+═══════════════════════════════════════════════════════════════════════════════
