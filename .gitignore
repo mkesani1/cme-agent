@@ -5,7 +5,7 @@ node_modules/
 
 # Expo
 .expo/
-# dist/ - commented out to allow Vercel deployment
+dist/
 web-build/
 expo-env.d.ts
 
