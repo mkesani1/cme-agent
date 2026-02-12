@@ -208,13 +208,16 @@ export default function DashboardScreen() {
   const actionsAnim = useFadeInUp(200);
 
   useEffect(() => {
+    console.log('[Dashboard] useEffect triggered, user:', user);
     loadDashboard();
   }, [user]);
 
   async function loadDashboard() {
+    console.log('[Dashboard] loadDashboard called, user:', user, 'DEMO_MODE:', DEMO_MODE);
     if (!user) {
       if (DEMO_MODE) {
         // Use demo data when no user is authenticated
+        console.log('[Dashboard] Using demo data, setting licenses and loading=false');
         const demoFormatted: LicenseWithProgress[] = demoLicenses.map(l => ({
           id: l.id,
           state: l.state,
@@ -335,7 +338,9 @@ export default function DashboardScreen() {
     return null;
   }
 
+  console.log('[Dashboard] Render check - loading:', loading, 'licenses.length:', licenses.length);
   if (loading && licenses.length === 0) {
+    console.log('[Dashboard] Showing loading spinner');
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
