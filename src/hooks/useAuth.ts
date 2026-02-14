@@ -13,6 +13,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -124,6 +126,20 @@ export function useAuthProvider() {
     return { error: error as Error | null };
   }
 
+  async function resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${getRedirectUrl()}/reset-password`,
+    });
+    return { error: error as Error | null };
+  }
+
+  async function updatePassword(password: string) {
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+    return { error: error as Error | null };
+  }
+
   return {
     session,
     user,
@@ -133,7 +149,16 @@ export function useAuthProvider() {
     signIn,
     signOut,
     updateProfile,
+    resetPassword,
+    updatePassword,
   };
+}
+
+function getRedirectUrl(): string {
+  if (typeof window !== 'undefined' && window.location) {
+    return window.location.origin;
+  }
+  return 'https://cme-agent.vercel.app';
 }
 
 export { AuthContext };

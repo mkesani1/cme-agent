@@ -20,6 +20,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -27,6 +28,11 @@ export default function RegisterScreen() {
   async function handleRegister() {
     if (!fullName || !email || !password || !confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (!termsAccepted) {
+      setError('You must accept the terms and conditions to continue');
       return;
     }
 
@@ -51,6 +57,13 @@ export default function RegisterScreen() {
       setError(signUpError.message);
     } else {
       setSuccess(true);
+      // Redirect to email verification after 2 seconds
+      setTimeout(() => {
+        router.replace({
+          pathname: '/(auth)/verify-email',
+          params: { email },
+        });
+      }, 1500);
     }
   }
 
@@ -76,15 +89,13 @@ export default function RegisterScreen() {
           <Card style={styles.card}>
             {success ? (
               <View style={styles.successContainer}>
-                <Text style={styles.successTitle}>Check your email!</Text>
+                <Text style={styles.successTitle}>Account Created!</Text>
                 <Text style={styles.successText}>
                   We've sent a confirmation link to {email}. Please check your inbox and click the link to activate your account.
                 </Text>
-                <Link href="/(auth)/login" asChild>
-                  <TouchableOpacity style={styles.backToLogin}>
-                    <Text style={styles.loginLink}>Back to Sign In</Text>
-                  </TouchableOpacity>
-                </Link>
+                <Text style={styles.successSubtext}>
+                  Redirecting to email verification...
+                </Text>
               </View>
             ) : null}
 
@@ -131,6 +142,27 @@ export default function RegisterScreen() {
                   placeholder="••••••••"
                   containerStyle={styles.input}
                 />
+
+                {/* Terms Checkbox */}
+                <View style={styles.termsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.checkbox,
+                      termsAccepted && styles.checkboxChecked,
+                    ]}
+                    onPress={() => setTermsAccepted(!termsAccepted)}
+                  >
+                    {termsAccepted && (
+                      <Text style={styles.checkmark}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                  <Text style={styles.termsText}>
+                    I agree to the{' '}
+                    <Text style={styles.termsLink}>Terms of Service</Text>
+                    {' '}and{' '}
+                    <Text style={styles.termsLink}>Privacy Policy</Text>
+                  </Text>
+                </View>
 
                 <Button
                   title="Create Account"
@@ -201,12 +233,14 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: typography.body.fontSize,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     lineHeight: 22,
   },
-  backToLogin: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+  successSubtext: {
+    color: colors.textSecondary,
+    fontSize: typography.bodySmall.fontSize,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   errorContainer: {
     backgroundColor: colors.riskLight + '20',
@@ -221,6 +255,42 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: spacing.md,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.textSecondary,
+    marginRight: spacing.sm,
+    marginTop: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  checkmark: {
+    color: colors.background,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  termsText: {
+    flex: 1,
+    color: colors.textSecondary,
+    fontSize: typography.bodySmall.fontSize,
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: colors.accent,
+    fontWeight: '600',
   },
   button: {
     marginTop: spacing.md,
