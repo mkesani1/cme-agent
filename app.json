@@ -25,7 +25,8 @@
         "NSCameraUsageDescription": "Camera access is needed to capture and upload certificates for authentication.",
         "NSNotificationPermissionUsageDescription": "Notifications help you stay updated with important CME Agent information and reminders.",
         "NSLocationWhenInUseUsageDescription": "Location access may be used to provide location-aware CME information.",
-        "MinimumOSVersion": "13.0"
+        "MinimumOSVersion": "13.0",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -39,6 +40,8 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS",
         "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS"
       ]
@@ -56,8 +59,14 @@
     },
     "extra": {
       "supabaseUrl": "$EXPO_PUBLIC_SUPABASE_URL",
-      "supabaseAnonKey": "$EXPO_PUBLIC_SUPABASE_ANON_KEY"
+      "supabaseAnonKey": "$EXPO_PUBLIC_SUPABASE_ANON_KEY",
+      "router": {},
+      "eas": {
+        "projectId": "ca33cf31-aff8-47e2-9ed2-81d0deef7076"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ca33cf31-aff8-47e2-9ed2-81d0deef7076"
     }
   }
 }
-
