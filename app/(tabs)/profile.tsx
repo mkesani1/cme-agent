@@ -165,25 +165,56 @@ export default function ProfileScreen() {
         <Animated.View style={sectionsAnim}>
           <Text style={styles.sectionTitle}>ACCOUNT</Text>
           <View style={styles.settingsCard}>
-            <SettingRow icon="person-outline" label="Edit Profile" />
+            <SettingRow
+              icon="person-outline"
+              label="Edit Profile"
+              onPress={() => router.push('/(tabs)/settings/edit-profile')}
+            />
             <View style={styles.divider} />
-            <SettingRow icon="notifications-outline" label="Notifications" />
+            <SettingRow
+              icon="notifications-outline"
+              label="Notifications"
+              onPress={() => router.push('/(tabs)/settings/notifications')}
+            />
             <View style={styles.divider} />
-            <SettingRow icon="link-outline" label="Connected Accounts" />
+            <SettingRow
+              icon="link-outline"
+              label="Connected Accounts"
+              onPress={() => Alert.alert('Coming Soon', 'Connected accounts feature will be available in a future update.')}
+            />
           </View>
 
           <Text style={styles.sectionTitle}>DATA</Text>
           <View style={styles.settingsCard}>
-            <SettingRow icon="download-outline" label="Export Data" />
+            <SettingRow
+              icon="download-outline"
+              label="Export Data"
+              onPress={() => router.push('/(tabs)/settings/export-data')}
+            />
             <View style={styles.divider} />
-            <SettingRow icon="document-text-outline" label="Reports" />
+            <SettingRow
+              icon="document-text-outline"
+              label="Reports"
+              onPress={() => router.push('/(tabs)/settings/reports')}
+            />
           </View>
 
           <Text style={styles.sectionTitle}>SUPPORT</Text>
           <View style={styles.settingsCard}>
-            <SettingRow icon="help-circle-outline" label="Help Center" />
+            <SettingRow
+              icon="help-circle-outline"
+              label="Help Center"
+              onPress={() => router.push('/(tabs)/settings/help')}
+            />
             <View style={styles.divider} />
-            <SettingRow icon="mail-outline" label="Contact Support" />
+            <SettingRow
+              icon="mail-outline"
+              label="Contact Support"
+              onPress={() => {
+                const { Linking } = require('react-native');
+                Linking.openURL('mailto:support@cmeagent.com?subject=CME%20Agent%20Support');
+              }}
+            />
           </View>
 
           {/* Sign Out */}

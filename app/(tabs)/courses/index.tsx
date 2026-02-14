@@ -9,15 +9,18 @@ import {
   Linking,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card, CategoryTag, GapsSummaryCard, RecommendationCard } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../../src/lib/theme';
 import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { DEMO_MODE, demoCourses } from '../../../src/lib/demoData';
 import { useRecommendations, CourseRecommendation } from '../../../src/hooks/useRecommendations';
+import { useCourseDiscovery, useGapAnalysis } from '../../../src/hooks/useCourseDiscovery';
 
 interface Course {
   id: string;
@@ -43,7 +46,7 @@ export default function CoursesScreen() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'smart' | 'all'>('smart');
+  const [activeTab, setActiveTab] = useState<'smart' | 'discover' | 'all'>('smart');
 
   // AI Recommendations
   const {
@@ -53,6 +56,14 @@ export default function CoursesScreen() {
     error: recommendationsError,
     refetch: refetchRecommendations,
   } = useRecommendations();
+
+  // AI Course Discovery
+  const {
+    discoveredCourses,
+    discoveryState,
+    runDiscovery,
+    loading: loadingDiscovery,
+  } = useCourseDiscovery();
 
   useEffect(() => {
     loadAllCourses();
@@ -170,11 +181,25 @@ export default function CoursesScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.toggleButton, activeTab === 'discover' && styles.toggleButtonActive]}
+            onPress={() => setActiveTab('discover')}
+          >
+            <Ionicons
+              name="globe"
+              size={14}
+              color={activeTab === 'discover' ? '#FFFFFF' : colors.accent}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={[styles.toggleText, activeTab === 'discover' && styles.toggleTextActive]}>
+              AI Discover
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'all' && styles.toggleButtonActive]}
             onPress={() => setActiveTab('all')}
           >
             <Text style={[styles.toggleText, activeTab === 'all' && styles.toggleTextActive]}>
-              All Courses
+              All
             </Text>
           </TouchableOpacity>
         </View>
@@ -222,6 +247,171 @@ export default function CoursesScreen() {
               <Card style={styles.errorCard}>
                 <Text style={styles.errorText}>{recommendationsError}</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={() => refetchRecommendations()}>
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </TouchableOpacity>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* AI Discover Tab */}
+        {activeTab === 'discover' && (
+          <>
+            {/* AI Discovery Banner */}
+            <LinearGradient
+              colors={['#1a365d', '#2a4a7a', '#1a365d']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.discoverBanner}
+            >
+              <View style={styles.discoverBannerContent}>
+                <View style={styles.discoverIconContainer}>
+                  <Ionicons name="globe" size={28} color={colors.accent} />
+                </View>
+                <View style={styles.discoverTextContainer}>
+                  <Text style={styles.discoverTitle}>AI Course Discovery</Text>
+                  <Text style={styles.discoverDescription}>
+                    Our AI agent searches the web for CME courses tailored to your licenses and specialty
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.discoverButton,
+                  discoveryState.isDiscovering && styles.discoverButtonDisabled,
+                ]}
+                onPress={() => {
+                  if (!discoveryState.isDiscovering) {
+                    runDiscovery();
+                  }
+                }}
+                disabled={discoveryState.isDiscovering}
+              >
+                {discoveryState.isDiscovering ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={styles.discoverButtonText}>Searching...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="search" size={18} color="#FFFFFF" />
+                    <Text style={styles.discoverButtonText}>Find Courses</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </LinearGradient>
+
+            {/* Discovery Stats */}
+            {discoveryState.lastDiscoveryAt && (
+              <View style={styles.discoveryStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{discoveryState.coursesFound}</Text>
+                  <Text style={styles.statLabel}>Found</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{discoveryState.queriesUsed.length}</Text>
+                  <Text style={styles.statLabel}>Searches</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>
+                    {Math.floor((Date.now() - discoveryState.lastDiscoveryAt.getTime()) / 60000)}m
+                  </Text>
+                  <Text style={styles.statLabel}>Ago</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Discovered Courses */}
+            {loadingDiscovery ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading discovered courses...</Text>
+              </View>
+            ) : discoveredCourses.length > 0 ? (
+              <>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIcon}>
+                    <Ionicons name="trophy" size={18} color={colors.accent} />
+                  </View>
+                  <View>
+                    <Text style={styles.sectionTitle}>Discovered for You</Text>
+                    <Text style={styles.sectionSubtitle}>
+                      {discoveredCourses.length} courses from across the web
+                    </Text>
+                  </View>
+                </View>
+
+                {discoveredCourses.slice(0, 10).map((course, index) => (
+                  <Card key={course.source_url || index} style={styles.discoveredCard}>
+                    <View style={styles.discoveredHeader}>
+                      <View style={styles.rankBadge}>
+                        <Text style={styles.rankText}>#{index + 1}</Text>
+                      </View>
+                      <View style={styles.discoveredInfo}>
+                        <Text style={styles.discoveredTitle}>{course.title}</Text>
+                        <Text style={styles.discoveredProvider}>{course.provider}</Text>
+                      </View>
+                      <View style={styles.scoreContainer}>
+                        <Text style={styles.scoreValue}>{course.relevance_score || 0}</Text>
+                        <Text style={styles.scoreLabel}>Match</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.discoveredMeta}>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="time-outline" size={14} color={colors.textMuted} />
+                        <Text style={styles.metaText}>{course.credits} credits</Text>
+                      </View>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="laptop-outline" size={14} color={colors.textMuted} />
+                        <Text style={styles.metaText}>{course.format}</Text>
+                      </View>
+                      {course.price !== undefined && (
+                        <View style={styles.metaItem}>
+                          <Ionicons name="pricetag-outline" size={14} color={colors.textMuted} />
+                          <Text style={styles.metaText}>
+                            {course.price === 0 ? 'Free' : `$${course.price}`}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {course.states_accepted.length > 0 && (
+                      <View style={styles.statesContainer}>
+                        <Text style={styles.statesLabel}>Accepted in: </Text>
+                        <Text style={styles.statesText}>
+                          {course.states_accepted.slice(0, 5).join(', ')}
+                          {course.states_accepted.length > 5 && ` +${course.states_accepted.length - 5} more`}
+                        </Text>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.viewCourseButton}
+                      onPress={() => course.source_url && Linking.openURL(course.source_url)}
+                    >
+                      <Text style={styles.viewCourseText}>View Course</Text>
+                      <Ionicons name="open-outline" size={16} color={colors.accent} />
+                    </TouchableOpacity>
+                  </Card>
+                ))}
+              </>
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="globe-outline" size={48} color={colors.textMuted} />
+                <Text style={styles.emptyText}>No courses discovered yet</Text>
+                <Text style={styles.emptySubtext}>
+                  Tap "Find Courses" to let our AI search for relevant CME courses based on your profile
+                </Text>
+              </View>
+            )}
+
+            {discoveryState.error && (
+              <Card style={styles.errorCard}>
+                <Text style={styles.errorText}>{discoveryState.error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={() => runDiscovery()}>
                   <Text style={styles.retryButtonText}>Try Again</Text>
                 </TouchableOpacity>
               </Card>
@@ -627,5 +817,179 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: typography.bodySmall.fontSize,
+  },
+  // AI Discover styles
+  discoverBanner: {
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  discoverBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  discoverIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(196, 165, 116, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  discoverTextContainer: {
+    flex: 1,
+  },
+  discoverTitle: {
+    ...typography.h3,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  discoverDescription: {
+    ...typography.caption,
+    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 18,
+  },
+  discoverButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    padding: spacing.md,
+    borderRadius: 12,
+    gap: spacing.sm,
+  },
+  discoverButtonDisabled: {
+    opacity: 0.7,
+  },
+  discoverButtonText: {
+    ...typography.body,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  discoveryStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    ...typography.h3,
+    color: colors.accent,
+  },
+  statLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+  },
+  discoveredCard: {
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent,
+  },
+  discoveredHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  rankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  rankText: {
+    ...typography.caption,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  discoveredInfo: {
+    flex: 1,
+  },
+  discoveredTitle: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  discoveredProvider: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  scoreContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(196, 165, 116, 0.15)',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 8,
+  },
+  scoreValue: {
+    ...typography.body,
+    fontWeight: '700',
+    color: colors.accent,
+  },
+  scoreLabel: {
+    fontSize: 10,
+    color: colors.accent,
+    textTransform: 'uppercase',
+  },
+  discoveredMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  statesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  statesLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  statesText: {
+    ...typography.caption,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  viewCourseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: spacing.sm,
+  },
+  viewCourseText: {
+    ...typography.body,
+    color: colors.accent,
+    fontWeight: '600',
   },
 });
