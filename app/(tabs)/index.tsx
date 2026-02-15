@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,14 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Easing,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import * as Haptics from 'expo-haptics';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../src/lib/theme';
@@ -100,12 +102,31 @@ function BubbleOverlay({ variant = 'gold' }: { variant?: 'gold' | 'navy' }) {
   );
 }
 
-// Circular progress component
+// Animated Circular progress component - fills from 0 to target
 function CircularProgress({ progress, size = 70 }: { progress: number; size?: number }) {
   const strokeWidth = 6;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  // Animation for progress ring
+  const animatedProgress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Animate from 0 to target progress
+    Animated.timing(animatedProgress, {
+      toValue: progress,
+      duration: 1200,
+      delay: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false, // Required for non-transform/opacity animations
+    }).start();
+  }, [progress]);
+
+  // Convert animated value to strokeDashoffset
+  const animatedOffset = animatedProgress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+  });
 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -119,8 +140,8 @@ function CircularProgress({ progress, size = 70 }: { progress: number; size?: nu
           strokeWidth={strokeWidth}
           fill="transparent"
         />
-        {/* Progress circle */}
-        <Circle
+        {/* Animated Progress circle */}
+        <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -128,7 +149,7 @@ function CircularProgress({ progress, size = 70 }: { progress: number; size?: nu
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={`${circumference} ${circumference}`}
-          strokeDashoffset={strokeDashoffset}
+          strokeDashoffset={animatedOffset}
           strokeLinecap="round"
         />
       </Svg>
@@ -136,6 +157,137 @@ function CircularProgress({ progress, size = 70 }: { progress: number; size?: nu
         <Ionicons name="bar-chart-outline" size={24} color="rgba(255,255,255,0.8)" />
       </View>
     </View>
+  );
+}
+
+// Create animated SVG Circle component
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+// Pressable card with haptic feedback and lift animation
+function PressableCard({
+  children,
+  onPress,
+  style,
+  hapticStyle = 'light'
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  style?: any;
+  hapticStyle?: 'light' | 'medium' | 'heavy';
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const translateAnim = useRef(new Animated.Value(0)).current;
+
+  const hapticMap = {
+    light: Haptics.ImpactFeedbackStyle.Light,
+    medium: Haptics.ImpactFeedbackStyle.Medium,
+    heavy: Haptics.ImpactFeedbackStyle.Heavy,
+  };
+
+  const handlePressIn = () => {
+    // Haptic feedback
+    Haptics.impactAsync(hapticMap[hapticStyle]);
+
+    // Scale down and lift
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0.97,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateAnim, {
+        toValue: -4,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    // Spring back
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateAnim, {
+        toValue: 0,
+        friction: 3,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <Animated.View style={[
+      style,
+      {
+        transform: [
+          { scale: scaleAnim },
+          { translateY: translateAnim },
+        ],
+      },
+    ]}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+// Pressable button with haptic feedback and scale
+function PressableButton({
+  children,
+  onPress,
+  style,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  style?: any;
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      friction: 8,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 80,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={{ width: '100%', height: '100%' }}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
@@ -295,9 +447,12 @@ export default function DashboardScreen() {
   }
 
   async function onRefresh() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setRefreshing(true);
     await loadDashboard();
     setRefreshing(false);
+    // Success haptic when refresh completes
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
 
   function getGreeting() {
@@ -378,9 +533,9 @@ export default function DashboardScreen() {
 
           return (
             <Animated.View style={cardAnim}>
-              <TouchableOpacity
-                activeOpacity={0.9}
+              <PressableCard
                 onPress={() => router.push(`/(tabs)/licenses/${heroLicense.id}`)}
+                hapticStyle="medium"
               >
                 <View style={[
                   styles.heroCardWrapper,
@@ -442,7 +597,7 @@ export default function DashboardScreen() {
                     </View>
                   </LinearGradient>
                 </View>
-              </TouchableOpacity>
+              </PressableCard>
             </Animated.View>
           );
         })()}
@@ -456,7 +611,7 @@ export default function DashboardScreen() {
           const progress = total > 0 ? Math.round((license.creditsEarned / total) * 100) : 0;
 
           return (
-            <TouchableOpacity
+            <PressableCard
               key={license.id}
               style={[
                 styles.licenseRow,
@@ -464,7 +619,7 @@ export default function DashboardScreen() {
                 urgency === 'thisYear' && styles.licenseRowThisYear,
               ]}
               onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
-              activeOpacity={0.7}
+              hapticStyle="light"
             >
               <BubbleOverlay variant="navy" />
               <View style={styles.licenseRowTop}>
@@ -517,7 +672,7 @@ export default function DashboardScreen() {
                   <Text style={styles.miniProgressText}>{progress}%</Text>
                 </View>
               )}
-            </TouchableOpacity>
+            </PressableCard>
           );
         })}
 
@@ -525,36 +680,39 @@ export default function DashboardScreen() {
         <Animated.View style={[styles.quickActions, actionsAnim]}>
           <Text style={styles.sectionLabel}>QUICK ACTIONS</Text>
           <View style={styles.actionButtons}>
-            <TouchableOpacity
+            <PressableButton
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/courses')}
-              activeOpacity={0.8}
             >
-              <View style={styles.actionIconCircle}>
-                <Ionicons name="laptop-outline" size={22} color={colors.text} />
+              <View style={styles.actionButtonInner}>
+                <View style={styles.actionIconCircle}>
+                  <Ionicons name="laptop-outline" size={22} color={colors.text} />
+                </View>
+                <Text style={styles.actionText}>Find Courses</Text>
               </View>
-              <Text style={styles.actionText}>Find Courses</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </PressableButton>
+            <PressableButton
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/certificates/upload')}
-              activeOpacity={0.8}
             >
-              <View style={styles.actionIconCircle}>
-                <Ionicons name="arrow-up-outline" size={22} color={colors.text} />
+              <View style={styles.actionButtonInner}>
+                <View style={styles.actionIconCircle}>
+                  <Ionicons name="arrow-up-outline" size={22} color={colors.text} />
+                </View>
+                <Text style={styles.actionText}>Upload Cert</Text>
               </View>
-              <Text style={styles.actionText}>Upload Cert</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </PressableButton>
+            <PressableButton
               style={styles.actionButton}
               onPress={() => router.push('/(tabs)/agent')}
-              activeOpacity={0.8}
             >
-              <View style={styles.actionIconCircle}>
-                <Ionicons name="sparkles-outline" size={22} color={colors.text} />
+              <View style={styles.actionButtonInner}>
+                <View style={styles.actionIconCircle}>
+                  <Ionicons name="sparkles-outline" size={22} color={colors.text} />
+                </View>
+                <Text style={styles.actionText}>AI Assistant</Text>
               </View>
-              <Text style={styles.actionText}>AI Assistant</Text>
-            </TouchableOpacity>
+            </PressableButton>
           </View>
         </Animated.View>
 
@@ -898,11 +1056,14 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     backgroundColor: colors.backgroundCard,
-    padding: spacing.md,
     borderRadius: 16,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  actionButtonInner: {
+    padding: spacing.md,
+    alignItems: 'center',
   },
   actionIconCircle: {
     width: 44,
