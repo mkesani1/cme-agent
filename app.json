@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cmeagent.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSCameraUsageDescription": "Camera access is needed to capture and upload certificates for authentication.",
         "NSNotificationPermissionUsageDescription": "Notifications help you stay updated with important CME Agent information and reminders.",
