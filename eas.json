@@ -19,7 +19,8 @@
         "buildType": "apk"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "autoIncrement": true
       },
       "channel": "preview"
     },
@@ -29,7 +30,8 @@
         "buildType": "app-bundle"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "autoIncrement": true
       },
       "channel": "production"
     }
@@ -37,9 +39,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "YOUR_APPLE_ID",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+        "appleId": "manjunath.kesani@icloud.com"
       },
       "android": {
         "track": "production"
