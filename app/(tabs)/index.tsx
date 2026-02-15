@@ -283,7 +283,7 @@ function PressableButton({
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%' }}
       >
         {children}
       </TouchableOpacity>
