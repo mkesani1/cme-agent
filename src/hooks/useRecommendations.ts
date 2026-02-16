@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEMO_MODE } from '../lib/demoData';
 import { SUPABASE_ANON_KEY, EDGE_FUNCTIONS } from '../lib/config';
+import { supabase } from '../lib/supabase';
 
 export interface CourseRecommendation {
   id: string;
@@ -54,11 +55,16 @@ export function useRecommendations() {
         ? EDGE_FUNCTIONS.recommendCoursesDemoUrl
         : EDGE_FUNCTIONS.recommendCoursesUrl;
 
+      // Get the user's auth token for JWT-protected edge functions
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_ANON_KEY,
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           limit,
