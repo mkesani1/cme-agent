@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { commonStyles } from '../../src/lib/commonStyles';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
@@ -88,12 +89,12 @@ export default function RegisterScreen() {
           {/* Register Form */}
           <Card style={styles.card}>
             {success ? (
-              <View style={styles.successContainer}>
-                <Text style={styles.successTitle}>Account Created!</Text>
-                <Text style={styles.successText}>
+              <View style={commonStyles.successContainer}>
+                <Text style={commonStyles.successTitle}>Account Created!</Text>
+                <Text style={commonStyles.successText}>
                   We've sent a confirmation link to {email}. Please check your inbox and click the link to activate your account.
                 </Text>
-                <Text style={styles.successSubtext}>
+                <Text style={commonStyles.successSubtext}>
                   Redirecting to email verification...
                 </Text>
               </View>
@@ -102,8 +103,8 @@ export default function RegisterScreen() {
             {!success && (
               <>
                 {error ? (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
+                  <View style={commonStyles.errorContainer}>
+                    <Text style={commonStyles.errorText}>{error}</Text>
                   </View>
                 ) : null}
 

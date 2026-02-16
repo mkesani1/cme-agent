@@ -7,3 +7,6 @@ export { SmartSuggestions } from './SmartSuggestions';
 export type { AISuggestion } from './SmartSuggestions';
 export { GapsSummaryCard } from './GapsSummaryCard';
 export { RecommendationCard } from './RecommendationCard';
+export { BubbleOverlay } from './BubbleOverlay';
+export { PressableCard } from './PressableCard';
+export { PressableButton } from './PressableButton';

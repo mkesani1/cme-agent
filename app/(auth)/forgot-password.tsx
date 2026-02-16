@@ -14,6 +14,7 @@ import Constants from 'expo-constants';
 import { supabase } from '../../src/lib/supabase';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { commonStyles } from '../../src/lib/commonStyles';
 
 // Get the correct redirect URL based on platform
 function getResetRedirectUrl(): string {
@@ -59,12 +60,12 @@ export default function ForgotPasswordScreen() {
   if (success) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.successContainer}>
+        <View style={commonStyles.successContainer}>
           <View style={styles.successIcon}>
             <Text style={styles.successIconText}>✓</Text>
           </View>
-          <Text style={styles.successTitle}>Check your email</Text>
-          <Text style={styles.successText}>
+          <Text style={commonStyles.successTitle}>Check your email</Text>
+          <Text style={commonStyles.successText}>
             We've sent a password reset link to {email}
           </Text>
           <Button
@@ -106,8 +107,8 @@ export default function ForgotPasswordScreen() {
           {/* Reset Form */}
           <Card style={styles.card}>
             {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={commonStyles.errorContainer}>
+                <Text style={commonStyles.errorText}>{error}</Text>
               </View>
             ) : null}
 

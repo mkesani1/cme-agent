@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { commonStyles } from '../../src/lib/commonStyles';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -70,8 +71,8 @@ export default function LoginScreen() {
             <Text style={styles.title}>Welcome back</Text>
 
             {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={commonStyles.errorContainer}>
+                <Text style={commonStyles.errorText}>{error}</Text>
               </View>
             ) : null}
 
@@ -173,17 +174,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.lg,
-  },
-  errorContainer: {
-    backgroundColor: colors.riskLight + '20',
-    padding: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    color: colors.risk,
-    fontSize: typography.bodySmall.fontSize,
-    textAlign: 'center',
   },
   input: {
     marginBottom: spacing.md,

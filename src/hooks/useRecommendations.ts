@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEMO_MODE } from '../lib/demoData';
-
-const SUPABASE_URL = 'https://drwpnasiqgzqdubmlwxj.supabase.co';
+import { SUPABASE_ANON_KEY, EDGE_FUNCTIONS } from '../lib/config';
 
 export interface CourseRecommendation {
   id: string;
@@ -52,14 +51,14 @@ export function useRecommendations() {
 
       // Use demo endpoint for demo mode
       const endpoint = DEMO_MODE
-        ? `${SUPABASE_URL}/functions/v1/recommend-courses-demo`
-        : `${SUPABASE_URL}/functions/v1/recommend-courses`;
+        ? EDGE_FUNCTIONS.recommendCoursesDemoUrl
+        : EDGE_FUNCTIONS.recommendCoursesUrl;
 
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyd3BuYXNpcWd6cWR1Ym1sd3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2OTQ3MzAsImV4cCI6MjA1NDI3MDczMH0.9FxALg7S1edvLhOLt6TL-3Ol3ZsJm-7P1p4hT0cR9rc',
+          'apikey': SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
           limit,

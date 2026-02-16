@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase';
 import {
   runCourseDiscoveryAgent,
   DiscoveredCourse,
+  DoctorProfile,
   calculateCreditGaps,
   scoreCourserelevance,
   calculateEfficiencyScore,
@@ -92,7 +93,7 @@ export function useCourseDiscovery(): UseCourseDiscoveryReturn {
           const scoredCourses = data.map((course) => ({
             ...course,
             relevance_score: profile && licenses.length > 0
-              ? scoreCourserelevance(course, profile as any, licenses)
+              ? scoreCourserelevance(course, profile as DoctorProfile, licenses)
               : course.relevance_score || 50,
             efficiency_score: calculateEfficiencyScore(course),
           }));
@@ -135,7 +136,7 @@ export function useCourseDiscovery(): UseCourseDiscoveryReturn {
 
     try {
       const result = await runCourseDiscoveryAgent({
-        profile: { ...profile, id: user.id } as any,
+        profile: { ...profile, id: user.id } as DoctorProfile,
         licenses,
         maxResults: 30,
       });

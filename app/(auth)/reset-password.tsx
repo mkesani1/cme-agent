@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/lib/supabase';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { commonStyles } from '../../src/lib/commonStyles';
 
 export default function ResetPasswordScreen() {
   const params = useLocalSearchParams();
@@ -218,8 +219,8 @@ export default function ResetPasswordScreen() {
           <View style={styles.successIcon}>
             <Text style={styles.successIconText}>✓</Text>
           </View>
-          <Text style={styles.successTitle}>Password Updated!</Text>
-          <Text style={styles.successText}>
+          <Text style={commonStyles.successTitle}>Password Updated!</Text>
+          <Text style={commonStyles.successText}>
             Your password has been successfully changed.
           </Text>
           <Button
@@ -282,8 +283,8 @@ export default function ResetPasswordScreen() {
           {/* Reset Form */}
           <Card style={styles.card}>
             {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={commonStyles.errorContainer}>
+                <Text style={commonStyles.errorText}>{error}</Text>
               </View>
             ) : null}
 

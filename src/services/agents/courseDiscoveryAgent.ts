@@ -25,10 +25,10 @@ export interface DoctorProfile {
 export interface License {
   id: string;
   state: string;
-  license_number: string;
-  expiration_date: string;
-  total_credits_required: number;
-  credits_completed: number;
+  license_number: string | null;
+  expiry_date: string | null;
+  total_credits_required: number | null;
+  credits_earned?: number;
   category1_required?: number;
   ethics_required?: number;
   controlled_substance_required?: number;
@@ -158,12 +158,14 @@ export function calculateCreditGaps(license: License): {
   totalGap: number;
   categoryGaps: Record<string, number>;
 } {
-  const totalGap = license.total_credits_required - license.credits_completed;
+  const creditsRequired = license.total_credits_required ?? 0;
+  const creditsEarned = license.credits_earned ?? 0;
+  const totalGap = creditsRequired - creditsEarned;
 
   const categoryGaps: Record<string, number> = {};
 
   if (license.category1_required) {
-    categoryGaps.category1 = Math.max(0, license.category1_required - (license.credits_completed * 0.6)); // Estimate
+    categoryGaps.category1 = Math.max(0, license.category1_required - (creditsEarned * 0.6)); // Estimate
   }
   if (license.ethics_required) {
     categoryGaps.ethics = license.ethics_required; // Assume not completed

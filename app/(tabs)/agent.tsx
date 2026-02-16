@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,124 +8,84 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  Alert,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { triggerHaptic, triggerNotification } from '../../src/lib/haptics';
 import { useAuth } from '../../src/hooks/useAuth';
+import { useDemo } from '../../src/hooks/useDemo';
 import { supabase } from '../../src/lib/supabase';
-import { Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
-import { DEMO_MODE, demoProfile } from '../../src/lib/demoData';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { EDGE_FUNCTIONS } from '../../src/lib/config';
+import { TypingIndicator, MessageBubble, SuggestionChip } from '../../src/components/chat';
+import type { Message } from '../../src/components/chat';
 
 interface License {
   state: string;
   total_credits_required: number | null;
   expiry_date: string | null;
   credits_earned?: number;
+  requirements?: Array<{ category: string; required: number; earned: number }>;
 }
 
 const SUGGESTED_PROMPTS = [
-  'What do I need for my CA renewal?',
-  'Find courses for controlled substances',
-  'Explain opioid CME requirements',
-  'How many credits do I have left?',
+  { icon: 'shield-checkmark', text: 'What do I need for my TX renewal?', color: colors.risk },
+  { icon: 'search', text: 'Find courses for risk management', color: colors.accent },
+  { icon: 'analytics', text: 'How many credits do I have left?', color: colors.success },
+  { icon: 'help-circle', text: 'Explain opioid CME requirements', color: colors.warning },
 ];
 
-// Mock AI responses for demo mode
-const DEMO_RESPONSES: Record<string, string> = {
-  'What do I need for my CA renewal?': `Based on your California license (expiring Dec 2026), you need:
-
-**Total Progress:** 35/50 credits completed
-
-**Remaining Requirements:**
-• General CME: 10 more hours needed (25/35)
-• Risk Management: 5 more hours needed (0/5)
-• Controlled Substances: ✓ Complete! (10/10)
-
-I recommend focusing on Risk Management first, as you have 0 credits in that category. Would you like me to find some courses?`,
-
-  'Find courses for controlled substances': `Here are some recommended controlled substances courses:
-
-1. **Opioid Prescribing: Safe Practices** - AMA Ed Hub
-   • 3 credits, $0 (free)
-   • Self-paced online
-
-2. **Pain Management Essentials** - AAFP
-   • 4 credits, $75
-   • Interactive case studies
-
-3. **DEA-Approved Training** - ACCME
-   • 2 credits, $50
-   • Counts for CA requirements
-
-Would you like me to help you enroll in any of these?`,
-
-  'Explain opioid CME requirements': `**California Opioid CME Requirements:**
-
-All California physicians with DEA registration must complete CME on opioid prescribing. Here's what you need:
-
-• **12 hours** of CME on pain management and opioid prescribing per renewal cycle
-• This is part of your controlled substances requirement
-• Must be AMA PRA Category 1 Credit™
-
-✓ Good news! You've already completed 10 hours of controlled substances CME.
-
-Would you like me to recommend courses to complete your remaining requirements?`,
-
-  'How many credits do I have left?': `Here's your CME credit summary:
-
-**California License:**
-• Total: 35/50 credits (70% complete)
-• Due: December 15, 2026
-
-**By Category:**
-• General CME: 25/35 (10 remaining)
-• Risk Management: 0/5 (5 remaining) ⚠️
-• Controlled Substances: 10/10 ✓
-
-**Texas License:**
-• Total: 24/24 credits (100% complete) ✓
-
-You're doing great! Focus on Risk Management for CA - that's your biggest gap.`,
-
-  'default': `I can help you with your CME requirements! Here are some things I can assist with:
-
-• Check your progress toward license renewal
-• Find courses that match your requirements
-• Explain state-specific CME rules
-• Track your certificates and credits
-
-What would you like to know?`,
-};
-
+// ─── Main Agent Screen ───
 export default function AgentScreen() {
   const { user, profile } = useAuth();
+  const { isDemo, displayProfile, demoLicenses, DEMO_MODE } = useDemo();
   const scrollRef = useRef<ScrollView>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [licenses, setLicenses] = useState<License[]>([]);
+  const sendScaleAnim = useRef(new Animated.Value(1)).current;
+  const headerGlowAnim = useRef(new Animated.Value(0)).current;
+
+  // Subtle header glow animation
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(headerGlowAnim, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+        Animated.timing(headerGlowAnim, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+      ])
+    ).start();
+  }, []);
 
   // Load user licenses for context
   useEffect(() => {
     async function loadLicenses() {
+      if (isDemo) {
+        // Use demo license data
+        setLicenses(demoLicenses.map(l => ({
+          state: l.state,
+          total_credits_required: l.total_credits_required,
+          expiry_date: l.expiry_date,
+          credits_earned: l.creditsEarned,
+          requirements: l.requirements.map(r => ({
+            category: r.category,
+            required: r.required,
+            earned: r.earned,
+          })),
+        })));
+        return;
+      }
+
       if (!user) return;
 
       const { data: licensesData } = await supabase
         .from('licenses')
-        .select('state, total_credits_required, expiry_date')
+        .select('id, state, total_credits_required, expiry_date')
         .eq('user_id', user.id);
 
       if (licensesData) {
-        // Get credit allocations
         const { data: allocations } = await supabase
           .from('credit_allocations')
           .select('license_id, credits_applied')
@@ -146,8 +106,33 @@ export default function AgentScreen() {
     loadLicenses();
   }, [user]);
 
+  // Build user context for the AI
+  const getUserContext = useCallback(() => {
+    const currentProfile = displayProfile;
+    return {
+      name: currentProfile?.full_name?.split(' ').pop(),
+      degreeType: currentProfile?.degree_type,
+      licenses: licenses.map(l => ({
+        state: l.state,
+        creditsRequired: l.total_credits_required || 0,
+        creditsEarned: l.credits_earned || 0,
+        expiryDate: l.expiry_date,
+        requirements: l.requirements,
+      })),
+    };
+  }, [user, profile, licenses]);
+
   async function sendMessage(text: string) {
-    if (!text.trim()) return;
+    if (!text.trim() || loading) return;
+
+    // Haptic feedback on send
+    triggerHaptic('medium');
+
+    // Send button animation
+    Animated.sequence([
+      Animated.timing(sendScaleAnim, { toValue: 0.8, duration: 80, useNativeDriver: true }),
+      Animated.spring(sendScaleAnim, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 8 }),
+    ]).start();
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -160,50 +145,43 @@ export default function AgentScreen() {
     setInput('');
     setLoading(true);
 
-    // Demo mode: Use mock responses
-    if (!user && DEMO_MODE) {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500));
-
-      // Find matching response or use default
-      const responseText = DEMO_RESPONSES[text] || DEMO_RESPONSES['default'];
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseText,
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Build user context for the AI
-      const userContext = {
-        name: profile?.full_name?.split(' ').pop(),
-        degreeType: profile?.degree_type,
-        licenses: licenses.map(l => ({
-          state: l.state,
-          creditsRequired: l.total_credits_required || 0,
-          creditsEarned: l.credits_earned || 0,
-          expiryDate: l.expiry_date,
-        })),
-      };
+      const userContext = getUserContext();
 
-      // Call the Edge Function
-      const { data, error } = await supabase.functions.invoke('cme-chat', {
-        body: {
+      // Get auth token if available
+      let authToken: string | undefined;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        authToken = session?.access_token;
+      } catch (_e) {
+        // No auth, continue without
+      }
+
+      // Call the real AI edge function
+      const response = await fetch(EDGE_FUNCTIONS.cmeChatUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({
           messages: updatedMessages.map(m => ({
             role: m.role,
             content: m.content,
           })),
           userContext,
-        },
+        }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Success haptic
+      triggerNotification('success');
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -213,27 +191,39 @@ export default function AgentScreen() {
 
       setMessages(prev => [...prev, aiMessage]);
 
-      // Persist messages to database
-      await supabase.from('chat_messages').insert([
-        { user_id: user!.id, role: 'user', content: text },
-        { user_id: user!.id, role: 'assistant', content: aiMessage.content },
-      ]);
+      // Persist messages to database if authenticated
+      if (user) {
+        await supabase.from('chat_messages').insert([
+          { user_id: user.id, role: 'user', content: text },
+          { user_id: user.id, role: 'assistant', content: aiMessage.content },
+        ]).then(() => {}).catch(() => {});
+      }
 
     } catch (err) {
       console.error('Chat error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
 
-      // Show error as assistant message for better UX
+      // Error haptic
+      triggerNotification('error');
+
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I'm having trouble connecting right now. Please try again in a moment. (${errorMessage})`,
+        content: `I'm having trouble connecting right now. Please try again in a moment.\n\n(${errorMessage})`,
       };
       setMessages(prev => [...prev, errorResponse]);
     } finally {
       setLoading(false);
     }
   }
+
+  const currentProfile = displayProfile;
+  const displayName = currentProfile?.full_name?.split(' ').pop() || 'there';
+
+  const headerGlowColor = headerGlowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(166, 139, 91, 0.0)', 'rgba(166, 139, 91, 0.15)'],
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -243,79 +233,57 @@ export default function AgentScreen() {
         keyboardVerticalOffset={90}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, { backgroundColor: headerGlowColor }]}>
           <View style={styles.agentAvatar}>
-            <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+            <Ionicons name="sparkles" size={22} color="#FFFFFF" />
           </View>
-          <View>
+          <View style={styles.headerText}>
             <Text style={styles.agentName}>CME Agent</Text>
-            <Text style={styles.agentStatus}>Your AI compliance assistant</Text>
+            <View style={styles.statusRow}>
+              <View style={styles.statusDot} />
+              <Text style={styles.agentStatus}>AI-powered • Your data</Text>
+            </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Messages */}
         <ScrollView
           ref={scrollRef}
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd()}
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
         >
           {messages.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>
-                Hi Dr. {((!user && DEMO_MODE) ? demoProfile : profile)?.full_name?.split(' ').pop()}!
-              </Text>
+              <View style={styles.emptyAvatarLarge}>
+                <Ionicons name="sparkles" size={32} color={colors.accent} />
+              </View>
+              <Text style={styles.emptyTitle}>Hi Dr. {displayName}!</Text>
               <Text style={styles.emptyText}>
-                I'm your CME Agent. I can help you understand your requirements,
-                find courses, and stay on track with your compliance.
+                I'm your AI compliance assistant. I know your licenses, credits, and deadlines — ask me anything about your CME requirements.
               </Text>
 
               <Text style={styles.suggestionsTitle}>Try asking:</Text>
               <View style={styles.suggestions}>
                 {SUGGESTED_PROMPTS.map((prompt, index) => (
-                  <TouchableOpacity
+                  <SuggestionChip
                     key={index}
-                    style={styles.suggestionChip}
-                    onPress={() => sendMessage(prompt)}
-                  >
-                    <Text style={styles.suggestionText}>{prompt}</Text>
-                  </TouchableOpacity>
+                    icon={prompt.icon}
+                    text={prompt.text}
+                    color={prompt.color}
+                    onPress={() => sendMessage(prompt.text)}
+                  />
                 ))}
               </View>
             </View>
           ) : (
             messages.map((message) => (
-              <View
-                key={message.id}
-                style={[
-                  styles.messageBubble,
-                  message.role === 'user' ? styles.userBubble : styles.assistantBubble,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.messageText,
-                    message.role === 'user' && styles.userText,
-                  ]}
-                >
-                  {message.content}
-                </Text>
-              </View>
+              <MessageBubble key={message.id} message={message} />
             ))
           )}
 
-          {loading && (
-            <View style={[styles.messageBubble, styles.assistantBubble]}>
-              <View style={styles.thinkingContainer}>
-                <Text style={styles.typingIndicator}>Thinking</Text>
-                <View style={styles.dots}>
-                  <Text style={styles.dot}>.</Text>
-                  <Text style={styles.dot}>.</Text>
-                  <Text style={styles.dot}>.</Text>
-                </View>
-              </View>
-            </View>
-          )}
+          {loading && <TypingIndicator />}
         </ScrollView>
 
         {/* Input */}
@@ -325,17 +293,21 @@ export default function AgentScreen() {
             value={input}
             onChangeText={setInput}
             placeholder="Ask me anything about CME..."
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={colors.textMuted}
             multiline
             maxLength={500}
+            returnKeyType="default"
           />
-          <TouchableOpacity
-            style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
-            onPress={() => sendMessage(input)}
-            disabled={!input.trim() || loading}
-          >
-            <Text style={styles.sendIcon}>→</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: sendScaleAnim }] }}>
+            <TouchableOpacity
+              style={[styles.sendButton, (!input.trim() || loading) && styles.sendButtonDisabled]}
+              onPress={() => sendMessage(input)}
+              disabled={!input.trim() || loading}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="send" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -350,35 +322,50 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
+
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    backgroundColor: colors.card,
   },
   agentAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  agentIcon: {
-    fontSize: 24,
+  headerText: {
+    flex: 1,
   },
   agentName: {
     fontSize: typography.h3.fontSize,
     fontWeight: typography.h3.fontWeight,
     color: colors.text,
   },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+    marginRight: 6,
+  },
   agentStatus: {
     fontSize: typography.caption.fontSize,
     color: colors.textSecondary,
   },
+
+  // Messages
   messagesContainer: {
     flex: 1,
   },
@@ -386,8 +373,20 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     paddingBottom: spacing.xl,
   },
+
+  // Empty state
   emptyState: {
-    padding: spacing.lg,
+    padding: spacing.md,
+    paddingTop: spacing.xl,
+  },
+  emptyAvatarLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.accent + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   emptyTitle: {
     fontSize: typography.h2.fontSize,
@@ -404,84 +403,35 @@ const styles = StyleSheet.create({
   suggestionsTitle: {
     fontSize: typography.label.fontSize,
     fontWeight: typography.label.fontWeight,
-    color: colors.text,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: spacing.md,
   },
   suggestions: {
     gap: spacing.sm,
   },
-  suggestionChip: {
-    backgroundColor: colors.card,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  suggestionText: {
-    fontSize: typography.body.fontSize,
-    color: colors.text,
-  },
-  messageBubble: {
-    maxWidth: '80%',
-    padding: spacing.md,
-    borderRadius: 16,
-    marginBottom: spacing.sm,
-  },
-  userBubble: {
-    backgroundColor: colors.accent,
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  assistantBubble: {
-    backgroundColor: colors.card,
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: typography.body.fontSize,
-    color: colors.text,
-    lineHeight: 22,
-  },
-  userText: {
-    color: '#FFFFFF',
-  },
-  thinkingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  typingIndicator: {
-    fontSize: typography.body.fontSize,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  dots: {
-    flexDirection: 'row',
-    marginLeft: spacing.xs,
-  },
-  dot: {
-    fontSize: typography.body.fontSize,
-    color: colors.textSecondary,
-    marginHorizontal: 2,
-  },
+  // Input
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: colors.card,
+    backgroundColor: colors.backgroundElevated,
   },
   input: {
     flex: 1,
     backgroundColor: colors.background,
     borderRadius: 20,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     fontSize: typography.body.fontSize,
     color: colors.text,
     maxHeight: 100,
     marginRight: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   sendButton: {
     width: 40,
@@ -492,11 +442,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    opacity: 0.5,
-  },
-  sendIcon: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontWeight: '700',
+    opacity: 0.4,
   },
 });

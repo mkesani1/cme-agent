@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { usePathname, router } from 'expo-router';
 import { useRef, useEffect } from 'react';
 import { colors } from '../../src/lib/theme';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../../src/lib/haptics';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -51,9 +51,7 @@ function CustomTabBar() {
 
   const handlePress = (tab: typeof TAB_CONFIG[number], index: number) => {
     // Haptic feedback
-    Haptics.impactAsync(
-      tab.isCenter ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light
-    );
+    triggerHaptic(tab.isCenter ? 'medium' : 'light');
 
     // Scale animation
     Animated.sequence([

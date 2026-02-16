@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/lib/supabase';
 import { Button, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { commonStyles } from '../../src/lib/commonStyles';
 
 export default function VerifyEmailScreen() {
   const params = useLocalSearchParams();
@@ -117,8 +118,8 @@ export default function VerifyEmailScreen() {
           <View style={styles.successIcon}>
             <Text style={styles.successIconText}>✓</Text>
           </View>
-          <Text style={styles.successTitle}>Email Verified!</Text>
-          <Text style={styles.successText}>
+          <Text style={commonStyles.successTitle}>Email Verified!</Text>
+          <Text style={commonStyles.successText}>
             Your account has been activated. Redirecting to the app...
           </Text>
         </View>
@@ -146,13 +147,13 @@ export default function VerifyEmailScreen() {
         {/* Content */}
         <Card style={styles.card}>
           {error ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View style={commonStyles.errorContainer}>
+              <Text style={commonStyles.errorText}>{error}</Text>
             </View>
           ) : null}
 
           {resendSuccess ? (
-            <View style={styles.successContainer}>
+            <View style={commonStyles.successContainer}>
               <Text style={styles.successMessage}>
                 Verification email sent! Check your inbox.
               </Text>

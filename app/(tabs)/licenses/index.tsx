@@ -17,6 +17,7 @@ import { useAuth } from '../../../src/hooks/useAuth';
 import { Card, Button, ProgressBar, CategoryTag } from '../../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../../src/lib/theme';
 import { DEMO_MODE, getStateName, demoLicenses } from '../../../src/lib/demoData';
+import { getUrgencyLevel, getDaysUntilExpiry, UrgencyLevel } from '../../../src/lib/license-utils';
 
 interface License {
   id: string;
@@ -40,23 +41,6 @@ interface DEARegistration {
   linked_states: string[] | null;
 }
 
-// Urgency classification — matches dashboard logic
-type UrgencyLevel = 'critical' | 'thisYear' | 'safe';
-
-function getUrgencyLevel(expiryDate: string | null): UrgencyLevel {
-  if (!expiryDate) return 'safe';
-  const now = new Date();
-  const expiry = new Date(expiryDate);
-  const daysUntil = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (daysUntil <= 90) return 'critical';
-  if (expiry.getFullYear() === now.getFullYear()) return 'thisYear';
-  return 'safe';
-}
-
-function getDaysUntil(dateStr: string | null): number | null {
-  if (!dateStr) return null;
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-}
 
 // Sort by expiry date (soonest first)
 function sortByExpiry(licenses: License[]): License[] {
@@ -279,7 +263,7 @@ export default function LicensesScreen() {
               ? (license.credits_earned / totalRequired) * 100
               : 0;
             const urgency = getUrgencyLevel(license.expiry_date);
-            const daysUntil = getDaysUntil(license.expiry_date);
+            const daysUntil = getDaysUntilExpiry(license.expiry_date);
 
             return (
               <TouchableOpacity

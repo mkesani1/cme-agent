@@ -16,12 +16,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic, triggerNotification } from '../../src/lib/haptics';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
+import { useDemo } from '../../src/hooks/useDemo';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../src/lib/theme';
-import { DEMO_MODE, demoProfile, getStateName, demoLicenses } from '../../src/lib/demoData';
+import { getStateName } from '../../src/lib/demoData';
 import { useFadeInUp } from '../../src/lib/animations';
+import { getUrgencyLevel, getDaysUntilExpiry, GOLD_GRADIENT, UrgencyLevel } from '../../src/lib/license-utils';
+import { BubbleOverlay, PressableCard, PressableButton } from '../../src/components/ui';
 
 interface LicenseWithProgress {
   id: string;
@@ -38,24 +41,6 @@ interface LicenseWithProgress {
   }[];
 }
 
-// Urgency classification for license expiry
-type UrgencyLevel = 'critical' | 'thisYear' | 'safe';
-
-function getUrgencyLevel(expiryDate: string | null): UrgencyLevel {
-  if (!expiryDate) return 'safe';
-  const now = new Date();
-  const expiry = new Date(expiryDate);
-  const daysUntil = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (daysUntil <= 90) return 'critical';       // Within 3 months → RED
-  if (expiry.getFullYear() === now.getFullYear()) return 'thisYear'; // This year → YELLOW
-  return 'safe';
-}
-
-function getDaysUntilExpiry(expiryDate: string | null): number | null {
-  if (!expiryDate) return null;
-  return Math.ceil((new Date(expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-}
 
 // Sort licenses by expiry date (soonest first)
 function sortByExpiry(licenses: LicenseWithProgress[]): LicenseWithProgress[] {
@@ -65,41 +50,6 @@ function sortByExpiry(licenses: LicenseWithProgress[]): LicenseWithProgress[] {
     if (!b.expiryDate) return -1;
     return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
   });
-}
-
-// Subtle bubble/bokeh overlay for luxury feel
-function BubbleOverlay({ variant = 'gold' }: { variant?: 'gold' | 'navy' }) {
-  const bubbles = [
-    { cx: '15%', cy: '20%', r: 40, opacity: 0.08 },
-    { cx: '85%', cy: '15%', r: 60, opacity: 0.06 },
-    { cx: '75%', cy: '70%', r: 35, opacity: 0.07 },
-    { cx: '25%', cy: '80%', r: 50, opacity: 0.05 },
-    { cx: '50%', cy: '40%', r: 25, opacity: 0.04 },
-    { cx: '90%', cy: '50%', r: 45, opacity: 0.06 },
-    { cx: '10%', cy: '60%', r: 30, opacity: 0.05 },
-    { cx: '60%', cy: '85%', r: 55, opacity: 0.04 },
-    { cx: '40%', cy: '10%', r: 35, opacity: 0.06 },
-    { cx: '70%', cy: '30%', r: 20, opacity: 0.05 },
-  ];
-
-  const fillColor = variant === 'gold' ? 'rgba(255, 255, 255, 1)' : 'rgba(166, 139, 91, 1)';
-
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-        {bubbles.map((bubble, index) => (
-          <Circle
-            key={index}
-            cx={bubble.cx}
-            cy={bubble.cy}
-            r={bubble.r}
-            fill={fillColor}
-            opacity={bubble.opacity}
-          />
-        ))}
-      </Svg>
-    </View>
-  );
 }
 
 // Animated Circular progress component - fills from 0 to target
@@ -163,134 +113,6 @@ function CircularProgress({ progress, size = 70 }: { progress: number; size?: nu
 // Create animated SVG Circle component
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-// Pressable card with haptic feedback and lift animation
-function PressableCard({
-  children,
-  onPress,
-  style,
-  hapticStyle = 'light'
-}: {
-  children: React.ReactNode;
-  onPress: () => void;
-  style?: any;
-  hapticStyle?: 'light' | 'medium' | 'heavy';
-}) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const translateAnim = useRef(new Animated.Value(0)).current;
-
-  const hapticMap = {
-    light: Haptics.ImpactFeedbackStyle.Light,
-    medium: Haptics.ImpactFeedbackStyle.Medium,
-    heavy: Haptics.ImpactFeedbackStyle.Heavy,
-  };
-
-  const handlePressIn = () => {
-    // Haptic feedback
-    Haptics.impactAsync(hapticMap[hapticStyle]);
-
-    // Scale down and lift
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 0.97,
-        friction: 8,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateAnim, {
-        toValue: -4,
-        friction: 8,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    // Spring back
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 3,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateAnim, {
-        toValue: 0,
-        friction: 3,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  return (
-    <Animated.View style={[
-      style,
-      {
-        transform: [
-          { scale: scaleAnim },
-          { translateY: translateAnim },
-        ],
-      },
-    ]}>
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-      >
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
-// Pressable button with haptic feedback and scale
-function PressableButton({
-  children,
-  onPress,
-  style,
-}: {
-  children: React.ReactNode;
-  onPress: () => void;
-  style?: any;
-}) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Animated.spring(scaleAnim, {
-      toValue: 0.95,
-      friction: 8,
-      tension: 100,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 3,
-      tension: 80,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={{ width: '100%' }}
-      >
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
 // Category pill component
 function CategoryPill({
   label,
@@ -350,6 +172,7 @@ function UrgencyBadge({ urgency, daysLeft }: { urgency: UrgencyLevel; daysLeft: 
 
 export default function DashboardScreen() {
   const { user, profile } = useAuth();
+  const { isDemo, displayProfile, demoLicenses, DEMO_MODE } = useDemo();
   const [licenses, setLicenses] = useState<LicenseWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -447,12 +270,12 @@ export default function DashboardScreen() {
   }
 
   async function onRefresh() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
     setRefreshing(true);
     await loadDashboard();
     setRefreshing(false);
     // Success haptic when refresh completes
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    triggerNotification('success');
   }
 
   function getGreeting() {
@@ -462,7 +285,7 @@ export default function DashboardScreen() {
     return 'Good evening';
   }
 
-  const displayProfile = (!user && DEMO_MODE) ? demoProfile : profile;
+  // displayProfile comes from useDemo() hook
 
   function formatExpiry(dateStr: string | null) {
     if (!dateStr) return '';
@@ -543,7 +366,7 @@ export default function DashboardScreen() {
                   heroUrgency === 'thisYear' && styles.heroCardThisYear,
                 ]}>
                   <LinearGradient
-                    colors={['#C4A574', '#A68B5B', '#8B7349', '#705C3A']}
+                    colors={[...GOLD_GRADIENT]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.heroCard}
