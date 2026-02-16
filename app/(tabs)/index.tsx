@@ -345,9 +345,32 @@ export default function DashboardScreen() {
         {/* Header */}
         <Animated.View style={[styles.header, headerAnim]}>
           <Text style={styles.greetingSmall}>{getGreeting()}</Text>
-          <Text style={styles.doctorName}>Dr. {displayProfile?.full_name?.split(' ').pop() || 'Chandrasekhar'}</Text>
-          <Text style={styles.specialty}>{displayProfile?.degree_type || 'MD'} · Internal Medicine</Text>
+          <Text style={styles.doctorName}>Dr. {displayProfile?.full_name?.split(' ').pop() || 'Doctor'}</Text>
+          <Text style={styles.specialty}>{displayProfile?.degree_type || 'MD'}{displayProfile?.specialty ? ` · ${displayProfile.specialty}` : ''}</Text>
         </Animated.View>
+
+        {/* Empty state — no licenses yet */}
+        {!loading && licenses.length === 0 && (
+          <Animated.View style={cardAnim}>
+            <View style={styles.emptyStateCard}>
+              <View style={styles.emptyStateIcon}>
+                <Ionicons name="medical-outline" size={40} color={colors.accent} />
+              </View>
+              <Text style={styles.emptyStateTitle}>Welcome to CME Agent</Text>
+              <Text style={styles.emptyStateText}>
+                Add your medical licenses to start tracking CME credits and get personalized course recommendations.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyStateButton}
+                onPress={() => router.push('/(tabs)/licenses')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add-circle-outline" size={20} color={colors.navy[900]} />
+                <Text style={styles.emptyStateButtonText}>Add Your First License</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
 
         {/* Hero License Card — soonest expiring, with gold gradient */}
         {heroLicense && (() => {
@@ -952,5 +975,52 @@ const styles = StyleSheet.create({
     color: colors.navy[900],
     fontWeight: '600',
     fontSize: 14,
+  },
+
+  // Empty state
+  emptyStateCard: {
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 20,
+    padding: spacing.xl,
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emptyStateIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  emptyStateTitle: {
+    ...typography.h2,
+    color: colors.text,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  emptyStateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: spacing.sm,
+  },
+  emptyStateButtonText: {
+    color: colors.navy[900],
+    fontWeight: '600',
+    fontSize: 16,
   },
 });

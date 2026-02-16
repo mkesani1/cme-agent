@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/hooks/useAuth';
+import { supabase } from '../../src/lib/supabase';
 import { colors, spacing, typography, degreeTypes } from '../../src/lib/theme';
 import { useFadeInUp } from '../../src/lib/animations';
 import { GOLD_GRADIENT } from '../../src/lib/license-utils';
@@ -43,11 +44,28 @@ function SettingRow({ icon, label, onPress, showChevron = true }: SettingRowProp
 }
 
 export default function ProfileScreen() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [stats, setStats] = useState({ licenses: 0, courses: 0, certs: 0 });
   const headerAnim = useFadeInUp(0);
   const cardAnim = useFadeInUp(100);
   const sectionsAnim = useFadeInUp(200);
+
+  useEffect(() => {
+    if (!user) return;
+    async function loadStats() {
+      const [licRes, certRes] = await Promise.all([
+        supabase.from('licenses').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
+        supabase.from('certificates').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
+      ]);
+      setStats({
+        licenses: licRes.count ?? 0,
+        courses: certRes.count ?? 0,  // completed courses = certificates
+        certs: certRes.count ?? 0,
+      });
+    }
+    loadStats();
+  }, [user]);
 
   async function handleSignOut() {
     Alert.alert(
@@ -110,17 +128,17 @@ export default function ProfileScreen() {
             </Text>
             <View style={styles.profileStats}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>3</Text>
+                <Text style={styles.statValue}>{stats.licenses}</Text>
                 <Text style={styles.statLabel}>Licenses</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>12</Text>
+                <Text style={styles.statValue}>{stats.courses}</Text>
                 <Text style={styles.statLabel}>Courses</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>8</Text>
+                <Text style={styles.statValue}>{stats.certs}</Text>
                 <Text style={styles.statLabel}>Certs</Text>
               </View>
             </View>

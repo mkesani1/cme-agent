@@ -1,5 +1,5 @@
 // Demo mode flag - set to true to enable demo mode with mock data
-export const DEMO_MODE = true;
+export const DEMO_MODE = false;
 
 // Demo credentials for auto-login (backed by real Supabase data)
 export const DEMO_EMAIL = 'test.user.cme@example.com';
