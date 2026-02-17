@@ -34,8 +34,14 @@ export function useAuthProvider() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Safety timeout — if auth takes more than 10s, stop loading so the app doesn't hang
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(safetyTimeout);
       if (session?.user) {
         setSession(session);
         setUser(session.user);
@@ -43,11 +49,16 @@ export function useAuthProvider() {
       } else {
         setLoading(false);
       }
+    }).catch((err) => {
+      clearTimeout(safetyTimeout);
+      console.warn('Failed to get session:', err);
+      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        clearTimeout(safetyTimeout);
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -59,20 +70,28 @@ export function useAuthProvider() {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function fetchProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (!error && data) {
-      setProfile(data);
+      if (!error && data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch profile:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function signUp(email: string, password: string, fullName: string) {
