@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card } from '../../src/components/ui';
 import { colors, spacing, typography, degreeTypes, DegreeType } from '../../src/lib/theme';
+import { useFadeInUp, useStaggeredList } from '../../src/lib/animations';
 
 const degreeOptions: { type: DegreeType; icon: string; description: string }[] = [
   { type: 'MD', icon: '🩺', description: 'Doctor of Medicine' },
@@ -16,6 +17,12 @@ export default function DegreeSelectScreen() {
   const { updateProfile } = useAuth();
   const [selectedDegree, setSelectedDegree] = useState<DegreeType | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Animations
+  const headerAnim = useFadeInUp(0);
+  const optionAnims = useStaggeredList(degreeOptions.length, 200);
+  const noteAnim = useFadeInUp(500);
+  const footerAnim = useFadeInUp(600);
 
   async function handleContinue() {
     if (!selectedDegree) return;
@@ -41,53 +48,58 @@ export default function DegreeSelectScreen() {
         </View>
 
         {/* Header */}
-        <Text style={styles.title}>What's your degree?</Text>
-        <Text style={styles.subtitle}>
-          This helps us customize your CME requirements
-        </Text>
+        <Animated.View style={headerAnim}>
+          <Text style={styles.title}>What's your degree?</Text>
+          <Text style={styles.subtitle}>
+            This helps us customize your CME requirements
+          </Text>
+        </Animated.View>
 
         {/* Degree Options */}
         <View style={styles.options}>
-          {degreeOptions.map((option) => (
-            <TouchableOpacity
-              key={option.type}
-              onPress={() => setSelectedDegree(option.type)}
-              activeOpacity={0.7}
-            >
-              <Card
-                style={[
-                  styles.optionCard,
-                  selectedDegree === option.type && styles.optionSelected,
-                ]}
+          {degreeOptions.map((option, index) => (
+            <Animated.View key={option.type} style={optionAnims[index]}>
+              <TouchableOpacity
+                onPress={() => setSelectedDegree(option.type)}
+                activeOpacity={0.7}
               >
-                <Text style={styles.optionIcon}>{option.icon}</Text>
-                <View style={styles.optionText}>
-                  <Text style={styles.optionType}>{option.type}</Text>
-                  <Text style={styles.optionDescription}>{option.description}</Text>
-                </View>
-                <View
+                <Card
                   style={[
-                    styles.radio,
-                    selectedDegree === option.type && styles.radioSelected,
+                    styles.optionCard,
+                    selectedDegree === option.type && styles.optionSelected,
                   ]}
                 >
-                  {selectedDegree === option.type && (
-                    <View style={styles.radioInner} />
-                  )}
-                </View>
-              </Card>
-            </TouchableOpacity>
+                  <Text style={styles.optionIcon}>{option.icon}</Text>
+                  <View style={styles.optionText}>
+                    <Text style={styles.optionType}>{option.type}</Text>
+                    <Text style={styles.optionDescription}>{option.description}</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.radio,
+                      selectedDegree === option.type && styles.radioSelected,
+                    ]}
+                  >
+                    {selectedDegree === option.type && (
+                      <View style={styles.radioInner} />
+                    )}
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            </Animated.View>
           ))}
         </View>
 
         {/* Note */}
-        <Text style={styles.note}>
-          More credential types coming soon: PA, NP, PharmD
-        </Text>
+        <Animated.View style={noteAnim}>
+          <Text style={styles.note}>
+            More credential types coming soon: PA, NP, PharmD
+          </Text>
+        </Animated.View>
       </View>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <Animated.View style={[styles.footer, footerAnim]}>
         <Button
           title="Continue"
           onPress={handleContinue}
@@ -95,7 +107,7 @@ export default function DegreeSelectScreen() {
           loading={loading}
           size="lg"
         />
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

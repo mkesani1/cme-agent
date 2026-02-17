@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import { useAuth } from '../../../src/hooks/useAuth';
 import { DEMO_MODE, demoCourses } from '../../../src/lib/demoData';
 import { useRecommendations, CourseRecommendation } from '../../../src/hooks/useRecommendations';
 import { useCourseDiscovery, useGapAnalysis } from '../../../src/hooks/useCourseDiscovery';
+import { useFadeInUp, useTabFade } from '../../../src/lib/animations';
 
 interface Course {
   id: string;
@@ -47,6 +49,15 @@ export default function CoursesScreen() {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'smart' | 'discover' | 'all'>('smart');
+
+  // Animations
+  const headerAnim = useFadeInUp(0);
+  const { opacity: tabOpacity, fadeOutIn } = useTabFade();
+
+  function switchTab(tab: 'smart' | 'discover' | 'all') {
+    if (tab === activeTab) return;
+    fadeOutIn(() => setActiveTab(tab));
+  }
 
   // AI Recommendations
   const {
@@ -157,18 +168,20 @@ export default function CoursesScreen() {
         }
       >
         {/* Header */}
-        <Text style={styles.title}>Find Courses</Text>
-        <Text style={styles.subtitle}>
-          {activeTab === 'smart'
-            ? 'AI-optimized courses that cover multiple state requirements'
-            : 'Browse all available CME courses'}
-        </Text>
+        <Animated.View style={headerAnim}>
+          <Text style={styles.title}>Find Courses</Text>
+          <Text style={styles.subtitle}>
+            {activeTab === 'smart'
+              ? 'AI-optimized courses that cover multiple state requirements'
+              : 'Browse all available CME courses'}
+          </Text>
+        </Animated.View>
 
         {/* Tab Toggle */}
         <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'smart' && styles.toggleButtonActive]}
-            onPress={() => setActiveTab('smart')}
+            onPress={() => switchTab('smart')}
           >
             <Ionicons
               name="sparkles"
@@ -182,7 +195,7 @@ export default function CoursesScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'discover' && styles.toggleButtonActive]}
-            onPress={() => setActiveTab('discover')}
+            onPress={() => switchTab('discover')}
           >
             <Ionicons
               name="globe"
@@ -196,13 +209,16 @@ export default function CoursesScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'all' && styles.toggleButtonActive]}
-            onPress={() => setActiveTab('all')}
+            onPress={() => switchTab('all')}
           >
             <Text style={[styles.toggleText, activeTab === 'all' && styles.toggleTextActive]}>
               All
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Tab Content with crossfade */}
+        <Animated.View style={{ opacity: tabOpacity }}>
 
         {/* Smart Match Tab */}
         {activeTab === 'smart' && (
@@ -533,6 +549,8 @@ export default function CoursesScreen() {
             )}
           </>
         )}
+
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );

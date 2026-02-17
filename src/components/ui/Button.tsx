@@ -6,8 +6,11 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
+  Animated,
 } from 'react-native';
 import { colors, borderRadius, spacing, typography } from '../../lib/theme';
+import { useScalePress } from '../../lib/animations';
+import { triggerHaptic } from '../../lib/haptics';
 
 interface ButtonProps {
   title: string;
@@ -30,6 +33,13 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const { scale, onPressIn, onPressOut } = useScalePress();
+
+  const handlePress = () => {
+    triggerHaptic('light');
+    onPress();
+  };
+
   const buttonStyles = [
     styles.base,
     styles[variant],
@@ -47,21 +57,25 @@ export function Button({
   ];
 
   return (
-    <TouchableOpacity
-      style={buttonStyles}
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.7}
-    >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'primary' ? '#FFFFFF' : colors.accent}
-          size="small"
-        />
-      ) : (
-        <Text style={textStyles}>{title}</Text>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <TouchableOpacity
+        style={buttonStyles}
+        onPress={handlePress}
+        onPressIn={disabled ? undefined : onPressIn}
+        onPressOut={disabled ? undefined : onPressOut}
+        disabled={disabled || loading}
+        activeOpacity={1}
+      >
+        {loading ? (
+          <ActivityIndicator
+            color={variant === 'primary' ? '#FFFFFF' : colors.accent}
+            size="small"
+          />
+        ) : (
+          <Text style={textStyles}>{title}</Text>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card, ProgressBar, CategoryTag } from '../../src/components/ui';
 import { colors, spacing, typography, CMECategory } from '../../src/lib/theme';
+import { useScaleIn, useFadeInUp } from '../../src/lib/animations';
 
 interface LicenseSummary {
   state: string;
@@ -21,6 +22,14 @@ export default function SetupCompleteScreen() {
   const { user, profile } = useAuth();
   const [licenses, setLicenses] = useState<LicenseSummary[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Animations
+  const successAnim = useScaleIn(0);
+  const titleAnim = useFadeInUp(300);
+  const subtitleAnim = useFadeInUp(400);
+  const summaryTitleAnim = useFadeInUp(500);
+  const cardsAnim = useFadeInUp(600);
+  const footerAnim = useFadeInUp(800);
 
   useEffect(() => {
     loadLicenses();
@@ -81,65 +90,75 @@ export default function SetupCompleteScreen() {
         </View>
 
         {/* Success Icon */}
-        <View style={styles.successIcon}>
+        <Animated.View style={[styles.successIcon, successAnim]}>
           <Text style={styles.successEmoji}>✓</Text>
-        </View>
+        </Animated.View>
 
         {/* Header */}
-        <Text style={styles.title}>You're all set!</Text>
-        <Text style={styles.subtitle}>
-          Your CME Agent is ready to help you stay compliant
-        </Text>
+        <Animated.View style={titleAnim}>
+          <Text style={styles.title}>You're all set!</Text>
+        </Animated.View>
+        <Animated.View style={subtitleAnim}>
+          <Text style={styles.subtitle}>
+            Your CME Agent is ready to help you stay compliant
+          </Text>
+        </Animated.View>
 
         {/* Summary */}
         {licenses.length > 0 ? (
           <View style={styles.summary}>
-            <Text style={styles.summaryTitle}>Your Licenses</Text>
-            {licenses.map((license, index) => (
-              <Card key={index} style={styles.licenseCard}>
-                <View style={styles.licenseHeader}>
-                  <Text style={styles.licenseState}>{license.state}</Text>
-                  <Text style={styles.licenseNumber}>#{license.licenseNumber}</Text>
-                </View>
-
-                <View style={styles.requirementsContainer}>
-                  <Text style={styles.requirementsTitle}>Requirements:</Text>
-                  <View style={styles.categories}>
-                    {license.requirements.map((req, i) => (
-                      <View key={i} style={styles.categoryRow}>
-                        <CategoryTag category={req.category} size="sm" />
-                        <Text style={styles.categoryCredits}>{req.required} hrs</Text>
-                      </View>
-                    ))}
+            <Animated.View style={summaryTitleAnim}>
+              <Text style={styles.summaryTitle}>Your Licenses</Text>
+            </Animated.View>
+            <Animated.View style={cardsAnim}>
+              {licenses.map((license, index) => (
+                <Card key={index} style={styles.licenseCard}>
+                  <View style={styles.licenseHeader}>
+                    <Text style={styles.licenseState}>{license.state}</Text>
+                    <Text style={styles.licenseNumber}>#{license.licenseNumber}</Text>
                   </View>
-                </View>
 
-                <ProgressBar
-                  progress={0}
-                  label={`0/${license.totalRequired ?? 0} credits`}
-                  showPercentage
-                  size="md"
-                />
-              </Card>
-            ))}
+                  <View style={styles.requirementsContainer}>
+                    <Text style={styles.requirementsTitle}>Requirements:</Text>
+                    <View style={styles.categories}>
+                      {license.requirements.map((req, i) => (
+                        <View key={i} style={styles.categoryRow}>
+                          <CategoryTag category={req.category} size="sm" />
+                          <Text style={styles.categoryCredits}>{req.required} hrs</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  <ProgressBar
+                    progress={0}
+                    label={`0/${license.totalRequired ?? 0} credits`}
+                    showPercentage
+                    size="md"
+                  />
+                </Card>
+              ))}
+            </Animated.View>
           </View>
         ) : (
-          <Card style={styles.emptyCard}>
-            <Text style={styles.emptyText}>
-              No licenses added yet. You can add them from the dashboard.
-            </Text>
-          </Card>
+          <Animated.View style={cardsAnim}>
+            <Card style={styles.emptyCard}>
+              <Text style={styles.emptyText}>
+                No licenses added yet. You can add them from the dashboard.
+              </Text>
+            </Card>
+          </Animated.View>
         )}
       </View>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <Animated.View style={[styles.footer, footerAnim]}>
         <Button
           title="Go to Dashboard"
           onPress={goToDashboard}
           size="lg"
         />
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

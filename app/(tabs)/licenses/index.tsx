@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ import { Card, Button, ProgressBar, CategoryTag } from '../../../src/components/
 import { colors, spacing, typography, CMECategory } from '../../../src/lib/theme';
 import { DEMO_MODE, getStateName, demoLicenses } from '../../../src/lib/demoData';
 import { getUrgencyLevel, getDaysUntilExpiry, UrgencyLevel } from '../../../src/lib/license-utils';
+import { useFadeInUp } from '../../../src/lib/animations';
 
 interface License {
   id: string;
@@ -59,6 +61,42 @@ export default function LicensesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Entrance animations
+  const headerAnim = useFadeInUp(0);
+  const sectionAnim = useFadeInUp(100);
+  const deaSectionAnim = useFadeInUp(200);
+
+  // Staggered card animations (up to 6 cards)
+  const cardAnims = useRef(
+    Array.from({ length: 6 }, (_, i) => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(15),
+    }))
+  ).current;
+
+  // Trigger card stagger when licenses load
+  useEffect(() => {
+    if (licenses.length > 0 && !loading) {
+      const animations = cardAnims.slice(0, Math.min(licenses.length, 6)).map((anim, index) => {
+        return Animated.parallel([
+          Animated.timing(anim.opacity, {
+            toValue: 1,
+            duration: 300,
+            delay: 150 + index * 80,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.translateY, {
+            toValue: 0,
+            duration: 300,
+            delay: 150 + index * 80,
+            useNativeDriver: true,
+          }),
+        ]);
+      });
+      Animated.parallel(animations).start();
+    }
+  }, [licenses.length, loading]);
 
   useEffect(() => {
     loadData();
@@ -218,7 +256,7 @@ export default function LicensesScreen() {
           />
         }
       >
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerAnim]}>
           <Text style={styles.title}>Licenses</Text>
           <TouchableOpacity
             style={styles.addButton}
@@ -226,7 +264,7 @@ export default function LicensesScreen() {
           >
             <Text style={styles.addButtonText}>+ Add</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Error State */}
         {error && (
@@ -244,7 +282,9 @@ export default function LicensesScreen() {
         )}
 
         {/* State Licenses — sorted by expiry, with urgency highlighting */}
-        <Text style={styles.sectionTitle}>State Medical Licenses</Text>
+        <Animated.View style={sectionAnim}>
+          <Text style={styles.sectionTitle}>State Medical Licenses</Text>
+        </Animated.View>
 
         {sortedLicenses.length === 0 && !loading ? (
           <Card style={styles.emptyCard}>
@@ -257,17 +297,21 @@ export default function LicensesScreen() {
             />
           </Card>
         ) : (
-          sortedLicenses.map((license) => {
+          sortedLicenses.map((license, licenseIndex) => {
             const totalRequired = license.total_credits_required ?? 0;
             const progress = totalRequired > 0
               ? (license.credits_earned / totalRequired) * 100
               : 0;
             const urgency = getUrgencyLevel(license.expiry_date);
             const daysUntil = getDaysUntilExpiry(license.expiry_date);
+            const cardAnim = licenseIndex < 6 ? cardAnims[licenseIndex] : null;
 
             return (
-              <TouchableOpacity
+              <Animated.View
                 key={license.id}
+                style={cardAnim ? { opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] } : undefined}
+              >
+              <TouchableOpacity
                 onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
                 onLongPress={() => deleteLicense(license.id)}
                 activeOpacity={0.7}
@@ -361,14 +405,17 @@ export default function LicensesScreen() {
                   )}
                 </Card>
               </TouchableOpacity>
+              </Animated.View>
             );
           })
         )}
 
         {/* DEA Section */}
-        <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>
-          DEA Registration
-        </Text>
+        <Animated.View style={deaSectionAnim}>
+          <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>
+            DEA Registration
+          </Text>
+        </Animated.View>
 
         {dea ? (
           <Card style={styles.deaCard}>

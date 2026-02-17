@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { useScaleIn, useFadeInUp, useStaggeredList } from '../../src/lib/animations';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -15,37 +16,51 @@ const features: { icon: IconName; text: string }[] = [
 ];
 
 export default function WelcomeScreen() {
+  const logoAnim = useScaleIn(0);
+  const appNameAnim = useFadeInUp(200);
+  const taglineAnim = useFadeInUp(350);
+  const featureAnims = useStaggeredList(features.length, 500);
+  const ctaAnim = useFadeInUp(900);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoIcon}>◎</Text>
-          </View>
-          <Text style={styles.appName}>CME Agent</Text>
+          <Animated.View style={logoAnim}>
+            <View style={styles.logo}>
+              <Text style={styles.logoIcon}>◎</Text>
+            </View>
+          </Animated.View>
+          <Animated.View style={appNameAnim}>
+            <Text style={styles.appName}>CME Agent</Text>
+          </Animated.View>
         </View>
 
         {/* Tagline */}
-        <Text style={styles.tagline}>
-          Your AI-powered CME compliance partner
-        </Text>
+        <Animated.View style={taglineAnim}>
+          <Text style={styles.tagline}>
+            Your AI-powered CME compliance partner
+          </Text>
+        </Animated.View>
 
         {/* Features */}
         <View style={styles.features}>
           {features.map((feature, index) => (
-            <View key={index} style={styles.featureRow}>
-              <View style={styles.featureIconContainer}>
-                <Ionicons name={feature.icon} size={22} color={colors.accent} />
+            <Animated.View key={index} style={featureAnims[index]}>
+              <View style={styles.featureRow}>
+                <View style={styles.featureIconContainer}>
+                  <Ionicons name={feature.icon} size={22} color={colors.accent} />
+                </View>
+                <Text style={styles.featureText}>{feature.text}</Text>
               </View>
-              <Text style={styles.featureText}>{feature.text}</Text>
-            </View>
+            </Animated.View>
           ))}
         </View>
       </View>
 
       {/* CTA */}
-      <View style={styles.footer}>
+      <Animated.View style={[styles.footer, ctaAnim]}>
         <Button
           title="Get Started"
           onPress={() => router.push('/(onboarding)/degree-select')}
@@ -54,7 +69,7 @@ export default function WelcomeScreen() {
         <Text style={styles.footerText}>
           Takes less than 2 minutes to set up
         </Text>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

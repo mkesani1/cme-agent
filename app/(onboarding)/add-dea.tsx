@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card, Input } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { useFadeInUp } from '../../src/lib/animations';
 
 export default function AddDEAScreen() {
   const { user } = useAuth();
@@ -14,6 +15,12 @@ export default function AddDEAScreen() {
   const [expiryDate, setExpiryDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [skipDEA, setSkipDEA] = useState(false);
+
+  // Animations
+  const headerAnim = useFadeInUp(0);
+  const cardAnim = useFadeInUp(200);
+  const infoAnim = useFadeInUp(400);
+  const footerAnim = useFadeInUp(500);
 
   async function handleContinue() {
     if (!deaNumber && !skipDEA) {
@@ -24,7 +31,6 @@ export default function AddDEAScreen() {
     if (deaNumber) {
       setLoading(true);
 
-      // Get user's licenses to link DEA
       const { data: licenses } = await supabase
         .from('licenses')
         .select('state')
@@ -57,47 +63,53 @@ export default function AddDEAScreen() {
         </View>
 
         {/* Header */}
-        <Text style={styles.title}>DEA Registration</Text>
-        <Text style={styles.subtitle}>
-          Add your DEA registration for controlled substances tracking
-        </Text>
+        <Animated.View style={headerAnim}>
+          <Text style={styles.title}>DEA Registration</Text>
+          <Text style={styles.subtitle}>
+            Add your DEA registration for controlled substances tracking
+          </Text>
+        </Animated.View>
 
         {/* DEA Form */}
-        <Card style={styles.card}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="medkit" size={32} color={colors.accent} />
-          </View>
+        <Animated.View style={cardAnim}>
+          <Card style={styles.card}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="medkit" size={32} color={colors.accent} />
+            </View>
 
-          <Input
-            label="DEA Number"
-            value={deaNumber}
-            onChangeText={setDeaNumber}
-            placeholder="AB1234567"
-            autoCapitalize="characters"
-            containerStyle={styles.input}
-          />
+            <Input
+              label="DEA Number"
+              value={deaNumber}
+              onChangeText={setDeaNumber}
+              placeholder="AB1234567"
+              autoCapitalize="characters"
+              containerStyle={styles.input}
+            />
 
-          <Input
-            label="Expiry Date (Optional)"
-            value={expiryDate}
-            onChangeText={setExpiryDate}
-            placeholder="2027-06-30"
-            containerStyle={styles.input}
-          />
-        </Card>
+            <Input
+              label="Expiry Date (Optional)"
+              value={expiryDate}
+              onChangeText={setExpiryDate}
+              placeholder="2027-06-30"
+              containerStyle={styles.input}
+            />
+          </Card>
+        </Animated.View>
 
         {/* Info Box */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>Why add your DEA?</Text>
-          <Text style={styles.infoText}>
-            Many states require controlled substances CME credits tied to your DEA registration.
-            Adding it helps us track these requirements automatically.
-          </Text>
-        </View>
+        <Animated.View style={infoAnim}>
+          <View style={styles.infoBox}>
+            <Text style={styles.infoTitle}>Why add your DEA?</Text>
+            <Text style={styles.infoText}>
+              Many states require controlled substances CME credits tied to your DEA registration.
+              Adding it helps us track these requirements automatically.
+            </Text>
+          </View>
+        </Animated.View>
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <Animated.View style={[styles.footer, footerAnim]}>
         <Button
           title="Continue"
           onPress={handleContinue}
@@ -113,7 +125,7 @@ export default function AddDEAScreen() {
         >
           <Text style={styles.skipText}>I don't have a DEA registration</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

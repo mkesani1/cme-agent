@@ -2,7 +2,7 @@
 // Micro-animations for premium feel
 
 import { Animated, Easing } from 'react-native';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 // Animation timing constants
 export const timing = {
@@ -193,6 +193,112 @@ export function useStaggeredList(itemCount: number, baseDelay: number = 0) {
     opacity: anim.opacity,
     transform: [{ translateY: anim.translateY }],
   }));
+}
+
+// Hook for scale-in animation (logos, icons, celebration elements)
+export function useScaleIn(delay: number = 0) {
+  const scale = useRef(new Animated.Value(0.5)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 6,
+          tension: 80,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: timing.fast,
+          easing: easings.smooth,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return {
+    opacity,
+    transform: [{ scale }],
+  };
+}
+
+// Hook for shake animation (error feedback)
+export function useShake() {
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const shake = () => {
+    Animated.sequence([
+      Animated.timing(translateX, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: 8, duration: 50, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: -8, duration: 50, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: 4, duration: 50, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  };
+
+  return {
+    translateX,
+    shake,
+    style: { transform: [{ translateX }] },
+  };
+}
+
+// Hook for count-up animation (stat numbers)
+export function useCountUp(target: number, duration: number = 600, delay: number = 0) {
+  const animValue = useRef(new Animated.Value(0)).current;
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const listener = animValue.addListener(({ value }) => {
+      setDisplayValue(Math.round(value));
+    });
+
+    const timeout = setTimeout(() => {
+      Animated.timing(animValue, {
+        toValue: target,
+        duration,
+        easing: easings.decelerate,
+        useNativeDriver: false, // needed for listener
+      }).start();
+    }, delay);
+
+    return () => {
+      clearTimeout(timeout);
+      animValue.removeListener(listener);
+    };
+  }, [target]);
+
+  return displayValue;
+}
+
+// Hook for tab content crossfade
+export function useTabFade() {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const fadeOutIn = (callback: () => void) => {
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 120,
+      easing: easings.accelerate,
+      useNativeDriver: true,
+    }).start(() => {
+      callback();
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        easing: easings.decelerate,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  return { opacity, fadeOutIn };
 }
 
 // Animated card wrapper component style generator

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card, Input } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
+import { useFadeInUp } from '../../src/lib/animations';
 
 interface LicenseForm {
   state: string;
@@ -28,6 +29,13 @@ export default function AddLicensesScreen() {
   ]);
   const [loading, setLoading] = useState(false);
 
+  // Animations
+  const headerAnim = useFadeInUp(0);
+  const subtitleAnim = useFadeInUp(100);
+  const formAnim = useFadeInUp(200);
+  const addBtnAnim = useFadeInUp(400);
+  const footerAnim = useFadeInUp(500);
+
   function addLicense() {
     setLicenses([...licenses, { state: '', licenseNumber: '', expiryDate: '' }]);
   }
@@ -47,14 +55,12 @@ export default function AddLicensesScreen() {
   async function handleContinue() {
     const validLicenses = licenses.filter(l => l.state && l.licenseNumber);
     if (validLicenses.length === 0) {
-      // Skip if no licenses entered
       router.push('/(onboarding)/add-dea');
       return;
     }
 
     setLoading(true);
 
-    // Insert licenses
     for (const license of validLicenses) {
       const { data: licenseData, error: licenseError } = await supabase
         .from('licenses')
@@ -64,14 +70,12 @@ export default function AddLicensesScreen() {
           license_number: license.licenseNumber,
           degree_type: profile?.degree_type,
           expiry_date: license.expiryDate || null,
-          total_credits_required: 50, // Default, will be customized per state
+          total_credits_required: 50,
         })
         .select()
         .single();
 
       if (!licenseError && licenseData) {
-        // Add default requirements based on state
-        // This is simplified - in production, would have state-specific rules
         await supabase.from('license_requirements').insert([
           { license_id: licenseData.id, category: 'general', credits_required: 35 },
           { license_id: licenseData.id, category: 'controlled_substances', credits_required: 10 },
@@ -96,59 +100,67 @@ export default function AddLicensesScreen() {
         </View>
 
         {/* Header */}
-        <Text style={styles.title}>Add your licenses</Text>
-        <Text style={styles.subtitle}>
-          Enter your state medical licenses. You can add more later.
-        </Text>
+        <Animated.View style={headerAnim}>
+          <Text style={styles.title}>Add your licenses</Text>
+        </Animated.View>
+        <Animated.View style={subtitleAnim}>
+          <Text style={styles.subtitle}>
+            Enter your state medical licenses. You can add more later.
+          </Text>
+        </Animated.View>
 
         {/* License Forms */}
-        {licenses.map((license, index) => (
-          <Card key={index} style={styles.licenseCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>License {index + 1}</Text>
-              {licenses.length > 1 && (
-                <TouchableOpacity onPress={() => removeLicense(index)}>
-                  <Text style={styles.removeText}>Remove</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+        <Animated.View style={formAnim}>
+          {licenses.map((license, index) => (
+            <Card key={index} style={styles.licenseCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>License {index + 1}</Text>
+                {licenses.length > 1 && (
+                  <TouchableOpacity onPress={() => removeLicense(index)}>
+                    <Text style={styles.removeText}>Remove</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
-            <Input
-              label="State"
-              value={license.state}
-              onChangeText={(value) => updateLicense(index, 'state', value.toUpperCase())}
-              placeholder="CA"
-              maxLength={2}
-              autoCapitalize="characters"
-              containerStyle={styles.input}
-            />
+              <Input
+                label="State"
+                value={license.state}
+                onChangeText={(value) => updateLicense(index, 'state', value.toUpperCase())}
+                placeholder="CA"
+                maxLength={2}
+                autoCapitalize="characters"
+                containerStyle={styles.input}
+              />
 
-            <Input
-              label="License Number"
-              value={license.licenseNumber}
-              onChangeText={(value) => updateLicense(index, 'licenseNumber', value)}
-              placeholder="MD-123456"
-              containerStyle={styles.input}
-            />
+              <Input
+                label="License Number"
+                value={license.licenseNumber}
+                onChangeText={(value) => updateLicense(index, 'licenseNumber', value)}
+                placeholder="MD-123456"
+                containerStyle={styles.input}
+              />
 
-            <Input
-              label="Expiry Date (Optional)"
-              value={license.expiryDate}
-              onChangeText={(value) => updateLicense(index, 'expiryDate', value)}
-              placeholder="2026-12-31"
-              containerStyle={styles.input}
-            />
-          </Card>
-        ))}
+              <Input
+                label="Expiry Date (Optional)"
+                value={license.expiryDate}
+                onChangeText={(value) => updateLicense(index, 'expiryDate', value)}
+                placeholder="2026-12-31"
+                containerStyle={styles.input}
+              />
+            </Card>
+          ))}
+        </Animated.View>
 
         {/* Add Another */}
-        <TouchableOpacity onPress={addLicense} style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Add Another License</Text>
-        </TouchableOpacity>
+        <Animated.View style={addBtnAnim}>
+          <TouchableOpacity onPress={addLicense} style={styles.addButton}>
+            <Text style={styles.addButtonText}>+ Add Another License</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <Animated.View style={[styles.footer, footerAnim]}>
         <Button
           title="Continue"
           onPress={handleContinue}
@@ -161,7 +173,7 @@ export default function AddLicensesScreen() {
         >
           <Text style={styles.skipText}>Skip for now</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

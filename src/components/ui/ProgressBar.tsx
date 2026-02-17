@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Animated } from 'react-native';
 import { colors, borderRadius, spacing, typography } from '../../lib/theme';
+import { useProgressAnimation } from '../../lib/animations';
 
 interface ProgressBarProps {
   progress: number; // 0-100
@@ -21,11 +22,21 @@ export function ProgressBar({
 }: ProgressBarProps) {
   const clampedProgress = Math.min(100, Math.max(0, progress));
 
+  // Animated progress value (0-100)
+  const animatedProgress = useProgressAnimation(clampedProgress, 800);
+
   // Determine color based on progress
   const barColor = progress >= 100 ? colors.success :
                    progress >= 75 ? color :
                    progress >= 50 ? colors.warning :
                    colors.risk;
+
+  // Interpolate width as percentage string
+  const animatedWidth = animatedProgress.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+    extrapolate: 'clamp',
+  });
 
   return (
     <View style={[styles.container, style]}>
@@ -38,11 +49,11 @@ export function ProgressBar({
         </View>
       )}
       <View style={[styles.track, styles[`track_${size}`]]}>
-        <View
+        <Animated.View
           style={[
             styles.bar,
             styles[`bar_${size}`],
-            { width: `${clampedProgress}%`, backgroundColor: barColor },
+            { width: animatedWidth, backgroundColor: barColor },
           ]}
         />
       </View>

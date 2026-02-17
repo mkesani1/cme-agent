@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
 import { commonStyles } from '../../src/lib/commonStyles';
+import { useFadeInUp, useShake } from '../../src/lib/animations';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
@@ -25,6 +27,18 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Animations
+  const headerAnim = useFadeInUp(0);
+  const cardAnim = useFadeInUp(200);
+  const linkAnim = useFadeInUp(400);
+  const { shake, style: shakeStyle } = useShake();
+
+  useEffect(() => {
+    if (error) {
+      shake();
+    }
+  }, [error]);
 
   async function handleRegister() {
     if (!fullName || !email || !password || !confirmPassword) {
@@ -58,7 +72,6 @@ export default function RegisterScreen() {
       setError(signUpError.message);
     } else {
       setSuccess(true);
-      // Redirect to email verification after 2 seconds
       setTimeout(() => {
         router.replace({
           pathname: '/(auth)/verify-email',
@@ -79,110 +92,114 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Header */}
-          <View style={styles.header}>
+          <Animated.View style={[styles.header, headerAnim]}>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
               Join thousands of physicians managing their CME effortlessly
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Register Form */}
-          <Card style={styles.card}>
-            {success ? (
-              <View style={commonStyles.successContainer}>
-                <Text style={commonStyles.successTitle}>Account Created!</Text>
-                <Text style={commonStyles.successText}>
-                  We've sent a confirmation link to {email}. Please check your inbox and click the link to activate your account.
-                </Text>
-                <Text style={commonStyles.successSubtext}>
-                  Redirecting to email verification...
-                </Text>
-              </View>
-            ) : null}
-
-            {!success && (
-              <>
-                {error ? (
-                  <View style={commonStyles.errorContainer}>
-                    <Text style={commonStyles.errorText}>{error}</Text>
-                  </View>
-                ) : null}
-
-                <Input
-                  label="Full Name"
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Dr. Jane Smith"
-                  containerStyle={styles.input}
-                />
-
-                <Input
-                  label="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  placeholder="you@example.com"
-                  containerStyle={styles.input}
-                />
-
-                <Input
-                  label="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  placeholder="••••••••"
-                  containerStyle={styles.input}
-                />
-
-                <Input
-                  label="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  placeholder="••••••••"
-                  containerStyle={styles.input}
-                />
-
-                {/* Terms Checkbox */}
-                <View style={styles.termsContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkbox,
-                      termsAccepted && styles.checkboxChecked,
-                    ]}
-                    onPress={() => setTermsAccepted(!termsAccepted)}
-                  >
-                    {termsAccepted && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </TouchableOpacity>
-                  <Text style={styles.termsText}>
-                    I agree to the{' '}
-                    <Text style={styles.termsLink}>Terms of Service</Text>
-                    {' '}and{' '}
-                    <Text style={styles.termsLink}>Privacy Policy</Text>
+          <Animated.View style={cardAnim}>
+            <Card style={styles.card}>
+              {success ? (
+                <View style={commonStyles.successContainer}>
+                  <Text style={commonStyles.successTitle}>Account Created!</Text>
+                  <Text style={commonStyles.successText}>
+                    We've sent a confirmation link to {email}. Please check your inbox and click the link to activate your account.
+                  </Text>
+                  <Text style={commonStyles.successSubtext}>
+                    Redirecting to email verification...
                   </Text>
                 </View>
+              ) : null}
 
-                <Button
-                  title="Create Account"
-                  onPress={handleRegister}
-                  loading={loading}
-                  style={styles.button}
-                />
+              {!success && (
+                <>
+                  {error ? (
+                    <Animated.View style={shakeStyle}>
+                      <View style={commonStyles.errorContainer}>
+                        <Text style={commonStyles.errorText}>{error}</Text>
+                      </View>
+                    </Animated.View>
+                  ) : null}
 
-                <View style={styles.loginContainer}>
-                  <Text style={styles.loginText}>Already have an account? </Text>
-                  <Link href="/(auth)/login" asChild>
-                    <TouchableOpacity>
-                      <Text style={styles.loginLink}>Sign In</Text>
+                  <Input
+                    label="Full Name"
+                    value={fullName}
+                    onChangeText={setFullName}
+                    placeholder="Dr. Jane Smith"
+                    containerStyle={styles.input}
+                  />
+
+                  <Input
+                    label="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    placeholder="you@example.com"
+                    containerStyle={styles.input}
+                  />
+
+                  <Input
+                    label="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    placeholder="••••••••"
+                    containerStyle={styles.input}
+                  />
+
+                  <Input
+                    label="Confirm Password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    placeholder="••••••••"
+                    containerStyle={styles.input}
+                  />
+
+                  {/* Terms Checkbox */}
+                  <View style={styles.termsContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkbox,
+                        termsAccepted && styles.checkboxChecked,
+                      ]}
+                      onPress={() => setTermsAccepted(!termsAccepted)}
+                    >
+                      {termsAccepted && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
                     </TouchableOpacity>
-                  </Link>
-                </View>
-              </>
-            )}
-          </Card>
+                    <Text style={styles.termsText}>
+                      I agree to the{' '}
+                      <Text style={styles.termsLink}>Terms of Service</Text>
+                      {' '}and{' '}
+                      <Text style={styles.termsLink}>Privacy Policy</Text>
+                    </Text>
+                  </View>
+
+                  <Button
+                    title="Create Account"
+                    onPress={handleRegister}
+                    loading={loading}
+                    style={styles.button}
+                  />
+
+                  <Animated.View style={[styles.loginContainer, linkAnim]}>
+                    <Text style={styles.loginText}>Already have an account? </Text>
+                    <Link href="/(auth)/login" asChild>
+                      <TouchableOpacity>
+                        <Text style={styles.loginLink}>Sign In</Text>
+                      </TouchableOpacity>
+                    </Link>
+                  </Animated.View>
+                </>
+              )}
+            </Card>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

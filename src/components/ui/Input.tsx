@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ViewStyle,
   TextInputProps,
+  Animated,
 } from 'react-native';
 import { colors, borderRadius, spacing, typography } from '../../lib/theme';
 
@@ -23,22 +24,46 @@ export function Input({
   ...props
 }: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const focusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false, // required for color interpolation
+    }).start();
+  }, [isFocused]);
+
+  const animatedBorderColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.accent],
+  });
+
+  const animatedBorderWidth = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1.5, 2],
+  });
 
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <TextInput
+      <Animated.View
         style={[
-          styles.input,
-          isFocused && styles.inputFocused,
-          error && styles.inputError,
-          style,
+          styles.inputWrapper,
+          {
+            borderColor: error ? colors.risk : animatedBorderColor,
+            borderWidth: error ? 1.5 : animatedBorderWidth,
+          },
         ]}
-        placeholderTextColor={colors.textSecondary}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        {...props}
-      />
+      >
+        <TextInput
+          style={[styles.input, style]}
+          placeholderTextColor={colors.textSecondary}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          {...props}
+        />
+      </Animated.View>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
@@ -54,21 +79,16 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.sm,
   },
-  input: {
+  inputWrapper: {
     backgroundColor: colors.card,
-    borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  input: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     fontSize: typography.body.fontSize,
     color: colors.text,
-  },
-  inputFocused: {
-    borderColor: colors.accent,
-  },
-  inputError: {
-    borderColor: colors.risk,
   },
   error: {
     fontSize: typography.caption.fontSize,

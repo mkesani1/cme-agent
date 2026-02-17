@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,18 +16,15 @@ import { supabase } from '../../src/lib/supabase';
 import { Button, Input, Card } from '../../src/components/ui';
 import { colors, spacing, typography } from '../../src/lib/theme';
 import { commonStyles } from '../../src/lib/commonStyles';
+import { useFadeInUp, useScaleIn } from '../../src/lib/animations';
 
-// Get the correct redirect URL based on platform
 function getResetRedirectUrl(): string {
   if (Platform.OS === 'web') {
-    // For web, use the actual site URL
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/reset-password`;
     }
-    // Fallback for SSR
     return 'https://cme-agent.vercel.app/reset-password';
   }
-  // For native apps, use deep link
   return 'cme-agent://reset-password';
 }
 
@@ -35,6 +33,13 @@ export default function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Animations
+  const backAnim = useFadeInUp(0);
+  const headerAnim = useFadeInUp(100);
+  const cardAnim = useFadeInUp(250);
+  const successIconAnim = useScaleIn(0);
+  const successTextAnim = useFadeInUp(200);
 
   async function handleReset() {
     if (!email) {
@@ -61,13 +66,15 @@ export default function ForgotPasswordScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={commonStyles.successContainer}>
-          <View style={styles.successIcon}>
+          <Animated.View style={[styles.successIcon, successIconAnim]}>
             <Text style={styles.successIconText}>✓</Text>
-          </View>
-          <Text style={commonStyles.successTitle}>Check your email</Text>
-          <Text style={commonStyles.successText}>
-            We've sent a password reset link to {email}
-          </Text>
+          </Animated.View>
+          <Animated.View style={successTextAnim}>
+            <Text style={commonStyles.successTitle}>Check your email</Text>
+            <Text style={commonStyles.successText}>
+              We've sent a password reset link to {email}
+            </Text>
+          </Animated.View>
           <Button
             title="Back to Login"
             onPress={() => router.replace('/(auth)/login')}
@@ -89,46 +96,50 @@ export default function ForgotPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Back button */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
+          <Animated.View style={backAnim}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           {/* Header */}
-          <View style={styles.header}>
+          <Animated.View style={[styles.header, headerAnim]}>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
               Enter your email and we'll send you a link to reset your password
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Reset Form */}
-          <Card style={styles.card}>
-            {error ? (
-              <View style={commonStyles.errorContainer}>
-                <Text style={commonStyles.errorText}>{error}</Text>
-              </View>
-            ) : null}
+          <Animated.View style={cardAnim}>
+            <Card style={styles.card}>
+              {error ? (
+                <View style={commonStyles.errorContainer}>
+                  <Text style={commonStyles.errorText}>{error}</Text>
+                </View>
+              ) : null}
 
-            <Input
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              placeholder="you@example.com"
-              containerStyle={styles.input}
-            />
+              <Input
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholder="you@example.com"
+                containerStyle={styles.input}
+              />
 
-            <Button
-              title="Send Reset Link"
-              onPress={handleReset}
-              loading={loading}
-              style={styles.button}
-            />
-          </Card>
+              <Button
+                title="Send Reset Link"
+                onPress={handleReset}
+                loading={loading}
+                style={styles.button}
+              />
+            </Card>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

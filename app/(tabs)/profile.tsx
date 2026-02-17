@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/hooks/useAuth';
 import { supabase } from '../../src/lib/supabase';
 import { colors, spacing, typography, degreeTypes } from '../../src/lib/theme';
-import { useFadeInUp } from '../../src/lib/animations';
+import { useFadeInUp, useCountUp } from '../../src/lib/animations';
 import { GOLD_GRADIENT } from '../../src/lib/license-utils';
 import { BubbleOverlay } from '../../src/components/ui';
 
@@ -50,6 +50,11 @@ export default function ProfileScreen() {
   const headerAnim = useFadeInUp(0);
   const cardAnim = useFadeInUp(100);
   const sectionsAnim = useFadeInUp(200);
+
+  // Animated count-up for profile stats
+  const animatedLicenses = useCountUp(stats.licenses, 600, 300);
+  const animatedCourses = useCountUp(stats.courses, 600, 400);
+  const animatedCerts = useCountUp(stats.certs, 600, 500);
 
   useEffect(() => {
     if (!user) return;
@@ -128,17 +133,17 @@ export default function ProfileScreen() {
             </Text>
             <View style={styles.profileStats}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.licenses}</Text>
+                <Text style={styles.statValue}>{animatedLicenses}</Text>
                 <Text style={styles.statLabel}>Licenses</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.courses}</Text>
+                <Text style={styles.statValue}>{animatedCourses}</Text>
                 <Text style={styles.statLabel}>Courses</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.certs}</Text>
+                <Text style={styles.statValue}>{animatedCerts}</Text>
                 <Text style={styles.statLabel}>Certs</Text>
               </View>
             </View>
