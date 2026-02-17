@@ -253,8 +253,20 @@ export function useShake() {
 export function useCountUp(target: number, duration: number = 600, delay: number = 0) {
   const animValue = useRef(new Animated.Value(0)).current;
   const [displayValue, setDisplayValue] = useState(0);
+  const prevTarget = useRef(0);
 
   useEffect(() => {
+    // Skip animation if target is 0 (data not loaded yet)
+    if (target === 0) {
+      setDisplayValue(0);
+      return;
+    }
+
+    // Reset to 0 before animating to new target (fixes re-trigger)
+    animValue.setValue(0);
+    setDisplayValue(0);
+    prevTarget.current = target;
+
     const listener = animValue.addListener(({ value }) => {
       setDisplayValue(Math.round(value));
     });

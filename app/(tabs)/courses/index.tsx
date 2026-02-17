@@ -22,7 +22,7 @@ import { useAuth } from '../../../src/hooks/useAuth';
 import { DEMO_MODE, demoCourses } from '../../../src/lib/demoData';
 import { useRecommendations, CourseRecommendation } from '../../../src/hooks/useRecommendations';
 import { useCourseDiscovery, useGapAnalysis } from '../../../src/hooks/useCourseDiscovery';
-import { useFadeInUp, useTabFade } from '../../../src/lib/animations';
+import { useFadeInUp } from '../../../src/lib/animations';
 
 interface Course {
   id: string;
@@ -52,12 +52,6 @@ export default function CoursesScreen() {
 
   // Animations
   const headerAnim = useFadeInUp(0);
-  const { opacity: tabOpacity, fadeOutIn } = useTabFade();
-
-  function switchTab(tab: 'smart' | 'discover' | 'all') {
-    if (tab === activeTab) return;
-    fadeOutIn(() => setActiveTab(tab));
-  }
 
   // AI Recommendations
   const {
@@ -143,20 +137,8 @@ export default function CoursesScreen() {
     if (url) Linking.openURL(url);
   }
 
-  const isLoading = activeTab === 'smart' ? loadingRecommendations : loadingCourses;
-
-  if (isLoading && recommendations.length === 0 && allCourses.length === 0) {
-    return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={styles.loadingText}>
-            {activeTab === 'smart' ? 'Finding optimal courses for you...' : 'Loading courses...'}
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // Don't block the entire screen — let each tab handle its own loading state
+  // This prevents the recommendations edge function from blocking access to All/Discover tabs
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -181,7 +163,7 @@ export default function CoursesScreen() {
         <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'smart' && styles.toggleButtonActive]}
-            onPress={() => switchTab('smart')}
+            onPress={() => setActiveTab('smart')}
           >
             <Ionicons
               name="sparkles"
@@ -195,7 +177,7 @@ export default function CoursesScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'discover' && styles.toggleButtonActive]}
-            onPress={() => switchTab('discover')}
+            onPress={() => setActiveTab('discover')}
           >
             <Ionicons
               name="globe"
@@ -209,7 +191,7 @@ export default function CoursesScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.toggleButton, activeTab === 'all' && styles.toggleButtonActive]}
-            onPress={() => switchTab('all')}
+            onPress={() => setActiveTab('all')}
           >
             <Text style={[styles.toggleText, activeTab === 'all' && styles.toggleTextActive]}>
               All
@@ -217,12 +199,20 @@ export default function CoursesScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Tab Content with crossfade */}
-        <Animated.View style={{ opacity: tabOpacity }}>
+        {/* Tab Content */}
+        <View>
 
         {/* Smart Match Tab */}
         {activeTab === 'smart' && (
           <>
+            {/* Loading state for smart tab */}
+            {loadingRecommendations && recommendations.length === 0 && (
+              <View style={styles.tabLoadingContainer}>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.loadingText}>Finding optimal courses for you...</Text>
+              </View>
+            )}
+
             {/* Gaps Summary */}
             <GapsSummaryCard summary={gapsSummary} loading={loadingRecommendations} />
 
@@ -438,6 +428,14 @@ export default function CoursesScreen() {
         {/* All Courses Tab */}
         {activeTab === 'all' && (
           <>
+            {/* Loading state for all tab */}
+            {loadingCourses && allCourses.length === 0 && (
+              <View style={styles.tabLoadingContainer}>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading courses...</Text>
+              </View>
+            )}
+
             {/* Search */}
             <View style={styles.searchContainer}>
               <Ionicons name="search" size={18} color={colors.textSecondary} style={styles.searchIcon} />
@@ -550,7 +548,7 @@ export default function CoursesScreen() {
           </>
         )}
 
-        </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -569,6 +567,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
+  },
+  tabLoadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
   },
   loadingText: {
     fontSize: typography.body.fontSize,

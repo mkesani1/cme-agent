@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -56,21 +56,24 @@ export default function ProfileScreen() {
   const animatedCourses = useCountUp(stats.courses, 600, 400);
   const animatedCerts = useCountUp(stats.certs, 600, 500);
 
-  useEffect(() => {
-    if (!user) return;
-    async function loadStats() {
-      const [licRes, certRes] = await Promise.all([
-        supabase.from('licenses').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
-        supabase.from('certificates').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
-      ]);
-      setStats({
-        licenses: licRes.count ?? 0,
-        courses: certRes.count ?? 0,  // completed courses = certificates
-        certs: certRes.count ?? 0,
-      });
-    }
-    loadStats();
-  }, [user]);
+  // Reload stats every time profile tab gains focus (covers post-onboarding)
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      async function loadStats() {
+        const [licRes, certRes] = await Promise.all([
+          supabase.from('licenses').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
+          supabase.from('certificates').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
+        ]);
+        setStats({
+          licenses: licRes.count ?? 0,
+          courses: certRes.count ?? 0,  // completed courses = certificates
+          certs: certRes.count ?? 0,
+        });
+      }
+      loadStats();
+    }, [user])
+  );
 
   async function handleSignOut() {
     Alert.alert(

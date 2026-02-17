@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../src/lib/supabase';
@@ -98,9 +98,12 @@ export default function LicensesScreen() {
     }
   }, [licenses.length, loading]);
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
+  // Reload data every time this tab gains focus (covers return from onboarding)
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [user])
+  );
 
   async function loadData() {
     if (!user) {
