@@ -30,22 +30,30 @@ export default function AddDEAScreen() {
 
     if (deaNumber) {
       setLoading(true);
+      try {
+        const { data: licenses } = await Promise.race([
+          supabase.from('licenses').select('state').eq('user_id', user!.id),
+          new Promise<{ data: null }>((resolve) =>
+            setTimeout(() => resolve({ data: null }), 8000)
+          ),
+        ]);
 
-      const { data: licenses } = await supabase
-        .from('licenses')
-        .select('state')
-        .eq('user_id', user!.id);
+        const linkedStates = licenses?.map((l: any) => l.state) || [];
 
-      const linkedStates = licenses?.map(l => l.state) || [];
-
-      await supabase.from('dea_registrations').insert({
-        user_id: user!.id,
-        dea_number: deaNumber,
-        expiry_date: expiryDate || null,
-        linked_states: linkedStates,
-      });
-
-      setLoading(false);
+        await Promise.race([
+          supabase.from('dea_registrations').insert({
+            user_id: user!.id,
+            dea_number: deaNumber,
+            expiry_date: expiryDate || null,
+            linked_states: linkedStates,
+          }),
+          new Promise((resolve) => setTimeout(resolve, 8000)),
+        ]);
+      } catch (err) {
+        console.warn('[Onboarding] DEA save error:', err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     router.push('/(onboarding)/setup-complete');

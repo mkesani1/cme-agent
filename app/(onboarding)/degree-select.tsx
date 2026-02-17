@@ -28,12 +28,24 @@ export default function DegreeSelectScreen() {
     if (!selectedDegree) return;
 
     setLoading(true);
-    const { error } = await updateProfile({ degree_type: selectedDegree });
+    try {
+      const result = await Promise.race([
+        updateProfile({ degree_type: selectedDegree }),
+        new Promise<{ error: Error }>((resolve) =>
+          setTimeout(() => resolve({ error: new Error('Request timed out') }), 8000)
+        ),
+      ]);
 
-    if (!error) {
-      router.push('/(onboarding)/add-licenses');
+      if (!result.error) {
+        router.push('/(onboarding)/add-licenses');
+      } else {
+        console.warn('[Onboarding] degree update failed:', result.error);
+      }
+    } catch (err) {
+      console.warn('[Onboarding] degree update error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

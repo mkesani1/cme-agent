@@ -64,14 +64,18 @@ export default function RegisterScreen() {
     setLoading(true);
     setError('');
 
-    const { error: signUpError } = await signUp(email, password, fullName);
+    try {
+      const { error: signUpError } = await signUp(email, password, fullName);
 
-    setLoading(false);
-
-    if (signUpError) {
-      setError(signUpError.message);
-    } else {
-      setSuccess(true);
+      if (signUpError) {
+        setError(signUpError.message);
+      } else {
+        setSuccess(true);
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
       setTimeout(() => {
         router.replace({
           pathname: '/(auth)/verify-email',

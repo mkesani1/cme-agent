@@ -60,31 +60,42 @@ export default function AddLicensesScreen() {
     }
 
     setLoading(true);
-
-    for (const license of validLicenses) {
-      const { data: licenseData, error: licenseError } = await supabase
-        .from('licenses')
-        .insert({
-          user_id: user!.id,
-          state: license.state,
-          license_number: license.licenseNumber,
-          degree_type: profile?.degree_type,
-          expiry_date: license.expiryDate || null,
-          total_credits_required: 50,
-        })
-        .select()
-        .single();
-
-      if (!licenseError && licenseData) {
-        await supabase.from('license_requirements').insert([
-          { license_id: licenseData.id, category: 'general', credits_required: 35 },
-          { license_id: licenseData.id, category: 'controlled_substances', credits_required: 10 },
-          { license_id: licenseData.id, category: 'risk_management', credits_required: 5 },
+    try {
+      for (const license of validLicenses) {
+        const insertResult = await Promise.race([
+          supabase
+            .from('licenses')
+            .insert({
+              user_id: user!.id,
+              state: license.state,
+              license_number: license.licenseNumber,
+              degree_type: profile?.degree_type,
+              expiry_date: license.expiryDate || null,
+              total_credits_required: 50,
+            })
+            .select()
+            .single(),
+          new Promise<{ data: null; error: Error }>((resolve) =>
+            setTimeout(() => resolve({ data: null, error: new Error('Timeout') }), 8000)
+          ),
         ]);
-      }
-    }
 
-    setLoading(false);
+        if (!insertResult.error && insertResult.data) {
+          await Promise.race([
+            supabase.from('license_requirements').insert([
+              { license_id: insertResult.data.id, category: 'general', credits_required: 35 },
+              { license_id: insertResult.data.id, category: 'controlled_substances', credits_required: 10 },
+              { license_id: insertResult.data.id, category: 'risk_management', credits_required: 5 },
+            ]),
+            new Promise((resolve) => setTimeout(resolve, 8000)),
+          ]);
+        }
+      }
+    } catch (err) {
+      console.warn('[Onboarding] License save error:', err);
+    } finally {
+      setLoading(false);
+    }
     router.push('/(onboarding)/add-dea');
   }
 
