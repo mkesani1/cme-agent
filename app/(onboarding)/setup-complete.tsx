@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card, ProgressBar, CategoryTag } from '../../src/components/ui';
@@ -19,7 +20,7 @@ interface LicenseSummary {
 }
 
 export default function SetupCompleteScreen() {
-  const { user, profile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
   const [licenses, setLicenses] = useState<LicenseSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +65,18 @@ export default function SetupCompleteScreen() {
     setLoading(false);
   }
 
-  function goToDashboard() {
+  async function goToDashboard() {
+    // Mark onboarding as completed so user never gets stuck in the onboarding loop
+    await AsyncStorage.setItem('onboarding_completed', 'true');
+
+    // Also retry the degree update one more time from saved selection
+    try {
+      const savedDegree = await AsyncStorage.getItem('onboarding_degree');
+      if (savedDegree && profile && !profile.degree_type) {
+        updateProfile({ degree_type: savedDegree }).catch(() => {});
+      }
+    } catch {} // non-critical
+
     router.replace('/(tabs)');
   }
 

@@ -1,13 +1,26 @@
+import { useState, useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../src/hooks/useAuth';
 import { colors } from '../src/lib/theme';
 import { DEMO_MODE } from '../src/lib/demoData';
 
 export default function Index() {
   const { session, profile, loading } = useAuth();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    AsyncStorage.getItem('onboarding_completed').then((val) => {
+      setOnboardingCompleted(val === 'true');
+      setOnboardingChecked(true);
+    }).catch(() => {
+      setOnboardingChecked(true);
+    });
+  }, []);
+
+  if (loading || !onboardingChecked) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.accent} />
@@ -25,13 +38,13 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  // If user is authenticated but hasn't completed onboarding, redirect to onboarding
-  if (!profile?.degree_type) {
-    return <Redirect href="/(onboarding)/welcome" />;
+  // If user has completed onboarding (either via profile.degree_type or AsyncStorage flag)
+  if (profile?.degree_type || onboardingCompleted) {
+    return <Redirect href="/(tabs)" />;
   }
 
-  // User is authenticated and has completed onboarding, go to main app
-  return <Redirect href="/(tabs)" />;
+  // User is authenticated but hasn't completed onboarding
+  return <Redirect href="/(onboarding)/welcome" />;
 }
 
 const styles = StyleSheet.create({

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Button, Card } from '../../src/components/ui';
 import { colors, spacing, typography, degreeTypes, DegreeType } from '../../src/lib/theme';
@@ -16,7 +17,6 @@ const degreeOptions: { type: DegreeType; icon: string; description: string }[] =
 export default function DegreeSelectScreen() {
   const { updateProfile } = useAuth();
   const [selectedDegree, setSelectedDegree] = useState<DegreeType | null>(null);
-  const [loading, setLoading] = useState(false);
 
   // Animations
   const headerAnim = useFadeInUp(0);
@@ -24,28 +24,19 @@ export default function DegreeSelectScreen() {
   const noteAnim = useFadeInUp(500);
   const footerAnim = useFadeInUp(600);
 
-  async function handleContinue() {
+  function handleContinue() {
     if (!selectedDegree) return;
 
-    setLoading(true);
-    try {
-      const result = await Promise.race([
-        updateProfile({ degree_type: selectedDegree }),
-        new Promise<{ error: Error }>((resolve) =>
-          setTimeout(() => resolve({ error: new Error('Request timed out') }), 8000)
-        ),
-      ]);
+    // Save degree locally so onboarding can proceed even if Supabase hangs
+    AsyncStorage.setItem('onboarding_degree', selectedDegree);
 
-      if (!result.error) {
-        router.push('/(onboarding)/add-licenses');
-      } else {
-        console.warn('[Onboarding] degree update failed:', result.error);
-      }
-    } catch (err) {
-      console.warn('[Onboarding] degree update error:', err);
-    } finally {
-      setLoading(false);
-    }
+    // Fire-and-forget: update profile in background, don't block navigation
+    updateProfile({ degree_type: selectedDegree }).catch((err) => {
+      console.warn('[Onboarding] degree update failed:', err);
+    });
+
+    // Navigate immediately — never block the user
+    router.push('/(onboarding)/add-licenses');
   }
 
   return (
@@ -116,7 +107,6 @@ export default function DegreeSelectScreen() {
           title="Continue"
           onPress={handleContinue}
           disabled={!selectedDegree}
-          loading={loading}
           size="lg"
         />
       </Animated.View>

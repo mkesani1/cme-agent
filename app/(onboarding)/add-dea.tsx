@@ -13,7 +13,6 @@ export default function AddDEAScreen() {
   const { user } = useAuth();
   const [deaNumber, setDeaNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
-  const [loading, setLoading] = useState(false);
   const [skipDEA, setSkipDEA] = useState(false);
 
   // Animations
@@ -22,40 +21,31 @@ export default function AddDEAScreen() {
   const infoAnim = useFadeInUp(400);
   const footerAnim = useFadeInUp(500);
 
-  async function handleContinue() {
-    if (!deaNumber && !skipDEA) {
-      router.push('/(onboarding)/setup-complete');
-      return;
-    }
+  function handleContinue() {
+    // Fire-and-forget: save DEA in background, don't block navigation
+    if (deaNumber && user) {
+      (async () => {
+        try {
+          const { data: licenses } = await supabase
+            .from('licenses')
+            .select('state')
+            .eq('user_id', user.id);
 
-    if (deaNumber) {
-      setLoading(true);
-      try {
-        const { data: licenses } = await Promise.race([
-          supabase.from('licenses').select('state').eq('user_id', user!.id),
-          new Promise<{ data: null }>((resolve) =>
-            setTimeout(() => resolve({ data: null }), 8000)
-          ),
-        ]);
+          const linkedStates = licenses?.map((l: any) => l.state) || [];
 
-        const linkedStates = licenses?.map((l: any) => l.state) || [];
-
-        await Promise.race([
-          supabase.from('dea_registrations').insert({
-            user_id: user!.id,
+          await supabase.from('dea_registrations').insert({
+            user_id: user.id,
             dea_number: deaNumber,
             expiry_date: expiryDate || null,
             linked_states: linkedStates,
-          }),
-          new Promise((resolve) => setTimeout(resolve, 8000)),
-        ]);
-      } catch (err) {
-        console.warn('[Onboarding] DEA save error:', err);
-      } finally {
-        setLoading(false);
-      }
+          });
+        } catch (err) {
+          console.warn('[Onboarding] DEA save error:', err);
+        }
+      })();
     }
 
+    // Navigate immediately
     router.push('/(onboarding)/setup-complete');
   }
 
@@ -121,7 +111,6 @@ export default function AddDEAScreen() {
         <Button
           title="Continue"
           onPress={handleContinue}
-          loading={loading}
           size="lg"
         />
         <TouchableOpacity
