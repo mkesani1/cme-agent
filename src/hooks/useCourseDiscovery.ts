@@ -73,28 +73,50 @@ export function useCourseDiscovery(): UseCourseDiscoveryReturn {
     loadLicenses();
   }, [user?.id]);
 
-  // Load discovered courses from database
+  // Load courses from the courses table (the actual table in Supabase)
   useEffect(() => {
     async function loadDiscoveredCourses() {
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('discovered_courses')
+          .from('courses')
           .select('*')
-          .order('relevance_score', { ascending: false })
+          .eq('is_active', true)
+          .order('credit_hours', { ascending: false })
           .limit(100);
 
         if (error) {
-          console.error('Error loading discovered courses:', error);
-          // If table doesn't exist yet, just return empty array
+          console.error('Error loading courses:', error);
           setDiscoveredCourses([]);
         } else if (data) {
+          // Map courses table schema to DiscoveredCourse interface
+          const mappedCourses: DiscoveredCourse[] = data.map((course: any) => ({
+            id: course.id,
+            title: course.title,
+            provider: course.provider,
+            provider_url: course.course_url || '',
+            credits: course.credit_hours || 0,
+            credit_types: course.category ? [course.category] : [],
+            accreditation: course.accme_accredited ? ['ACCME'] : [],
+            states_accepted: course.approved_states || [],
+            specialty_focus: course.specialty_tags || [],
+            price: course.price_cents ? course.price_cents / 100 : 0,
+            duration_hours: course.duration_minutes ? course.duration_minutes / 60 : course.credit_hours,
+            format: course.format || 'online',
+            description: course.description || '',
+            topics: course.specialty_tags || [],
+            source_url: course.course_url || '',
+            discovered_at: course.created_at || new Date().toISOString(),
+            relevance_score: 50,
+            efficiency_score: 50,
+          }));
+
           // Score courses based on current profile
-          const scoredCourses = data.map((course) => ({
+          const scoredCourses = mappedCourses.map((course) => ({
             ...course,
             relevance_score: profile && licenses.length > 0
               ? scoreCourserelevance(course, profile as DoctorProfile, licenses)
-              : course.relevance_score || 50,
+              : 50,
             efficiency_score: calculateEfficiencyScore(course),
           }));
 

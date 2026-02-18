@@ -21,9 +21,19 @@ export default function AddDEAScreen() {
   const infoAnim = useFadeInUp(400);
   const footerAnim = useFadeInUp(500);
 
+  // DEA numbers are 2 letters followed by 7 digits (e.g. AB1234567)
+  const isValidDEA = /^[A-Z]{2}\d{7}$/.test(deaNumber.toUpperCase());
+
   function handleContinue() {
+    // Validate DEA format if provided
+    if (deaNumber && !isValidDEA) {
+      // Don't save invalid DEA — just continue
+      router.push('/(onboarding)/setup-complete');
+      return;
+    }
+
     // Fire-and-forget: save DEA in background, don't block navigation
-    if (deaNumber && user) {
+    if (deaNumber && isValidDEA && user) {
       (async () => {
         try {
           const { data: licenses } = await supabase
@@ -78,11 +88,16 @@ export default function AddDEAScreen() {
             <Input
               label="DEA Number"
               value={deaNumber}
-              onChangeText={setDeaNumber}
+              onChangeText={(v) => setDeaNumber(v.toUpperCase())}
               placeholder="AB1234567"
               autoCapitalize="characters"
               containerStyle={styles.input}
             />
+            {deaNumber.length > 0 && !isValidDEA && (
+              <Text style={styles.validationHint}>
+                DEA format: 2 letters + 7 digits (e.g. AB1234567)
+              </Text>
+            )}
 
             <Input
               label="Expiry Date (Optional)"
@@ -178,6 +193,12 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   input: {
+    marginBottom: spacing.md,
+  },
+  validationHint: {
+    fontSize: typography.caption.fontSize,
+    color: colors.risk,
+    marginTop: -spacing.sm,
     marginBottom: spacing.md,
   },
   infoBox: {

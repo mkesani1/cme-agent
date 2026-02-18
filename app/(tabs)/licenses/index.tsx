@@ -224,8 +224,37 @@ export default function LicensesScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await supabase.from('licenses').delete().eq('id', id);
-            setLicenses(licenses.filter(l => l.id !== id));
+            try {
+              const { error } = await supabase.from('licenses').delete().eq('id', id);
+              if (error) throw error;
+              setLicenses(licenses.filter(l => l.id !== id));
+            } catch (err) {
+              Alert.alert('Error', 'Failed to delete license. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  async function deleteDEA() {
+    if (!dea) return;
+    Alert.alert(
+      'Delete DEA Registration',
+      'Are you sure you want to remove your DEA registration?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase.from('dea_registrations').delete().eq('id', dea.id);
+              if (error) throw error;
+              setDea(null);
+            } catch (err) {
+              Alert.alert('Error', 'Failed to delete DEA registration. Please try again.');
+            }
           },
         },
       ]
@@ -421,6 +450,11 @@ export default function LicensesScreen() {
         </Animated.View>
 
         {dea ? (
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/licenses/add-dea')}
+            onLongPress={deleteDEA}
+            activeOpacity={0.7}
+          >
           <Card style={styles.deaCard}>
             <View style={styles.deaHeader}>
               <View style={styles.deaIconContainer}>
@@ -446,6 +480,7 @@ export default function LicensesScreen() {
               </View>
             )}
           </Card>
+          </TouchableOpacity>
         ) : (
           <Card style={styles.emptyCard}>
             <Ionicons name="medkit-outline" size={40} color={colors.textMuted} style={styles.emptyIconStyle} />
@@ -461,7 +496,7 @@ export default function LicensesScreen() {
 
         {/* Help text */}
         <Text style={styles.helpText}>
-          Long press on a license to delete it
+          Long press on a license or DEA registration to delete it
         </Text>
       </ScrollView>
     </SafeAreaView>
