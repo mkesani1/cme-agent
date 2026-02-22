@@ -17,6 +17,28 @@ import { colors, spacing, typography } from '../../src/lib/theme';
 import { commonStyles } from '../../src/lib/commonStyles';
 import { useFadeInUp, useShake } from '../../src/lib/animations';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function friendlyAuthError(message: string): string {
+  const msg = message.toLowerCase();
+  if (msg.includes('already registered') || msg.includes('already been registered')) {
+    return 'An account with this email already exists. Try signing in instead.';
+  }
+  if (msg.includes('rate limit') || msg.includes('too many')) {
+    return 'Too many attempts. Please wait a minute and try again.';
+  }
+  if (msg.includes('invalid email') || msg.includes('invalid_email')) {
+    return 'Please enter a valid email address.';
+  }
+  if (msg.includes('weak password') || msg.includes('password')) {
+    return 'Password is too weak. Use at least 8 characters with a mix of letters and numbers.';
+  }
+  if (msg.includes('network') || msg.includes('fetch')) {
+    return 'Network error. Please check your connection and try again.';
+  }
+  return message;
+}
+
 export default function RegisterScreen() {
   const { signUp } = useAuth();
   const [fullName, setFullName] = useState('');
@@ -46,6 +68,11 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (!EMAIL_REGEX.test(email.trim())) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     if (!termsAccepted) {
       setError('You must accept the terms and conditions to continue');
       return;
@@ -65,23 +92,25 @@ export default function RegisterScreen() {
     setError('');
 
     try {
-      const { error: signUpError } = await signUp(email, password, fullName);
+      const { error: signUpError } = await signUp(email.trim(), password, fullName.trim());
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(friendlyAuthError(signUpError.message));
+        setLoading(false);
       } else {
         setSuccess(true);
+        setLoading(false);
+        // Only redirect to verify-email on SUCCESS
+        setTimeout(() => {
+          router.replace({
+            pathname: '/(auth)/verify-email',
+            params: { email: email.trim() },
+          });
+        }, 1500);
       }
     } catch (e: any) {
       setError(e?.message || 'Network error. Please check your connection and try again.');
-    } finally {
       setLoading(false);
-      setTimeout(() => {
-        router.replace({
-          pathname: '/(auth)/verify-email',
-          params: { email },
-        });
-      }, 1500);
     }
   }
 

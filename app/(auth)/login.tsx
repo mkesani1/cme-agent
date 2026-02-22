@@ -17,6 +17,28 @@ import { colors, spacing, typography } from '../../src/lib/theme';
 import { commonStyles } from '../../src/lib/commonStyles';
 import { useScaleIn, useFadeInUp, useShake } from '../../src/lib/animations';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function friendlyAuthError(message: string): string {
+  const msg = message.toLowerCase();
+  if (msg.includes('invalid login credentials') || msg.includes('invalid_credentials')) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (msg.includes('email not confirmed')) {
+    return 'Please verify your email address before signing in. Check your inbox for a confirmation link.';
+  }
+  if (msg.includes('rate limit') || msg.includes('too many')) {
+    return 'Too many login attempts. Please wait a minute and try again.';
+  }
+  if (msg.includes('network') || msg.includes('fetch')) {
+    return 'Network error. Please check your connection and try again.';
+  }
+  if (msg.includes('user not found')) {
+    return 'No account found with this email. Please sign up first.';
+  }
+  return message;
+}
+
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
@@ -39,8 +61,15 @@ export default function LoginScreen() {
   }, [error]);
 
   async function handleLogin() {
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError('Please enter a valid email address');
       return;
     }
 
@@ -48,16 +77,17 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      const { error: signInError } = await signIn(email, password);
+      const { error: signInError } = await signIn(trimmedEmail, password);
 
       if (signInError) {
-        setError(signInError.message);
+        setError(friendlyAuthError(signInError.message));
         setLoading(false);
       } else {
+        setLoading(false);
         router.replace('/');
       }
     } catch (e: any) {
-      setError(e?.message || 'Network error. Please check your connection and try again.');
+      setError(friendlyAuthError(e?.message || 'Network error'));
       setLoading(false);
     }
   }

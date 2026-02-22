@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types/database';
 
@@ -74,6 +75,18 @@ export function useAuthProvider() {
 
           if (mounted && profileResult && 'data' in profileResult && profileResult.data) {
             setProfile(profileResult.data as Profile);
+          } else if (mounted && profileResult && 'error' in profileResult && profileResult.error?.code === 'PGRST116') {
+            // Profile missing — create fallback
+            console.warn('[Auth] Profile missing on init, creating fallback');
+            const fullName = sess.user.user_metadata?.full_name || '';
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .insert({ id: sess.user.id, full_name: fullName })
+              .select()
+              .single();
+            if (newProfile && mounted) {
+              setProfile(newProfile as Profile);
+            }
           }
         } catch (profileErr) {
           console.warn('[Auth] Profile load failed:', profileErr);
@@ -104,6 +117,18 @@ export function useAuthProvider() {
               .single();
             if (!error && data && mounted) {
               setProfile(data);
+            } else if (error && error.code === 'PGRST116') {
+              // Profile doesn't exist — trigger may have failed. Create it now.
+              console.warn('[Auth] Profile missing, creating fallback profile');
+              const fullName = newSession.user.user_metadata?.full_name || '';
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .insert({ id: newSession.user.id, full_name: fullName })
+                .select()
+                .single();
+              if (newProfile && mounted) {
+                setProfile(newProfile);
+              }
             }
           } catch (err) {
             console.warn('[Auth] Profile load in onAuthStateChange failed:', err);
@@ -125,10 +150,10 @@ export function useAuthProvider() {
 
   async function signUp(email: string, password: string, fullName: string) {
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim().toLowerCase(),
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName.trim() },
       },
     });
     return { error: error as Error | null };
@@ -136,13 +161,23 @@ export function useAuthProvider() {
 
   async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim().toLowerCase(),
       password,
     });
     return { error: error as Error | null };
   }
 
   async function signOut() {
+    // Clear all user-specific data from AsyncStorage BEFORE signing out
+    // This prevents the next user from inheriting previous user's state
+    try {
+      await AsyncStorage.multiRemove([
+        'onboarding_completed',
+        'demo_mode_dismissed',
+      ]);
+    } catch (e) {
+      console.warn('[Auth] Failed to clear AsyncStorage on signOut:', e);
+    }
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
