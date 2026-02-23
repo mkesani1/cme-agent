@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CME Admin — Staff Portal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy900: #0D1321; --navy800: #131B2E; --navy700: #1D2A3F; --navy600: #2A3A52; --navy500: #3A4D68;
+    --sand500: #A68B5B; --sand400: #D4C4B0; --sand300: #E8DED0; --sand50: #FDFCFB;
+    --green: #5B8C6B; --greenMuted: #3D6B4A; --amber: #C49A4A; --amberMuted: #8B7349;
+    --red: #B85C5C; --redMuted: #8B4444;
+    --whiteA60: rgba(255,255,255,0.6); --whiteA15: rgba(255,255,255,0.15);
+    --whiteA08: rgba(255,255,255,0.08); --whiteA04: rgba(255,255,255,0.04);
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; background: var(--navy900); color: var(--sand50); height: 100vh; overflow: hidden; }
+  button { font-family: inherit; }
+  input::placeholder { color: rgba(255,255,255,0.35); }
+
+  /* Layout */
+  .app { display: flex; height: 100vh; }
+  .sidebar { width: 240px; background: var(--navy800); border-right: 1px solid var(--whiteA08); display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.2s; overflow: hidden; }
+  .sidebar.collapsed { width: 64px; }
+  .sidebar-brand { padding: 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--whiteA08); }
+  .sidebar.collapsed .sidebar-brand { padding: 20px 12px; justify-content: center; }
+  .brand-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--sand500), var(--amberMuted)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .brand-text { overflow: hidden; }
+  .sidebar.collapsed .brand-text { display: none; }
+  .brand-title { font-size: 14px; font-weight: 600; color: var(--sand50); letter-spacing: 0.5px; }
+  .brand-sub { font-size: 10px; color: var(--sand400); letter-spacing: 0.8px; text-transform: uppercase; }
+
+  .sidebar-nav { flex: 1; padding: 12px 8px; }
+  .nav-btn { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 2px; background: transparent; border: none; border-radius: 8px; cursor: pointer; color: var(--sand400); font-size: 13px; text-align: left; transition: all 0.15s; }
+  .nav-btn:hover { background: var(--whiteA04); }
+  .nav-btn.active { background: var(--whiteA08); color: var(--sand50); font-weight: 500; }
+  .sidebar.collapsed .nav-btn { justify-content: center; }
+  .sidebar.collapsed .nav-label, .sidebar.collapsed .nav-badge { display: none; }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+  .collapse-btn { padding: 16px; border: none; border-top: 1px solid var(--whiteA08); background: transparent; color: var(--sand400); cursor: pointer; font-size: 12px; }
+
+  .main { flex: 1; overflow: auto; display: flex; }
+  .content { flex: 1; overflow: auto; padding: 32px; }
+
+  /* Detail Panel */
+  .detail-panel { width: 420px; background: var(--navy800); border-left: 1px solid var(--whiteA08); overflow: auto; flex-shrink: 0; display: none; }
+  .detail-panel.open { display: block; }
+  .detail-header { padding: 24px 24px 20px; border-bottom: 1px solid var(--whiteA08); }
+  .detail-name { font-size: 18px; font-weight: 500; color: var(--sand50); margin-bottom: 4px; }
+  .detail-specialty { font-size: 12px; color: var(--sand400); }
+  .detail-npi { font-size: 11px; color: var(--whiteA60); margin-top: 4px; }
+  .detail-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-gold { flex: 1; padding: 8px 0; background: linear-gradient(135deg, var(--sand500), var(--amberMuted)); border: none; border-radius: 8px; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer; }
+  .btn-ghost { flex: 1; padding: 8px 0; background: var(--whiteA08); border: 1px solid var(--whiteA15); border-radius: 8px; color: var(--sand400); font-size: 12px; font-weight: 500; cursor: pointer; }
+  .close-btn { background: none; border: none; color: var(--sand400); cursor: pointer; font-size: 18px; padding: 4px; float: right; }
+
+  .license-card { margin: 16px 16px 0; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, rgba(166,139,91,0.13), rgba(139,115,73,0.07)); border: 1px solid var(--whiteA15); }
+  .license-head { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .license-title { font-size: 14px; font-weight: 600; color: var(--sand50); }
+  .license-expiry { font-size: 11px; color: var(--whiteA60); margin-top: 2px; }
+  .credit-bar-wrap { padding: 0 20px 4px; }
+  .credit-bar-labels { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; }
+  .credit-bar { height: 3px; background: var(--whiteA08); border-radius: 2px; }
+  .credit-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s; }
+  .category-list { padding: 12px 20px 16px; }
+  .category-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+  .category-row + .category-row { border-top: 1px solid var(--whiteA04); }
+  .category-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sand50); }
+  .category-right { font-size: 12px; }
+  .certs-summary { margin: 16px 16px 24px; padding: 16px 20px; background: var(--whiteA04); border-radius: 10px; border: 1px solid var(--whiteA08); display: flex; justify-content: space-between; align-items: center; }
+  .certs-count { font-size: 20px; font-weight: 300; color: var(--sand400); }
+
+  /* Stat Cards */
+  .stats-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+  .stat-card { background: var(--navy700); border-radius: 12px; padding: 20px 24px; border: 1px solid var(--whiteA08); flex: 1 1 0; min-width: 160px; }
+  .stat-label { font-size: 11px; color: var(--sand400); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 300; letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--whiteA60); margin-top: 4px; }
+
+  /* Physician Table */
+  .roster-card { background: var(--navy700); border-radius: 12px; border: 1px solid var(--whiteA08); overflow: hidden; flex: 2; }
+  .roster-header { padding: 16px 20px; border-bottom: 1px solid var(--whiteA08); display: flex; justify-content: space-between; align-items: center; }
+  .roster-title { font-size: 14px; font-weight: 500; }
+  .filter-btns { display: flex; gap: 4px; }
+  .filter-btn { padding: 4px 12px; border-radius: 6px; border: none; font-size: 11px; cursor: pointer; background: transparent; color: var(--whiteA60); }
+  .filter-btn.active { background: var(--whiteA15); color: var(--sand50); }
+  .search-wrap { padding: 12px 20px; border-bottom: 1px solid var(--whiteA04); }
+  .search-input { width: 100%; padding: 8px 12px; background: var(--whiteA04); border: 1px solid var(--whiteA08); border-radius: 8px; color: var(--sand50); font-size: 12px; outline: none; }
+  .phys-row { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--whiteA04); cursor: pointer; transition: background 0.15s; }
+  .phys-row:hover { background: var(--whiteA04); }
+  .phys-row.selected { background: var(--whiteA08); }
+  .avatar { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--navy600), var(--navy500)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--sand400); flex-shrink: 0; border: 1px solid var(--whiteA15); }
+  .phys-info { flex: 1; min-width: 0; }
+  .phys-name { font-size: 13px; font-weight: 500; color: var(--sand50); margin-bottom: 2px; }
+  .phys-meta { font-size: 11px; color: var(--whiteA60); }
+  .badges { display: flex; gap: 6px; min-width: 100px; }
+  .badge { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; letter-spacing: 0.3px; white-space: nowrap; }
+  .badge-default { background: var(--whiteA08); color: var(--sand400); border: 1px solid var(--whiteA15); }
+  .badge-success { background: rgba(91,140,107,0.15); color: var(--green); border: 1px solid rgba(91,140,107,0.3); }
+  .badge-critical { background: rgba(184,92,92,0.15); color: var(--red); border: 1px solid rgba(184,92,92,0.3); }
+  .credit-col { width: 80px; text-align: right; }
+  .credit-num { font-size: 12px; color: var(--sand50); }
+  .credit-label { font-size: 10px; color: var(--whiteA60); }
+  .expiry-col { width: 80px; text-align: right; }
+  .expiry-days { font-size: 12px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  /* Alerts */
+  .alerts-card { flex: 1; background: var(--navy700); border-radius: 12px; border: 1px solid var(--whiteA08); padding: 16px 20px; min-width: 280px; }
+  .alerts-title { font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+  .alert-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--whiteA04); }
+  .alert-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .alert-physician { font-size: 12px; font-weight: 500; color: var(--sand50); }
+  .alert-message { font-size: 12px; color: var(--sand400); margin-top: 2px; }
+  .alert-time { font-size: 10px; color: var(--whiteA60); white-space: nowrap; }
+  .view-all-btn { width: 100%; padding: 10px 0; margin-top: 12px; background: transparent; border: 1px solid var(--whiteA08); border-radius: 8px; color: var(--sand400); font-size: 12px; cursor: pointer; }
+
+  /* Heatmap */
+  .heatmap { margin-top: 24px; background: var(--navy700); border-radius: 12px; border: 1px solid var(--whiteA08); padding: 20px 24px; }
+  .heatmap-title { font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+  .heatmap-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .heatmap-item { flex: 1 1 140px; padding: 16px; border-radius: 10px; cursor: pointer; background: var(--whiteA04); border: 1px solid var(--whiteA08); text-align: center; transition: border-color 0.15s; }
+  .heatmap-item:hover { border-color: var(--whiteA15); }
+  .heatmap-name { font-size: 12px; font-weight: 500; color: var(--sand50); margin-top: 8px; }
+  .heatmap-states { font-size: 10px; color: var(--whiteA60); margin-top: 2px; }
+
+  /* Two col layout */
+  .two-col { display: flex; gap: 24px; align-items: flex-start; }
+
+  /* Reports */
+  .report-row { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: var(--navy700); border-radius: 10px; border: 1px solid var(--whiteA08); cursor: pointer; margin-bottom: 12px; }
+  .report-row:hover { border-color: var(--whiteA15); }
+  .report-icon { font-size: 20px; color: var(--sand500); width: 28px; }
+  .report-info { flex: 1; }
+  .report-title { font-size: 13px; font-weight: 500; color: var(--sand50); }
+  .report-desc { font-size: 11px; color: var(--whiteA60); margin-top: 2px; }
+  .report-btn { padding: 6px 16px; background: var(--whiteA08); border: 1px solid var(--whiteA15); border-radius: 6px; color: var(--sand400); font-size: 11px; cursor: pointer; }
+
+  .greeting { font-size: 22px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .greeting-sub { font-size: 13px; color: var(--whiteA60); margin-bottom: 32px; }
+  .section-title { font-size: 22px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .section-sub { font-size: 13px; color: var(--whiteA60); margin-bottom: 24px; }
+  .empty-state { padding: 40px; text-align: center; color: var(--whiteA60); font-size: 13px; }
+
+  /* SVG Progress Arc */
+  .arc-container { position: relative; display: inline-block; }
+  .arc-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 500; color: var(--sand50); }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+  .modal { background: var(--navy800); border: 1px solid var(--whiteA15); border-radius: 16px; width: 520px; max-height: 85vh; overflow: auto; }
+  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--whiteA08); display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-size: 16px; font-weight: 500; color: var(--sand50); }
+  .modal-close { background: none; border: none; color: var(--sand400); cursor: pointer; font-size: 20px; padding: 4px 8px; border-radius: 6px; }
+  .modal-close:hover { background: var(--whiteA08); }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--whiteA08); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* Form */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 11px; color: var(--sand400); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 10px 14px; background: var(--whiteA04); border: 1px solid var(--whiteA15); border-radius: 8px; color: var(--sand50); font-size: 13px; outline: none; font-family: inherit; }
+  .form-input:focus { border-color: var(--sand500); }
+  .form-input::placeholder { color: rgba(255,255,255,0.3); }
+  .form-select { width: 100%; padding: 10px 14px; background: var(--navy700); border: 1px solid var(--whiteA15); border-radius: 8px; color: var(--sand50); font-size: 13px; outline: none; font-family: inherit; -webkit-appearance: none; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+
+  .btn-gold-sm { padding: 8px 20px; background: linear-gradient(135deg, var(--sand500), var(--amberMuted)); border: none; border-radius: 8px; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer; }
+  .btn-gold-sm:hover { opacity: 0.9; }
+  .btn-ghost-sm { padding: 8px 20px; background: var(--whiteA08); border: 1px solid var(--whiteA15); border-radius: 8px; color: var(--sand400); font-size: 12px; font-weight: 500; cursor: pointer; }
+  .btn-ghost-sm:hover { background: var(--whiteA15); }
+  .btn-danger-sm { padding: 8px 20px; background: rgba(184,92,92,0.15); border: 1px solid rgba(184,92,92,0.3); border-radius: 8px; color: var(--red); font-size: 12px; font-weight: 500; cursor: pointer; }
+  .btn-danger-sm:hover { background: rgba(184,92,92,0.25); }
+  .btn-add { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, var(--sand500), var(--amberMuted)); border: none; border-radius: 8px; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer; }
+
+  /* License management in detail */
+  .license-actions { display: flex; gap: 6px; padding: 0 20px 12px; }
+  .license-edit-btn { padding: 4px 12px; background: var(--whiteA08); border: 1px solid var(--whiteA15); border-radius: 6px; color: var(--sand400); font-size: 10px; cursor: pointer; }
+  .license-edit-btn:hover { background: var(--whiteA15); }
+  .license-del-btn { padding: 4px 12px; background: rgba(184,92,92,0.1); border: 1px solid rgba(184,92,92,0.2); border-radius: 6px; color: var(--red); font-size: 10px; cursor: pointer; }
+  .license-del-btn:hover { background: rgba(184,92,92,0.2); }
+
+  /* Physician manage view */
+  .manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .phys-manage-row { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: var(--navy700); border: 1px solid var(--whiteA08); border-radius: 10px; margin-bottom: 8px; }
+  .phys-manage-row:hover { border-color: var(--whiteA15); }
+  .phys-manage-actions { display: flex; gap: 6px; margin-left: auto; }
+
+  /* Confirm dialog */
+  .confirm-text { font-size: 13px; color: var(--sand400); line-height: 1.6; margin-bottom: 8px; }
+  .confirm-name { color: var(--sand50); font-weight: 500; }
+
+  /* Category pill in license form */
+  .cat-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--whiteA04); }
+  .cat-row:first-child { border-top: none; }
+  .cat-input { width: 60px; padding: 6px 8px; background: var(--whiteA04); border: 1px solid var(--whiteA15); border-radius: 6px; color: var(--sand50); font-size: 12px; text-align: center; outline: none; font-family: inherit; }
+  .cat-name-input { flex: 1; padding: 6px 10px; background: var(--whiteA04); border: 1px solid var(--whiteA15); border-radius: 6px; color: var(--sand50); font-size: 12px; outline: none; font-family: inherit; }
+  .cat-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 14px; padding: 4px; opacity: 0.6; }
+  .cat-remove:hover { opacity: 1; }
+  .add-cat-btn { padding: 6px 12px; background: var(--whiteA04); border: 1px dashed var(--whiteA15); border-radius: 6px; color: var(--sand400); font-size: 11px; cursor: pointer; margin-top: 8px; }
+  .add-cat-btn:hover { background: var(--whiteA08); }
+
+  /* Loading spinner */
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay" style="position:fixed;inset:0;background:var(--navy900);display:flex;align-items:center;justify-content:center;z-index:999">
+  <div style="text-align:center">
+    <div style="width:40px;height:40px;border:3px solid var(--whiteA15);border-top-color:var(--sand500);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
+    <div style="font-size:13px;color:var(--sand400)">Loading dashboard...</div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">C</div>
+      <div class="brand-text">
+        <div class="brand-title">CME Admin</div>
+        <div class="brand-sub">Staff Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="nav"></nav>
+    <button class="nav-btn" onclick="handleSignOut()" style="color:var(--red)">
+      <span class="nav-icon">↪</span>
+      <span class="nav-label">Sign Out</span>
+    </button>
+    <button class="collapse-btn" id="collapseBtn" onclick="toggleSidebar()">← Collapse</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="content" id="content"></div>
+    <div class="detail-panel" id="detailPanel"></div>
+  </div>
+  <!-- Modal -->
+  <div id="modalRoot"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ─── Supabase Init ───
+const SUPABASE_URL = 'https://drwpnasiqgzqdubmlwxj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyd3BuYXNpcWd6cWR1Ym1sd3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzE5MzAsImV4cCI6MjA4NTgwNzkzMH0.26RVUHuFDcYfMBLTsodSP9jUE01qYRn9bfQ-nfqtt7Y';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── Auth State ───
+let currentUser = null;
+let currentAgencyId = null;
+
+// ─── Data (mutable) ───
+let physicians = [];
+let alerts = [];
+let nextId = 100;
+
+// ─── State ───
+let currentView = "overview";
+let selectedPhysician = null;
+let searchQuery = "";
+let filterStatus = "all";
+let sidebarCollapsed = false;
+
+// Licenses view state
+let licSortBy = "expiry"; // expiry | credits | state | physician
+let licSortDir = "asc";   // asc | desc
+let licFilterState = "all";
+let licFilterStatus = "all";
+let licSearch = "";
+
+// Alerts view state
+let alertFilter = "all"; // all | critical | warning | info
+let alertSort = "newest"; // newest | oldest | physician
+
+// Reports view state
+let reportFilter = "all"; // all | compliance | expiration | credits | certificates | state
+
+// Course library state
+let courseSearch = "";
+let courseCategory = "all";
+let courseSortBy = "relevance";
+
+// ─── Auth Init ───
+async function initAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = '/admin/login';
+    return false;
+  }
+
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile || (profile.role !== 'staff' && profile.role !== 'admin')) {
+    await sb.auth.signOut();
+    window.location.href = '/admin/login';
+    return false;
+  }
+
+  currentUser = { ...profile, email: session.user.email };
+  currentAgencyId = profile.agency_id;
+  return true;
+}
+
+// ─── Sign Out ───
+async function handleSignOut() {
+  await sb.auth.signOut();
+  window.location.href = '/admin/login';
+}
+
+// ─── Data Loading ───
+async function loadData() {
+  // Load physicians (profiles in same agency with role=physician)
+  const { data: profiles } = await sb
+    .from('profiles')
+    .select('id, full_name, degree_type, specialty, agency_id')
+    .eq('agency_id', currentAgencyId)
+    .eq('role', 'physician');
+
+  // Load all licenses for those physicians
+  const physicianIds = (profiles || []).map(p => p.id);
+  const { data: licenses } = await sb
+    .from('licenses')
+    .select('*')
+    .in('user_id', physicianIds.length > 0 ? physicianIds : ['none']);
+
+  // Load license requirements for those licenses
+  const licenseIds = (licenses || []).map(l => l.id);
+  const { data: requirements } = await sb
+    .from('license_requirements')
+    .select('*')
+    .in('license_id', licenseIds.length > 0 ? licenseIds : ['none']);
+
+  // Load certificates count per physician
+  const { data: certs } = await sb
+    .from('certificates')
+    .select('user_id')
+    .in('user_id', physicianIds.length > 0 ? physicianIds : ['none']);
+
+  // Build physician objects matching the prototype's data shape
+  physicians = (profiles || []).map(p => {
+    const pLicenses = (licenses || []).filter(l => l.user_id === p.id);
+    const mappedLicenses = pLicenses.map(l => {
+      const reqs = (requirements || []).filter(r => r.license_id === l.id);
+      const totalRequired = reqs.reduce((s, r) => s + (r.credits_required || 0), 0) || l.credits_required || 50;
+      const totalEarned = reqs.reduce((s, r) => s + (r.credits_earned || 0), 0);
+      const categories = reqs.map(r => ({
+        name: r.category_name || r.category || 'General',
+        earned: r.credits_earned || 0,
+        required: r.credits_required || 0,
+        status: (r.credits_earned || 0) >= (r.credits_required || 0) ? 'complete' :
+                (r.credits_earned || 0) / (r.credits_required || 1) < 0.3 ? 'critical' :
+                (r.credits_earned || 0) / (r.credits_required || 1) < 0.6 ? 'urgent' : 'on-track'
+      }));
+      return {
+        id: l.id,
+        state: l.state || 'N/A',
+        type: l.license_type || p.degree_type || 'MD',
+        expiry: l.expiration_date || '2027-01-01',
+        credits: { earned: totalEarned, required: totalRequired },
+        categories: categories.length > 0 ? categories : [{ name: 'General', earned: totalEarned, required: totalRequired, status: totalEarned >= totalRequired ? 'complete' : 'on-track' }]
+      };
+    });
+
+    const certCount = (certs || []).filter(c => c.user_id === p.id).length;
+    const avatar = makeAvatar(p.full_name || 'Unknown');
+    const status = mappedLicenses.length > 0 ? computeStatus(mappedLicenses) : 'compliant';
+
+    return {
+      id: p.id,
+      name: p.full_name || 'Unknown',
+      specialty: p.specialty || p.degree_type || 'General',
+      npi: '—',
+      licenses: mappedLicenses,
+      certs: certCount,
+      status,
+      avatar
+    };
+  });
+
+  // Generate alerts from the data
+  alerts = [];
+  physicians.forEach(p => {
+    p.licenses.forEach(l => {
+      const days = daysUntil(l.expiry);
+      const pct = l.credits.required > 0 ? l.credits.earned / l.credits.required : 1;
+      if (days < 60 && days > 0) alerts.push({ id: alerts.length + 1, type: 'critical', physician: p.name, message: `${l.state} license expires in ${days} days`, time: 'Auto' });
+      else if (days < 120 && days > 0) alerts.push({ id: alerts.length + 1, type: 'warning', physician: p.name, message: `${l.state} license expires in ${days} days`, time: 'Auto' });
+      if (pct < 0.4 && l.credits.required > 0) alerts.push({ id: alerts.length + 1, type: 'critical', physician: p.name, message: `${l.state}: only ${Math.round(pct*100)}% of required credits earned`, time: 'Auto' });
+    });
+  });
+  alerts.sort((a, b) => (a.type === 'critical' ? 0 : a.type === 'warning' ? 1 : 2) - (b.type === 'critical' ? 0 : b.type === 'warning' ? 1 : 2));
+}
+
+// ─── Helpers ───
+function daysUntil(date) { return Math.ceil((new Date(date) - new Date()) / 86400000); }
+
+function statusColor(status) {
+  const m = { critical:"#B85C5C", urgent:"#B85C5C", attention:"#C49A4A", "on-track":"#A68B5B", compliant:"#5B8C6B", complete:"#5B8C6B" };
+  return m[status] || "#D4C4B0";
+}
+
+function arcColor(pct) { return pct >= 100 ? "#5B8C6B" : pct >= 60 ? "#A68B5B" : pct >= 30 ? "#C49A4A" : "#B85C5C"; }
+
+function svgArc(pct, size, stroke) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  const col = arcColor(pct);
+  const label = pct >= 100 ? "✓" : Math.round(pct) + "%";
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${stroke}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round" style="transition:stroke-dashoffset 0.8s"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central" fill="#FDFCFB" font-size="${size*0.24}" font-weight="500" style="transform:rotate(90deg);transform-origin:center">${label}</text>
+  </svg>`;
+}
+
+function dot(status) { return `<span class="status-dot" style="background:${statusColor(status)}"></span>`; }
+
+function badge(text, variant) {
+  const cls = variant === "success" ? "badge-success" : variant === "critical" ? "badge-critical" : "badge-default";
+  return `<span class="badge ${cls}">${text}</span>`;
+}
+
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+// ─── Render Nav ───
+function renderNav() {
+  const navItems = [
+    { id:"overview", icon:"◫", label:"Overview" },
+    { id:"physicians", icon:"⊕", label:"Physicians" },
+    { id:"licenses", icon:"◎", label:"Licenses" },
+    { id:"alerts", icon:"△", label:"Alerts", badge: alerts.filter(a=>a.type==="critical").length },
+    { id:"reports", icon:"▤", label:"Reports" },
+    { id:"courses", icon:"▧", label:"Course Library" }
+  ];
+
+  const nav = document.getElementById("nav");
+  nav.innerHTML = navItems.map(item => {
+    const active = currentView === item.id ? " active" : "";
+    const badgeHtml = item.badge ? `<span class="nav-badge">${item.badge}</span>` : "";
+    return `<button class="nav-btn${active}" onclick="navigate('${item.id}')">
+      <span class="nav-icon">${item.icon}</span>
+      <span class="nav-label">${item.label}</span>
+      ${badgeHtml}
+    </button>`;
+  }).join("");
+}
+
+function navigate(view) {
+  currentView = view;
+  selectedPhysician = null;
+  render();
+}
+
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById("sidebar").classList.toggle("collapsed", sidebarCollapsed);
+  document.getElementById("collapseBtn").textContent = sidebarCollapsed ? "→" : "← Collapse";
+}
+
+function selectPhysician(id) {
+  selectedPhysician = physicians.find(p => p.id === id) || null;
+  render();
+}
+
+function closeDetail() {
+  selectedPhysician = null;
+  render();
+}
+
+// ─── Modal System ───
+function showModal(html) { document.getElementById("modalRoot").innerHTML = html; }
+function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
+
+function makeAvatar(name) {
+  const parts = name.replace(/^Dr\.?\s*/i, "").trim().split(/\s+/);
+  return parts.map(p => p[0] || "").join("").toUpperCase().slice(0, 2);
+}
+
+function computeStatus(licenses) {
+  let worst = "compliant";
+  for (const l of licenses) {
+    const pct = l.credits.required > 0 ? l.credits.earned / l.credits.required : 1;
+    const days = daysUntil(l.expiry);
+    if (days < 60 || pct < 0.4) { return "critical"; }
+    if (days < 120 || pct < 0.7) { worst = "attention"; }
+    else if (pct < 1 && worst === "compliant") { worst = "on-track"; }
+  }
+  return worst;
+}
+
+// ─── Add Physician Modal ───
+function showAddPhysicianModal() {
+  showModal(`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">Add Physician</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div style="font-size:12px;color:var(--sand400);margin-bottom:16px;padding:12px;background:var(--whiteA04);border-radius:8px">Physicians register through the CME Agent app and are automatically assigned to your agency.</div>
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="fName" placeholder="Dr. Jane Smith"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Specialty</label><input class="form-input" id="fSpecialty" placeholder="Internal Medicine"></div>
+          <div class="form-group"><label class="form-label">NPI Number</label><input class="form-input" id="fNpi" placeholder="1234567890" maxlength="10"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn-ghost-sm" onclick="closeModal()">Cancel</button><button class="btn-gold-sm" onclick="addPhysician()">Add Physician</button></div>
+    </div>
+  </div>`);
+  setTimeout(() => document.getElementById("fName")?.focus(), 50);
+}
+
+function addPhysician() {
+  const name = document.getElementById("fName").value.trim();
+  const specialty = document.getElementById("fSpecialty").value.trim();
+  const npi = document.getElementById("fNpi").value.trim();
+  if (!name) { alert("Name is required"); return; }
+  physicians.push({ id: nextId++, name, specialty: specialty || "General", npi: npi || "—", licenses: [], certs: 0, status: "compliant", avatar: makeAvatar(name) });
+  closeModal(); render();
+}
+
+// ─── Edit Physician Modal ───
+function showEditPhysicianModal(id) {
+  const p = physicians.find(x => x.id === id); if (!p) return;
+  showModal(`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">Edit Physician</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="eName" value="${escHtml(p.name)}"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Specialty</label><input class="form-input" id="eSpecialty" value="${escHtml(p.specialty)}"></div>
+          <div class="form-group"><label class="form-label">NPI Number</label><input class="form-input" id="eNpi" value="${escHtml(p.npi)}" maxlength="10"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn-ghost-sm" onclick="closeModal()">Cancel</button><button class="btn-gold-sm" onclick="savePhysician(${id})">Save Changes</button></div>
+    </div>
+  </div>`);
+}
+
+function savePhysician(id) {
+  const p = physicians.find(x => x.id === id); if (!p) return;
+  p.name = document.getElementById("eName").value.trim() || p.name;
+  p.specialty = document.getElementById("eSpecialty").value.trim() || p.specialty;
+  p.npi = document.getElementById("eNpi").value.trim() || p.npi;
+  p.avatar = makeAvatar(p.name);
+  if (selectedPhysician?.id === id) selectedPhysician = p;
+  closeModal(); render();
+}
+
+// ─── Remove Physician ───
+function showRemovePhysicianModal(id) {
+  const p = physicians.find(x => x.id === id); if (!p) return;
+  showModal(`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">Remove Physician</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="confirm-text">Are you sure you want to remove <span class="confirm-name">${escHtml(p.name)}</span> from the roster?</div>
+        <div class="confirm-text">This will remove ${p.licenses.length} license${p.licenses.length !== 1 ? "s" : ""} and ${p.certs} certificate${p.certs !== 1 ? "s" : ""} on file. This action cannot be undone.</div>
+      </div>
+      <div class="modal-footer"><button class="btn-ghost-sm" onclick="closeModal()">Cancel</button><button class="btn-danger-sm" onclick="removePhysician(${id})">Remove Physician</button></div>
+    </div>
+  </div>`);
+}
+
+function removePhysician(id) {
+  physicians = physicians.filter(p => p.id !== id);
+  if (selectedPhysician?.id === id) selectedPhysician = null;
+  closeModal(); render();
+}
+
+// ─── Add License Modal ───
+function showAddLicenseModal(physId) {
+  const p = physicians.find(x => x.id === physId); if (!p) return;
+  showModal(`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">Add License — ${escHtml(p.name)}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">State</label>
+            <select class="form-select" id="lState">
+              <option value="">Select state...</option>
+              ${["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"].map(s => `<option value="${s}">${s}</option>`).join("")}
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">License Type</label>
+            <select class="form-select" id="lType"><option value="MD">MD</option><option value="DO">DO</option><option value="DPM">DPM</option><option value="PA">PA</option><option value="NP">NP</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Expiration Date</label><input class="form-input" id="lExpiry" type="date"></div>
+          <div class="form-group"><label class="form-label">Required Credits</label><input class="form-input" id="lRequired" type="number" value="50" min="0"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Credit Categories</label>
+          <div id="catList">
+            <div class="cat-row"><input class="cat-name-input" value="Ethics" placeholder="Category"><input class="cat-input" value="4" placeholder="Req" type="number" min="0"><button class="cat-remove" onclick="this.parentElement.remove()">×</button></div>
+            <div class="cat-row"><input class="cat-name-input" value="General" placeholder="Category"><input class="cat-input" value="46" placeholder="Req" type="number" min="0"><button class="cat-remove" onclick="this.parentElement.remove()">×</button></div>
+          </div>
+          <button class="add-cat-btn" onclick="addCatRow()">+ Add Category</button>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn-ghost-sm" onclick="closeModal()">Cancel</button><button class="btn-gold-sm" onclick="addLicense(${physId})">Add License</button></div>
+    </div>
+  </div>`);
+}
+
+function addCatRow() {
+  const list = document.getElementById("catList");
+  const row = document.createElement("div"); row.className = "cat-row";
+  row.innerHTML = '<input class="cat-name-input" placeholder="Category name"><input class="cat-input" placeholder="Req" type="number" min="0" value="0"><button class="cat-remove" onclick="this.parentElement.remove()">×</button>';
+  list.appendChild(row);
+}
+
+async function addLicense(physId) {
+  const p = physicians.find(x => x.id === physId); if (!p) return;
+  const state = document.getElementById("lState").value;
+  const type = document.getElementById("lType").value;
+  const expiry = document.getElementById("lExpiry").value;
+  const required = parseInt(document.getElementById("lRequired").value) || 50;
+  if (!state || !expiry) { alert("State and expiration date are required"); return; }
+
+  const { error } = await sb.from('licenses').insert({
+    user_id: physId,
+    state: state,
+    license_type: type,
+    expiration_date: expiry,
+    credits_required: required
+  });
+
+  if (error) { alert("Error adding license: " + error.message); return; }
+
+  const catRows = document.querySelectorAll("#catList .cat-row");
+  const categories = [];
+  catRows.forEach(row => {
+    const name = row.querySelector(".cat-name-input").value.trim();
+    const req = parseInt(row.querySelector(".cat-input").value) || 0;
+    if (name && req > 0) categories.push({ name, earned: 0, required: req, status: "urgent" });
+  });
+  p.licenses.push({ state, type, expiry, credits: { earned: 0, required }, categories });
+  p.status = computeStatus(p.licenses);
+  if (selectedPhysician?.id === physId) selectedPhysician = p;
+  closeModal(); await loadData(); render();
+}
+
+// ─── Edit License Modal ───
+function showEditLicenseModal(physId, licIdx) {
+  const p = physicians.find(x => x.id === physId); if (!p) return;
+  const l = p.licenses[licIdx]; if (!l) return;
+  const catHtml = l.categories.map(c =>
+    `<div class="cat-row"><input class="cat-name-input" value="${escHtml(c.name)}" placeholder="Category"><input class="cat-input" value="${c.earned}" placeholder="Earned" type="number" min="0" data-field="earned"><span style="color:var(--whiteA60);font-size:11px">/</span><input class="cat-input" value="${c.required}" placeholder="Req" type="number" min="0" data-field="required"><button class="cat-remove" onclick="this.parentElement.remove()">×</button></div>`
+  ).join("");
+  showModal(`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">Edit License — ${l.state} ${l.type}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">State</label><input class="form-input" id="elState" value="${l.state}"></div>
+          <div class="form-group"><label class="form-label">Type</label><input class="form-input" id="elType" value="${l.type}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Expiration</label><input class="form-input" id="elExpiry" type="date" value="${l.expiry}"></div>
+          <div class="form-group"><label class="form-label">Total Required</label><input class="form-input" id="elRequired" type="number" value="${l.credits.required}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Earned Credits</label><input class="form-input" id="elEarned" type="number" value="${l.credits.earned}"></div>
+        <div class="form-group">
+          <label class="form-label">Categories (Earned / Required)</label>
+          <div id="catList">${catHtml}</div>
+          <button class="add-cat-btn" onclick="addEditCatRow()">+ Add Category</button>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn-ghost-sm" onclick="closeModal()">Cancel</button><button class="btn-gold-sm" onclick="saveLicense(${physId},${licIdx})">Save License</button></div>
+    </div>
+  </div>`);
+}
+
+function addEditCatRow() {
+  const list = document.getElementById("catList");
+  const row = document.createElement("div"); row.className = "cat-row";
+  row.innerHTML = '<input class="cat-name-input" placeholder="Category name"><input class="cat-input" placeholder="Earned" type="number" min="0" value="0" data-field="earned"><span style="color:var(--whiteA60);font-size:11px">/</span><input class="cat-input" placeholder="Req" type="number" min="0" value="0" data-field="required"><button class="cat-remove" onclick="this.parentElement.remove()">×</button>';
+  list.appendChild(row);
+}
+
+async function saveLicense(physId, licIdx) {
+  const p = physicians.find(x => x.id === physId); if (!p) return;
+  const l = p.licenses[licIdx]; if (!l) return;
+  l.state = document.getElementById("elState").value.trim() || l.state;
+  l.type = document.getElementById("elType").value.trim() || l.type;
+  l.expiry = document.getElementById("elExpiry").value || l.expiry;
+  l.credits.required = parseInt(document.getElementById("elRequired").value) || l.credits.required;
+  l.credits.earned = parseInt(document.getElementById("elEarned").value) || 0;
+
+  const { error } = await sb.from('licenses').update({
+    state: l.state,
+    license_type: l.type,
+    expiration_date: l.expiry,
+    credits_required: l.credits.required
+  }).eq('id', l.id);
+
+  if (error) { alert("Error saving license: " + error.message); return; }
+
+  const catRows = document.querySelectorAll("#catList .cat-row");
+  const categories = [];
+  catRows.forEach(row => {
+    const name = row.querySelector(".cat-name-input").value.trim();
+    const inputs = row.querySelectorAll(".cat-input");
+    const earned = parseInt(inputs[0]?.value) || 0;
+    const req = parseInt(inputs[1]?.value) || 0;
+    if (name) {
+      const status = earned >= req ? "complete" : (earned / req < 0.3 ? "critical" : earned / req < 0.6 ? "urgent" : "on-track");
+      categories.push({ name, earned, required: req, status });
+    }
+  });
+  l.categories = categories;
+  p.status = computeStatus(p.licenses);
+  if (selectedPhysician?.id === physId) selectedPhysician = p;
+  closeModal(); await loadData(); render();
+}
+
+// ─── Remove License ───
+function showRemoveLicenseModal(physId, licIdx) {
+  const p = physicians.find(x => x.id === physId); if (!p) return;
+  const l = p.licenses[licIdx]; if (!l) return;
+  showModal(`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">Remove License</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="confirm-text">Remove the <span class="confirm-name">${l.state} — ${l.type}</span> license from ${escHtml(p.name)}?</div>
+        <div class="confirm-text">This will also remove ${l.categories.length} tracked credit categories. This cannot be undone.</div>
+      </div>
+      <div class="modal-footer"><button class="btn-ghost-sm" onclick="closeModal()">Cancel</button><button class="btn-danger-sm" onclick="removeLicense(${physId},${licIdx})">Remove License</button></div>
+    </div>
+  </div>`);
+}
+
+async function removeLicense(physId, licIdx) {
+  const p = physicians.find(x => x.id === physId); if (!p) return;
+  const l = p.licenses[licIdx]; if (!l) return;
+
+  const { error } = await sb.from('licenses').delete().eq('id', l.id);
+  if (error) { alert("Error removing license: " + error.message); return; }
+
+  p.licenses.splice(licIdx, 1);
+  p.status = computeStatus(p.licenses);
+  if (selectedPhysician?.id === physId) selectedPhysician = p;
+  closeModal(); await loadData(); render();
+}
+
+function setFilter(f) {
+  filterStatus = f;
+  render();
+}
+
+function onSearch(val) {
+  searchQuery = val;
+  render();
+}
+
+// License view controls
+function setLicSort(field) {
+  if (licSortBy === field) { licSortDir = licSortDir === "asc" ? "desc" : "asc"; }
+  else { licSortBy = field; licSortDir = "asc"; }
+  render();
+}
+function setLicFilterState(v) { licFilterState = v; render(); }
+function setLicFilterStatus(v) { licFilterStatus = v; render(); }
+function onLicSearch(v) { licSearch = v; render(); }
+
+// Alert view controls
+function setAlertFilter(v) { alertFilter = v; render(); }
+function setAlertSort(v) { alertSort = v; render(); }
+
+// Report view controls
+function setReportFilter(v) { reportFilter = v; render(); }
+
+// Course view controls
+function onCourseSearch(v) { courseSearch = v; render(); }
+function setCourseCategory(v) { courseCategory = v; render(); }
+function setCourseSortBy(v) { courseSortBy = v; render(); }
+
+// ─── Stats ───
+function getStats() {
+  const total = physicians.length;
+  const compliant = physicians.filter(p => p.status === "compliant").length;
+  const critical = physicians.filter(p => p.status === "critical").length;
+  const totalLicenses = physicians.reduce((s,p) => s + p.licenses.length, 0);
+  const expiringWithin90 = physicians.flatMap(p => p.licenses).filter(l => { const d = daysUntil(l.expiry); return d <= 90 && d > 0; }).length;
+  return { total, compliant, critical, totalLicenses, expiringWithin90 };
+}
+
+// ─── Filtered Physicians ───
+function getFiltered() {
+  return physicians.filter(p => {
+    const ms = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.specialty.toLowerCase().includes(searchQuery.toLowerCase()) || p.npi.includes(searchQuery);
+    const mf = filterStatus === "all" || p.status === filterStatus || (filterStatus === "critical" && (p.status === "critical" || p.status === "attention"));
+    return ms && mf;
+  });
+}
+
+// ─── Render Overview ───
+function renderOverview() {
+  const s = getStats();
+  const filtered = getFiltered();
+  const criticalMsg = s.critical > 0 ? `${s.critical} physician${s.critical > 1 ? "s" : ""} require${s.critical === 1 ? "s" : ""} attention` : "All physicians on track";
+  const expiringMsg = s.expiringWithin90 > 0 ? ` · ${s.expiringWithin90} license${s.expiringWithin90 > 1 ? "s" : ""} expiring within 90 days` : "";
+
+  const filters = ["all","critical","on-track","compliant"];
+  const filterLabels = { all:"All", critical:"Critical", "on-track":"In Progress", compliant:"Compliant" };
+
+  return `
+    <div class="greeting">Good afternoon</div>
+    <div class="greeting-sub">${criticalMsg}${expiringMsg}</div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Physicians</div><div class="stat-value">${s.total}</div><div class="stat-sub">Active roster</div></div>
+      <div class="stat-card"><div class="stat-label">Compliant</div><div class="stat-value" style="color:#5B8C6B">${s.compliant}</div><div class="stat-sub">${Math.round((s.compliant/s.total)*100)}% of roster</div></div>
+      <div class="stat-card"><div class="stat-label">Needs Attention</div><div class="stat-value" style="color:${s.critical > 0 ? '#B85C5C' : '#5B8C6B'}">${s.critical}</div><div class="stat-sub">${s.critical > 0 ? 'Action required' : 'None'}</div></div>
+      <div class="stat-card"><div class="stat-label">Licenses</div><div class="stat-value">${s.totalLicenses}</div><div class="stat-sub">${s.expiringWithin90} expiring soon</div></div>
+    </div>
+
+    <div class="heatmap" style="margin-top:0;margin-bottom:24px">
+      <div class="heatmap-title">Compliance at a Glance</div>
+      <div class="heatmap-grid">
+        ${physicians.map(p => {
+          const tp = Math.round(p.licenses.reduce((s,l) => s + (l.credits.earned/l.credits.required)*100, 0) / (p.licenses.length || 1));
+          return `<div class="heatmap-item" onclick="selectPhysician('${p.id}')">
+            ${svgArc(tp, 56, 4)}
+            <div class="heatmap-name">${p.name.replace("Dr. ","")}</div>
+            <div class="heatmap-states">${p.licenses.map(l=>l.state).join(", ") || "No licenses"}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="roster-card">
+        <div class="roster-header">
+          <div class="roster-title">Physician Roster</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="filter-btns">
+              ${filters.map(f => `<button class="filter-btn${filterStatus === f ? ' active' : ''}" onclick="setFilter('${f}')">${filterLabels[f]}</button>`).join("")}
+            </div>
+            <button class="btn-add" onclick="event.stopPropagation();showAddPhysicianModal()">＋ Add</button>
+          </div>
+        </div>
+        <div class="search-wrap">
+          <input class="search-input" placeholder="Search by name, specialty, or NPI..." value="${escHtml(searchQuery)}" oninput="onSearch(this.value)">
+        </div>
+        ${filtered.length === 0 ? '<div class="empty-state">No physicians match your filters</div>' :
+          filtered.map(p => {
+            const te = p.licenses.reduce((s,l) => s + l.credits.earned, 0);
+            const tr = p.licenses.reduce((s,l) => s + l.credits.required, 0);
+            const pct = Math.round((te/tr)*100);
+            const ne = p.licenses.reduce((m,l) => { const d = daysUntil(l.expiry); return d < m ? d : m; }, Infinity);
+            const sel = selectedPhysician?.id === p.id ? " selected" : "";
+            return `<div class="phys-row${sel}" onclick="selectPhysician('${p.id}')">
+              <div class="avatar">${p.avatar}</div>
+              <div class="phys-info">
+                <div class="phys-name">${p.name}</div>
+                <div class="phys-meta">${p.specialty} · NPI ${p.npi}</div>
+              </div>
+              <div class="badges">${p.licenses.map(l => {
+                const v = l.credits.earned >= l.credits.required ? "success" : daysUntil(l.expiry) < 60 ? "critical" : "default";
+                return badge(l.state, v);
+              }).join("")}</div>
+              <div class="credit-col"><div class="credit-num">${te}/${tr}</div><div class="credit-label">credits</div></div>
+              ${svgArc(pct, 40, 3)}
+              <div class="expiry-col"><div class="expiry-days" style="color:${ne < 60 ? '#B85C5C' : ne < 120 ? '#C49A4A' : '#D4C4B0'}">${ne}d</div><div class="credit-label">next renewal</div></div>
+              ${dot(p.status)}
+            </div>`;
+          }).join("")}
+      </div>
+
+      <div class="alerts-card">
+        <div class="alerts-title">Recent Alerts</div>
+        ${alerts.slice(0, 5).map(a => `<div class="alert-row">
+          <div class="alert-dot" style="background:${a.type === 'critical' ? '#B85C5C' : a.type === 'warning' ? '#C49A4A' : '#5B8C6B'}"></div>
+          <div style="flex:1"><div class="alert-physician">${a.physician}</div><div class="alert-message">${a.message}</div></div>
+          <div class="alert-time">${a.time}</div>
+        </div>`).join("")}
+        <button class="view-all-btn">View All Alerts</button>
+      </div>
+    </div>
+
+    `;
+}
+
+// ─── Render Alerts View ───
+function renderAlerts() {
+  let filtered = [...alerts];
+
+  // Filter by type
+  if (alertFilter !== "all") filtered = filtered.filter(a => a.type === alertFilter);
+
+  // Sort
+  if (alertSort === "oldest") filtered.reverse();
+  if (alertSort === "physician") filtered.sort((a,b) => a.physician.localeCompare(b.physician));
+
+  const typeFilters = ["all","critical","warning","info"];
+  const typeLabels = { all:"All", critical:"Critical", warning:"Warning", info:"Info" };
+  const typeColors = { all:"var(--sand400)", critical:"#B85C5C", warning:"#C49A4A", info:"#5B8C6B" };
+
+  const sortOptions = ["newest","oldest","physician"];
+  const sortLabels = { newest:"Newest First", oldest:"Oldest First", physician:"By Physician" };
+
+  return `
+    <div class="section-title">Alerts</div>
+    <div class="section-sub">${filtered.length} notification${filtered.length !== 1 ? 's' : ''} across your roster</div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <div class="filter-btns">
+        ${typeFilters.map(f => `<button class="filter-btn${alertFilter === f ? ' active' : ''}" style="${alertFilter === f ? 'border-left:2px solid '+typeColors[f] : ''}" onclick="setAlertFilter('${f}')">${typeLabels[f]}</button>`).join("")}
+      </div>
+      <select class="form-select" style="width:auto;padding:7px 12px;font-size:11px;background:var(--navy700)" onchange="setAlertSort(this.value)">
+        ${sortOptions.map(s => `<option value="${s}"${alertSort===s?" selected":""}>${sortLabels[s]}</option>`).join("")}
+      </select>
+    </div>
+
+    <div style="background:var(--navy700);border-radius:12px;border:1px solid var(--whiteA08);padding:8px 20px;max-width:800px">
+      ${filtered.length === 0 ? '<div class="empty-state">No alerts match this filter</div>' :
+        filtered.map(a => `<div class="alert-row">
+          <div class="alert-dot" style="background:${a.type === 'critical' ? '#B85C5C' : a.type === 'warning' ? '#C49A4A' : '#5B8C6B'}"></div>
+          <div style="flex:1"><div class="alert-physician">${a.physician}</div><div class="alert-message">${a.message}</div></div>
+          <div class="alert-time">${a.time}</div>
+        </div>`).join("")}
+    </div>`;
+}
+
+// ─── Render Reports View ───
+function renderReports() {
+  const reports = [
+    { title:"Compliance Summary", desc:"Overview of all physicians' CME status", icon:"◫", category:"compliance" },
+    { title:"Expiration Forecast", desc:"Licenses expiring in the next 6 months", icon:"△", category:"expiration" },
+    { title:"Credit Deficiency Report", desc:"Physicians behind on required credits", icon:"◎", category:"credits" },
+    { title:"Certificate Audit Trail", desc:"All uploaded certificates with verification status", icon:"▤", category:"certificates" },
+    { title:"State Requirements Matrix", desc:"Requirements by state and category", icon:"▧", category:"state" },
+    { title:"Board Certification Status", desc:"Physician board certifications and renewal dates", icon:"◫", category:"compliance" },
+    { title:"CME Activity Log", desc:"Detailed log of all completed CME activities", icon:"▤", category:"credits" },
+    { title:"Upcoming Deadlines", desc:"All requirements due within the next 90 days", icon:"△", category:"expiration" }
+  ];
+
+  const filtered = reportFilter === "all" ? reports : reports.filter(r => r.category === reportFilter);
+  const categories = ["all","compliance","expiration","credits","certificates","state"];
+  const catLabels = { all:"All", compliance:"Compliance", expiration:"Expirations", credits:"Credits", certificates:"Certificates", state:"State Reqs" };
+
+  return `
+    <div class="section-title">Reports</div>
+    <div class="section-sub">Generate compliance reports for your organization</div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <div class="filter-btns">
+        ${categories.map(c => `<button class="filter-btn${reportFilter === c ? ' active' : ''}" onclick="setReportFilter('${c}')">${catLabels[c]}</button>`).join("")}
+      </div>
+    </div>
+
+    <div style="max-width:800px">
+      ${filtered.length === 0 ? '<div class="empty-state">No reports in this category</div>' :
+        filtered.map(r => `<div class="report-row">
+          <span class="report-icon">${r.icon}</span>
+          <div class="report-info"><div class="report-title">${r.title}</div><div class="report-desc">${r.desc}</div></div>
+          <span class="badge badge-default" style="font-size:10px">${catLabels[r.category]}</span>
+          <button class="report-btn">Generate</button>
+        </div>`).join("")}
+    </div>`;
+}
+
+// ─── Render Detail Panel ───
+function renderDetail() {
+  const panel = document.getElementById("detailPanel");
+  if (!selectedPhysician) { panel.classList.remove("open"); panel.innerHTML = ""; return; }
+  panel.classList.add("open");
+  const p = selectedPhysician;
+
+  const licensesHtml = p.licenses.map((l, idx) => {
+    const pct = Math.round((l.credits.earned / l.credits.required) * 100);
+    const days = daysUntil(l.expiry);
+    const daysColor = days < 60 ? "#B85C5C" : days < 120 ? "#C49A4A" : "#D4C4B0";
+    const barColor = pct >= 100 ? "#5B8C6B" : pct >= 60 ? "#A68B5B" : "#C49A4A";
+    return `<div class="license-card">
+      <div class="license-head">
+        <div>
+          <div class="license-title">${l.state} — ${l.type}</div>
+          <div class="license-expiry">Expires ${l.expiry} · <span style="color:${daysColor}">${days} days</span></div>
+        </div>
+        ${svgArc(pct, 52, 4)}
+      </div>
+      <div class="credit-bar-wrap">
+        <div class="credit-bar-labels">
+          <span style="color:#D4C4B0">${l.credits.earned} of ${l.credits.required} credits</span>
+          <span style="color:rgba(255,255,255,0.6)">${l.credits.required - l.credits.earned} remaining</span>
+        </div>
+        <div class="credit-bar"><div class="credit-bar-fill" style="width:${Math.min(pct,100)}%;background:${barColor}"></div></div>
+      </div>
+      <div class="category-list">
+        ${l.categories.map(c => `<div class="category-row">
+          <div class="category-left">${dot(c.status)} ${c.name}</div>
+          <div class="category-right" style="color:${c.status === 'complete' ? '#5B8C6B' : '#D4C4B0'}">${c.earned}/${c.required}${c.status === 'complete' ? ' <span style="font-size:10px">✓</span>' : ''}</div>
+        </div>`).join("")}
+      </div>
+      <div class="license-actions">
+        <button class="license-edit-btn" onclick="showEditLicenseModal('${p.id}',${idx})">✎ Edit License</button>
+        <button class="license-del-btn" onclick="showRemoveLicenseModal('${p.id}',${idx})">✕ Remove</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  panel.innerHTML = `
+    <div class="detail-header">
+      <button class="close-btn" onclick="closeDetail()">×</button>
+      <div class="detail-name">${p.name}</div>
+      <div class="detail-specialty">${p.specialty}</div>
+      <div class="detail-npi">NPI: ${p.npi}</div>
+      <div class="detail-actions">
+        <button class="btn-gold">Upload Certificate</button>
+        <button class="btn-ghost">Find Courses</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="license-edit-btn" onclick="showEditPhysicianModal('${p.id}')">Edit Physician</button>
+        <button class="license-del-btn" onclick="showRemovePhysicianModal('${p.id}')">Remove</button>
+      </div>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;font-weight:500;color:var(--sand400);text-transform:uppercase;letter-spacing:0.8px">Licenses</div>
+      <button class="btn-add" style="padding:5px 12px;font-size:11px" onclick="showAddLicenseModal('${p.id}')">＋ Add License</button>
+    </div>
+    ${licensesHtml}
+    <div class="certs-summary">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--sand50)">Certificates on File</div>
+        <div style="font-size:11px;color:var(--whiteA60);margin-top:2px">${p.certs} documents uploaded</div>
+      </div>
+      <div class="certs-count">${p.certs}</div>
+    </div>`;
+}
+
+// ─── Render Physicians Management View ───
+function renderPhysicians() {
+  const filtered = getFiltered();
+  return `
+    <div class="manage-header">
+      <div>
+        <div class="section-title">Manage Physicians</div>
+        <div class="section-sub">Add, edit, or remove physicians and their licenses</div>
+      </div>
+      <button class="btn-add" onclick="showAddPhysicianModal()">＋ Add Physician</button>
+    </div>
+    <div class="search-wrap" style="padding:0 0 16px;border:none">
+      <input class="search-input" placeholder="Search by name, specialty, or NPI..." value="${escHtml(searchQuery)}" oninput="onSearch(this.value)">
+    </div>
+    ${filtered.length === 0 ? '<div class="empty-state">No physicians match your search</div>' :
+      filtered.map(p => {
+        const totalEarned = p.licenses.reduce((s,l) => s + l.credits.earned, 0);
+        const totalReq = p.licenses.reduce((s,l) => s + l.credits.required, 0);
+        const licensesDetail = p.licenses.map((l, idx) => {
+          const pct = Math.round((l.credits.earned / l.credits.required) * 100);
+          const days = daysUntil(l.expiry);
+          const daysColor = days < 60 ? "#B85C5C" : days < 120 ? "#C49A4A" : "#D4C4B0";
+          return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--whiteA04);border-radius:8px;margin-top:6px">
+            ${svgArc(pct, 36, 3)}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:500;color:var(--sand50)">${l.state} — ${l.type}</div>
+              <div style="font-size:11px;color:var(--whiteA60)">${l.credits.earned}/${l.credits.required} credits · Expires <span style="color:${daysColor}">${l.expiry} (${days}d)</span></div>
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="license-edit-btn" onclick="showEditLicenseModal('${p.id}',${idx})">Edit</button>
+              <button class="license-del-btn" onclick="showRemoveLicenseModal('${p.id}',${idx})">Remove</button>
+            </div>
+          </div>`;
+        }).join("");
+        return `<div style="background:var(--navy700);border:1px solid var(--whiteA08);border-radius:12px;margin-bottom:12px;overflow:hidden">
+          <div class="phys-manage-row" style="margin:0;border:none;border-radius:0">
+            <div class="avatar">${p.avatar}</div>
+            <div class="phys-info" style="cursor:pointer" onclick="selectPhysician('${p.id}')">
+              <div class="phys-name">${p.name}</div>
+              <div class="phys-meta">${p.specialty} · NPI ${p.npi}</div>
+            </div>
+            ${dot(p.status)}
+            <div class="phys-manage-actions">
+              <button class="license-edit-btn" onclick="showEditPhysicianModal('${p.id}')">Edit</button>
+              <button class="license-del-btn" onclick="showRemovePhysicianModal('${p.id}')">Remove</button>
+            </div>
+          </div>
+          <div style="padding:0 16px 12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <div style="font-size:11px;color:var(--sand400);text-transform:uppercase;letter-spacing:0.8px">${p.licenses.length} License${p.licenses.length !== 1 ? 's' : ''} · ${totalEarned}/${totalReq} credits</div>
+              <button class="btn-add" style="padding:4px 10px;font-size:10px" onclick="showAddLicenseModal('${p.id}')">＋ Add License</button>
+            </div>
+            ${licensesDetail || '<div style="font-size:12px;color:var(--whiteA60);padding:8px 0">No licenses — add one to start tracking</div>'}
+          </div>
+        </div>`;
+      }).join("")}`;
+}
+
+// ─── Render Licenses Overview ───
+function renderLicenses() {
+  let allLicenses = physicians.flatMap(p => p.licenses.map(l => ({...l, physician: p.name, physId: p.id})));
+
+  // Collect unique states for filter dropdown
+  const states = [...new Set(allLicenses.map(l => l.state))].sort();
+
+  // Filter by search
+  if (licSearch) {
+    const q = licSearch.toLowerCase();
+    allLicenses = allLicenses.filter(l => l.physician.toLowerCase().includes(q) || l.state.toLowerCase().includes(q) || l.type.toLowerCase().includes(q));
+  }
+  // Filter by state
+  if (licFilterState !== "all") allLicenses = allLicenses.filter(l => l.state === licFilterState);
+  // Filter by status
+  if (licFilterStatus !== "all") {
+    allLicenses = allLicenses.filter(l => {
+      const pct = l.credits.earned / l.credits.required;
+      const days = daysUntil(l.expiry);
+      if (licFilterStatus === "critical") return days < 60 || pct < 0.4;
+      if (licFilterStatus === "in-progress") return pct < 1 && !(days < 60 || pct < 0.4);
+      if (licFilterStatus === "compliant") return pct >= 1;
+      return true;
+    });
+  }
+
+  // Sort
+  const dir = licSortDir === "asc" ? 1 : -1;
+  allLicenses.sort((a,b) => {
+    if (licSortBy === "expiry") return dir * (daysUntil(a.expiry) - daysUntil(b.expiry));
+    if (licSortBy === "credits") return dir * ((a.credits.earned/a.credits.required) - (b.credits.earned/b.credits.required));
+    if (licSortBy === "state") return dir * a.state.localeCompare(b.state);
+    if (licSortBy === "physician") return dir * a.physician.localeCompare(b.physician);
+    return 0;
+  });
+
+  const sortArrow = (field) => licSortBy === field ? (licSortDir === "asc" ? " ↑" : " ↓") : "";
+  const sortBtn = (field, label) => `<button class="filter-btn${licSortBy === field ? ' active' : ''}" onclick="setLicSort('${field}')">${label}${sortArrow(field)}</button>`;
+  const statusFilters = ["all","critical","in-progress","compliant"];
+  const statusLabels = { all:"All", critical:"Critical", "in-progress":"In Progress", compliant:"Compliant" };
+
+  return `
+    <div class="section-title">All Licenses</div>
+    <div class="section-sub">${allLicenses.length} license${allLicenses.length !== 1 ? 's' : ''} across ${physicians.length} physicians</div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <input class="search-input" style="width:240px" placeholder="Search licenses..." value="${escHtml(licSearch)}" oninput="onLicSearch(this.value)">
+      <select class="form-select" style="width:auto;padding:7px 12px;font-size:11px;background:var(--navy700)" onchange="setLicFilterState(this.value)">
+        <option value="all"${licFilterState==="all"?" selected":""}>All States</option>
+        ${states.map(s => `<option value="${s}"${licFilterState===s?" selected":""}>${s}</option>`).join("")}
+      </select>
+      <div class="filter-btns">
+        ${statusFilters.map(f => `<button class="filter-btn${licFilterStatus === f ? ' active' : ''}" onclick="setLicFilterStatus('${f}')">${statusLabels[f]}</button>`).join("")}
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;margin-bottom:12px;align-items:center">
+      <span style="font-size:11px;color:var(--sand400);margin-right:4px">Sort by:</span>
+      ${sortBtn("expiry","Expiry")} ${sortBtn("credits","Credits")} ${sortBtn("state","State")} ${sortBtn("physician","Physician")}
+    </div>
+
+    <div style="background:var(--navy700);border-radius:12px;border:1px solid var(--whiteA08);overflow:hidden;max-width:900px">
+      ${allLicenses.length === 0 ? '<div class="empty-state">No licenses match your filters</div>' :
+        allLicenses.map(l => {
+          const pct = Math.round((l.credits.earned / l.credits.required) * 100);
+          const days = daysUntil(l.expiry);
+          const daysColor = days < 60 ? "#B85C5C" : days < 120 ? "#C49A4A" : "#D4C4B0";
+          return `<div style="display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--whiteA04)">
+            ${svgArc(pct, 40, 3)}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:500;color:var(--sand50)">${l.physician} — ${l.state} ${l.type}</div>
+              <div style="font-size:11px;color:var(--whiteA60)">${l.credits.earned}/${l.credits.required} credits · ${l.categories.length} categories</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:12px;color:${daysColor}">${days}d</div>
+              <div style="font-size:10px;color:var(--whiteA60)">to renewal</div>
+            </div>
+            ${dot(pct >= 100 ? "compliant" : pct >= 60 ? "on-track" : "critical")}
+          </div>`;
+        }).join("")}
+    </div>`;
+}
+
+// ─── Course Data ───
+const courses = [
+  { id:1, title:"Medical Ethics in Modern Practice", provider:"AMA", credits:4, category:"Ethics", format:"Online", duration:"4h", rating:4.8 },
+  { id:2, title:"Pain Management: Evidence-Based Approaches", provider:"ACCME", credits:12, category:"Pain Mgmt", format:"Online", duration:"12h", rating:4.6 },
+  { id:3, title:"Infection Control & Prevention", provider:"CDC", credits:4, category:"Infection Ctrl", format:"Online", duration:"4h", rating:4.7 },
+  { id:4, title:"Pediatric Emergency Medicine Update", provider:"AAP", credits:8, category:"General", format:"Hybrid", duration:"8h", rating:4.5 },
+  { id:5, title:"Controlled Substances Prescribing", provider:"DEA/ACCME", credits:3, category:"Controlled Subst", format:"Online", duration:"3h", rating:4.4 },
+  { id:6, title:"HIV/AIDS Clinical Management", provider:"AAHIVM", credits:2, category:"HIV/AIDS", format:"Online", duration:"2h", rating:4.3 },
+  { id:7, title:"Child Abuse Recognition & Reporting", provider:"AAP", credits:2, category:"Child Abuse", format:"Online", duration:"2h", rating:4.9 },
+  { id:8, title:"Advanced Cardiac Life Support Recert", provider:"AHA", credits:8, category:"General", format:"In-Person", duration:"2d", rating:4.7 },
+  { id:9, title:"Dermatology Pharmacology Review", provider:"AAD", credits:6, category:"Pharmacology", format:"Online", duration:"6h", rating:4.2 },
+  { id:10, title:"Opioid Risk Evaluation & Mitigation", provider:"FDA/ACCME", credits:3, category:"Pain Mgmt", format:"Online", duration:"3h", rating:4.5 },
+  { id:11, title:"Emergency Triage & Stabilization", provider:"ACEP", credits:6, category:"General", format:"Hybrid", duration:"6h", rating:4.6 },
+  { id:12, title:"Telehealth Ethics & Best Practices", provider:"AMA", credits:2, category:"Ethics", format:"Online", duration:"2h", rating:4.1 }
+];
+
+// ─── Render Courses View ───
+function renderCourses() {
+  const categories = ["all", ...new Set(courses.map(c => c.category))];
+  const formats = ["all","Online","Hybrid","In-Person"];
+  const sortOptions = ["relevance","credits-high","credits-low","rating","title"];
+  const sortLabels = { relevance:"Relevance", "credits-high":"Credits (High→Low)", "credits-low":"Credits (Low→High)", rating:"Highest Rated", title:"A→Z" };
+
+  let filtered = [...courses];
+  if (courseSearch) {
+    const q = courseSearch.toLowerCase();
+    filtered = filtered.filter(c => c.title.toLowerCase().includes(q) || c.provider.toLowerCase().includes(q) || c.category.toLowerCase().includes(q));
+  }
+  if (courseCategory !== "all") filtered = filtered.filter(c => c.category === courseCategory || c.format === courseCategory);
+
+  if (courseSortBy === "credits-high") filtered.sort((a,b) => b.credits - a.credits);
+  else if (courseSortBy === "credits-low") filtered.sort((a,b) => a.credits - b.credits);
+  else if (courseSortBy === "rating") filtered.sort((a,b) => b.rating - a.rating);
+  else if (courseSortBy === "title") filtered.sort((a,b) => a.title.localeCompare(b.title));
+
+  const stars = (n) => { const full = Math.floor(n); return "★".repeat(full) + (n - full >= 0.5 ? "½" : "") + " " + n.toFixed(1); };
+
+  return `
+    <div class="section-title">Course Library</div>
+    <div class="section-sub">${filtered.length} course${filtered.length !== 1 ? 's' : ''} available</div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <input class="search-input" style="width:260px" placeholder="Search courses, providers..." value="${escHtml(courseSearch)}" oninput="onCourseSearch(this.value)">
+      <select class="form-select" style="width:auto;padding:7px 12px;font-size:11px;background:var(--navy700)" onchange="setCourseCategory(this.value)">
+        ${categories.map(c => `<option value="${c}"${courseCategory===c?" selected":""}>${c === "all" ? "All Categories" : c}</option>`).join("")}
+      </select>
+      <select class="form-select" style="width:auto;padding:7px 12px;font-size:11px;background:var(--navy700)" onchange="setCourseCategory(this.value)">
+        ${formats.map(f => `<option value="${f}"${courseCategory===f?" selected":""}>${f === "all" ? "All Formats" : f}</option>`).join("")}
+      </select>
+      <select class="form-select" style="width:auto;padding:7px 12px;font-size:11px;background:var(--navy700)" onchange="setCourseSortBy(this.value)">
+        ${sortOptions.map(s => `<option value="${s}"${courseSortBy===s?" selected":""}>${sortLabels[s]}</option>`).join("")}
+      </select>
+    </div>
+
+    <div style="max-width:900px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+      ${filtered.length === 0 ? '<div class="empty-state" style="grid-column:1/-1">No courses match your filters</div>' :
+        filtered.map(c => `<div style="background:var(--navy700);border:1px solid var(--whiteA08);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:8px;transition:border-color 0.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--whiteA15)'" onmouseout="this.style.borderColor='var(--whiteA08)'">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:13px;font-weight:500;color:var(--sand50);line-height:1.4;flex:1">${c.title}</div>
+            <span class="badge badge-default" style="font-size:10px;margin-left:8px;flex-shrink:0">${c.format}</span>
+          </div>
+          <div style="font-size:11px;color:var(--whiteA60)">${c.provider} · ${c.duration}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px;border-top:1px solid var(--whiteA04)">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge badge-success" style="font-size:10px">${c.credits} credits</span>
+              <span class="badge badge-default" style="font-size:10px">${c.category}</span>
+            </div>
+            <div style="font-size:11px;color:var(--amber)">${stars(c.rating)}</div>
+          </div>
+        </div>`).join("")}
+    </div>`;
+}
+
+// ─── Main Render ───
+function render() {
+  renderNav();
+  const content = document.getElementById("content");
+  switch (currentView) {
+    case "physicians": content.innerHTML = renderPhysicians(); break;
+    case "licenses": content.innerHTML = renderLicenses(); break;
+    case "alerts": content.innerHTML = renderAlerts(); break;
+    case "reports": content.innerHTML = renderReports(); break;
+    case "courses": content.innerHTML = renderCourses(); break;
+    default: content.innerHTML = renderOverview(); break;
+  }
+  renderDetail();
+}
+
+// ─── Init ───
+async function init() {
+  const authed = await initAuth();
+  if (!authed) return;
+  await loadData();
+  document.getElementById("loadingOverlay").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
