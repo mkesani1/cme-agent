@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CME Agent - Blog | CME Compliance & Healthcare AI Insights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0D1321 0%, #1D2A3F 50%, #2A3A52 100%);
+            color: #D4C4B0;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: #0D1321;
+            border-bottom: 1px solid rgba(164, 139, 91, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C4A574 0%, #A68B5B 50%, #8B7349 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            color: #D4C4B0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #C4A574;
+        }
+
+        .nav-links a.active {
+            color: #C4A574;
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #C4A574 0%, #A68B5B 100%);
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-cta {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, #C4A574 0%, #A68B5B 50%, #8B7349 100%);
+            color: #0D1321;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(196, 165, 116, 0.3);
+        }
+
+        .nav-login {
+            color: #D4C4B0;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-login:hover {
+            color: #C4A574;
+        }
+
+        /* Mobile Navigation */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+
+            .nav-links {
+                gap: 1.5rem;
+                font-size: 0.85rem;
+            }
+
+            .nav-right {
+                gap: 1rem;
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .nav-cta,
+            .nav-login {
+                font-size: 0.85rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 900px;
+            margin: 4rem auto 3rem;
+            padding: 0 2rem;
+            text-align: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #FDFCFB;
+            letter-spacing: -0.5px;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #A68B5B;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                margin: 2.5rem auto;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+
+        /* Filter Tags */
+        .filter-section {
+            max-width: 1200px;
+            margin: 3rem auto 2rem;
+            padding: 0 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #A68B5B;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .filter-tag {
+            padding: 0.6rem 1.2rem;
+            background: rgba(164, 139, 91, 0.1);
+            color: #D4C4B0;
+            border: 1px solid rgba(164, 139, 91, 0.2);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .filter-tag:hover,
+        .filter-tag.active {
+            background: linear-gradient(135deg, rgba(196, 165, 116, 0.2) 0%, rgba(168, 139, 91, 0.2) 100%);
+            border-color: #A68B5B;
+            color: #FDFCFB;
+        }
+
+        /* Blog Grid */
+        .blog-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        @media (max-width: 1024px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Article Card */
+        .article-card {
+            background: linear-gradient(135deg, rgba(45, 60, 85, 0.4) 0%, rgba(29, 42, 63, 0.3) 100%);
+            border: 1px solid rgba(164, 139, 91, 0.15);
+            border-left: 4px solid transparent;
+            background-image:
+                linear-gradient(rgba(45, 60, 85, 0.4), rgba(29, 42, 63, 0.3)),
+                linear-gradient(135deg, #C4A574 0%, #A68B5B 100%);
+            background-clip: padding-box, border-box;
+            background-origin: padding-box, border-box;
+            border-image: linear-gradient(135deg, #C4A574 0%, #A68B5B 100%) 1;
+            border-left: 4px solid #A68B5B;
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInCard 0.6s ease-out both;
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(164, 139, 91, 0.4);
+            box-shadow: 0 20px 40px rgba(196, 165, 116, 0.15),
+                        0 0 20px rgba(196, 165, 116, 0.08);
+            background: linear-gradient(135deg, rgba(45, 60, 85, 0.6) 0%, rgba(29, 42, 63, 0.5) 100%);
+        }
+
+        .article-card:nth-child(1) { animation-delay: 0.1s; }
+        .article-card:nth-child(2) { animation-delay: 0.2s; }
+        .article-card:nth-child(3) { animation-delay: 0.3s; }
+        .article-card:nth-child(4) { animation-delay: 0.4s; }
+        .article-card:nth-child(5) { animation-delay: 0.5s; }
+        .article-card:nth-child(6) { animation-delay: 0.6s; }
+        .article-card:nth-child(7) { animation-delay: 0.7s; }
+        .article-card:nth-child(8) { animation-delay: 0.8s; }
+        .article-card:nth-child(9) { animation-delay: 0.9s; }
+        .article-card:nth-child(10) { animation-delay: 1s; }
+
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.2rem;
+            gap: 1rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            background: linear-gradient(135deg, rgba(196, 165, 116, 0.2) 0%, rgba(168, 139, 91, 0.1) 100%);
+            color: #C4A574;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .article-date {
+            font-size: 0.8rem;
+            color: #A68B5B;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .article-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #FDFCFB;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            transition: color 0.3s ease;
+        }
+
+        .article-card:hover .article-title {
+            color: #C4A574;
+        }
+
+        .article-excerpt {
+            font-size: 0.95rem;
+            color: #D4C4B0;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(164, 139, 91, 0.1);
+            padding-top: 1.2rem;
+        }
+
+        .read-more {
+            color: #C4A574;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .read-more::after {
+            content: '→';
+            transition: transform 0.3s ease;
+        }
+
+        .article-card:hover .read-more {
+            gap: 0.75rem;
+            color: #D4A574;
+        }
+
+        .article-card:hover .read-more::after {
+            transform: translateX(4px);
+        }
+
+        .read-time {
+            font-size: 0.8rem;
+            color: #A68B5B;
+        }
+
+        /* Newsletter CTA */
+        .newsletter-section {
+            background: linear-gradient(135deg, rgba(164, 139, 91, 0.1) 0%, rgba(91, 75, 43, 0.1) 100%);
+            border: 1px solid rgba(164, 139, 91, 0.2);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            max-width: 700px;
+            margin: 4rem auto;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+
+        .newsletter-section h3 {
+            font-size: 1.8rem;
+            color: #FDFCFB;
+            margin-bottom: 0.8rem;
+        }
+
+        .newsletter-section p {
+            color: #D4C4B0;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .newsletter-input {
+            padding: 0.85rem 1.2rem;
+            background: rgba(13, 19, 33, 0.5);
+            border: 1px solid rgba(164, 139, 91, 0.3);
+            border-radius: 6px;
+            color: #FDFCFB;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .newsletter-input::placeholder {
+            color: rgba(212, 196, 176, 0.5);
+        }
+
+        .newsletter-input:focus {
+            outline: none;
+            border-color: #A68B5B;
+            background: rgba(13, 19, 33, 0.7);
+            box-shadow: 0 0 16px rgba(196, 165, 116, 0.15);
+        }
+
+        .newsletter-button {
+            padding: 0.85rem 2rem;
+            background: linear-gradient(135deg, #C4A574 0%, #A68B5B 50%, #8B7349 100%);
+            color: #0D1321;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .newsletter-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(196, 165, 116, 0.3);
+        }
+
+        .newsletter-button:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .newsletter-input,
+            .newsletter-button {
+                width: 100%;
+            }
+        }
+
+        /* Footer */
+        footer {
+            background: #0D1321;
+            border-top: 1px solid rgba(164, 139, 91, 0.1);
+            padding: 3rem 2rem 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .footer-section h4 {
+            color: #FDFCFB;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.6rem;
+        }
+
+        .footer-section a {
+            color: #D4C4B0;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: #C4A574;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(164, 139, 91, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #A68B5B;
+        }
+
+        @media (max-width: 768px) {
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInCard {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">CME Agent</a>
+            <ul class="nav-links">
+                <li><a href="/#features">Features</a></li>
+                <li><a href="/admin-teams">For Admin Teams</a></li>
+                <li><a href="/#pricing">Pricing</a></li>
+                <li><a href="/blog" class="active">Blog</a></li>
+            </ul>
+            <div class="nav-right">
+                <a href="/#download" class="nav-cta">Download App</a>
+                <a href="/admin/login" class="nav-login">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>CME Agent Blog</h1>
+        <p>Insights on CME compliance, AI in healthcare, and medical licensing</p>
+    </section>
+
+    <!-- Filter Tags -->
+    <section class="filter-section">
+        <span class="filter-label">Filter by category</span>
+        <div class="filter-tags">
+            <a href="#" class="filter-tag active">All Articles</a>
+            <a href="#" class="filter-tag">Industry Update</a>
+            <a href="#" class="filter-tag">Compliance Guide</a>
+            <a href="#" class="filter-tag">AI & Healthcare</a>
+            <a href="#" class="filter-tag">State Regulations</a>
+            <a href="#" class="filter-tag">Best Practices</a>
+        </div>
+    </section>
+
+    <!-- Blog Grid -->
+    <div class="blog-container">
+        <div class="blog-grid">
+            <!-- Article 1 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">AI & Healthcare</span>
+                    <span class="article-date">Feb 18, 2026</span>
+                </div>
+                <h3 class="article-title">How AI is Transforming CME Tracking for Multi-State Physicians</h3>
+                <p class="article-excerpt">Artificial intelligence is revolutionizing how physicians across multiple states track and manage their continuing education requirements. Discover how machine learning algorithms can automatically categorize credits and predict compliance gaps before they become issues.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">6 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 2 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">State Regulations</span>
+                    <span class="article-date">Feb 15, 2026</span>
+                </div>
+                <h3 class="article-title">2026 State-by-State CME Requirements: What Changed and Why</h3>
+                <p class="article-excerpt">State medical boards continue to evolve their continuing education requirements. We've compiled a comprehensive guide to 2026 updates across all 50 states, including new specialization requirements and emerging compliance standards you need to know.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">8 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 3 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">Compliance Guide</span>
+                    <span class="article-date">Feb 10, 2026</span>
+                </div>
+                <h3 class="article-title">The Unique Compliance Challenges Locum Tenens Physicians Face</h3>
+                <p class="article-excerpt">Locum tenens physicians work across multiple states and healthcare systems, making CME compliance exceptionally complex. Learn why this growing workforce faces distinct regulatory hurdles and how to navigate them effectively.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">7 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 4 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">Industry Update</span>
+                    <span class="article-date">Feb 5, 2026</span>
+                </div>
+                <h3 class="article-title">ACCME's 2026 Standards: Impact on Physician CME Strategy</h3>
+                <p class="article-excerpt">The Accreditation Council for Continuing Medical Education has released new standards emphasizing outcome-based learning and interprofessional collaboration. Here's what physicians and compliance teams need to understand about the latest evolution.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">9 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 5 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">Compliance Guide</span>
+                    <span class="article-date">Jan 28, 2026</span>
+                </div>
+                <h3 class="article-title">The Hidden Costs of CME Non-Compliance: Beyond License Suspension</h3>
+                <p class="article-excerpt">License suspension is just the beginning. Non-compliance with CME requirements can trigger malpractice insurance complications, hospital credentialing issues, and reputation damage. We break down all the costs physicians need to avoid.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">7 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 6 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">Best Practices</span>
+                    <span class="article-date">Jan 20, 2026</span>
+                </div>
+                <h3 class="article-title">How Admin Teams Reduce Compliance Overhead by 80%</h3>
+                <p class="article-excerpt">Medical institutions are cutting compliance workload dramatically by automating tracking, verification, and reporting processes. Discover the strategies and tools that leading healthcare systems are using to streamline operations.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">6 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 7 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">AI & Healthcare</span>
+                    <span class="article-date">Jan 12, 2026</span>
+                </div>
+                <h3 class="article-title">Automating the Paper Trail: Digital Certificate Management for CME</h3>
+                <p class="article-excerpt">Manual certificate management is error-prone and time-consuming. Modern digital solutions are eliminating the paper trail entirely, creating secure, searchable archives and enabling instant compliance verification for audits and credentialing reviews.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">5 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 8 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">State Regulations</span>
+                    <span class="article-date">Dec 29, 2025</span>
+                </div>
+                <h3 class="article-title">Multi-State Licensing Compact: How It Affects Your CME Requirements</h3>
+                <p class="article-excerpt">The Interstate Medical Licensure Compact continues to expand, simplifying multi-state practice for some physicians. But CME requirements remain state-specific. We explain how the compact interacts with continued education mandates across member states.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">8 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 9 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">Compliance Guide</span>
+                    <span class="article-date">Dec 18, 2025</span>
+                </div>
+                <h3 class="article-title">DEA Training Requirements 2025: What Prescribers Need to Know</h3>
+                <p class="article-excerpt">DEA training requirements for opioid and controlled substance prescribers continue to evolve. This year brought new emphasis on addiction medicine and risk stratification. Get up to speed on what changed and how it impacts your CME planning.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">6 min read</span>
+                </div>
+            </article>
+
+            <!-- Article 10 -->
+            <article class="article-card">
+                <div class="article-header">
+                    <span class="article-category">Industry Update</span>
+                    <span class="article-date">Dec 5, 2025</span>
+                </div>
+                <h3 class="article-title">The Future of CME: AI-Driven Personalized Learning Paths</h3>
+                <p class="article-excerpt">Next-generation CME platforms are moving beyond one-size-fits-all requirements to personalized learning journeys powered by AI. Explore how adaptive algorithms will tailor education to individual physician specialties and career goals in 2026 and beyond.</p>
+                <div class="article-footer">
+                    <a href="#" class="read-more">Read More</a>
+                    <span class="read-time">7 min read</span>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <!-- Newsletter CTA -->
+    <section class="newsletter-section">
+        <h3>Stay Informed on CME Trends</h3>
+        <p>Get the latest updates on CME requirements, compliance insights, and healthcare AI trends delivered to your inbox.</p>
+        <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing!');">
+            <input
+                type="email"
+                class="newsletter-input"
+                placeholder="Enter your email address"
+                required
+            >
+            <button type="submit" class="newsletter-button">Subscribe</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/#features">Features</a></li>
+                    <li><a href="/pricing">Pricing</a></li>
+                    <li><a href="/app">Download</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/blog">Blog</a></li>
+                    <li><a href="/careers">Careers</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="/docs">Documentation</a></li>
+                    <li><a href="/faq">FAQ</a></li>
+                    <li><a href="/guides">Guides</a></li>
+                    <li><a href="/support">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="/privacy">Privacy Policy</a></li>
+                    <li><a href="/terms">Terms of Service</a></li>
+                    <li><a href="/security">Security</a></li>
+                    <li><a href="/compliance">Compliance</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 CME Agent. All rights reserved.</p>
+            <div style="display: flex; gap: 1.5rem;">
+                <a href="https://twitter.com" style="color: #A68B5B; text-decoration: none;">Twitter</a>
+                <a href="https://linkedin.com" style="color: #A68B5B; text-decoration: none;">LinkedIn</a>
+                <a href="https://github.com" style="color: #A68B5B; text-decoration: none;">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth animation on scroll for cards (optional enhancement)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.article-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Filter functionality (visual only)
+        document.querySelectorAll('.filter-tag').forEach(tag => {
+            tag.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
