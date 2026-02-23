@@ -107,7 +107,7 @@ export default function LicenseDetailScreen() {
       setError(null);
       setLoading(true);
 
-      // Get license details
+      // Get license details with wildcard relationship syntax for better compatibility
       const { data: licenseData, error: licenseError } = await supabase
         .from('licenses')
         .select(`
@@ -117,12 +117,7 @@ export default function LicenseDetailScreen() {
           degree_type,
           expiry_date,
           total_credits_required,
-          license_requirements (
-            id,
-            category,
-            credits_required,
-            due_date
-          )
+          license_requirements (*)
         `)
         .eq('id', id)
         .single();

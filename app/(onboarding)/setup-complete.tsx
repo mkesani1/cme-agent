@@ -43,10 +43,7 @@ export default function SetupCompleteScreen() {
         state,
         license_number,
         total_credits_required,
-        license_requirements (
-          category,
-          credits_required
-        )
+        license_requirements (*)
       `)
       .eq('user_id', user!.id);
 

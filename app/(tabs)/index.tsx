@@ -218,7 +218,7 @@ export default function DashboardScreen() {
         .from('licenses')
         .select(`
           id, state, license_number, expiry_date, total_credits_required,
-          license_requirements (id, category, credits_required)
+          license_requirements (*)
         `)
         .eq('user_id', user!.id);
 
