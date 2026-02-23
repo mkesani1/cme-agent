@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CME Agent — AI-Powered Compliance for Administrative Teams</title>
+    <meta name="description" content="Manage CME compliance across your entire physician roster with AI. Real-time dashboards, risk detection, audit reports, and intelligent course assignments.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-900: #0D1321;
+            --navy-800: #131B2E;
+            --navy-700: #1D2A3F;
+            --navy-600: #2A3A52;
+            --sand-500: #A68B5B;
+            --sand-400: #D4C4B0;
+            --sand-50: #FDFCFB;
+            --green: #5B8C6B;
+            --amber: #C49A4A;
+            --red: #B85C5C;
+            --gold-gradient: linear-gradient(135deg, #C4A574 0%, #A68B5B 50%, #8B7349 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--navy-900);
+            color: var(--sand-50);
+            line-height: 1.6;
+        }
+
+        /* Navigation — same as homepage */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(13, 19, 33, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(166, 139, 91, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 700; color: var(--sand-500); text-decoration: none; }
+
+        .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+        .nav-links a { color: var(--sand-400); text-decoration: none; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--sand-500); }
+        .nav-links a.active { color: var(--sand-500); }
+
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+
+        .nav-login {
+            color: var(--sand-400); text-decoration: none; font-weight: 500;
+            padding: 0.5rem 1rem; border: 1px solid rgba(166, 139, 91, 0.3);
+            border-radius: 8px; transition: all 0.3s; font-size: 0.9rem;
+        }
+        .nav-login:hover { color: var(--sand-500); border-color: var(--sand-500); background: rgba(166, 139, 91, 0.08); }
+
+        .nav-cta {
+            background: var(--gold-gradient); color: var(--navy-900);
+            padding: 0.75rem 1.5rem; border-radius: 8px;
+            text-decoration: none; font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(166, 139, 91, 0.4); }
+
+        /* Hero */
+        .hero {
+            padding: 10rem 2rem 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%; left: 10%; right: 10%;
+            height: 50%;
+            background: radial-gradient(ellipse, rgba(166, 139, 91, 0.08), transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            font-size: 3.25rem; font-weight: 700;
+            line-height: 1.1; margin-bottom: 1.5rem;
+            max-width: 800px; margin-left: auto; margin-right: auto;
+        }
+
+        .hero h1 span {
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.25rem; color: var(--sand-400);
+            max-width: 620px; margin: 0 auto 2.5rem;
+        }
+
+        .hero-ctas { display: flex; gap: 1rem; justify-content: center; }
+
+        .btn-primary {
+            background: var(--gold-gradient); color: var(--navy-900);
+            padding: 1rem 2rem; border-radius: 12px; text-decoration: none;
+            font-weight: 600; font-size: 1.1rem;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(166, 139, 91, 0.4); }
+
+        .btn-outline {
+            border: 2px solid var(--sand-500); color: var(--sand-500);
+            padding: 1rem 2rem; border-radius: 12px; text-decoration: none;
+            font-weight: 600; font-size: 1.1rem; background: transparent;
+            transition: all 0.3s;
+        }
+        .btn-outline:hover { background: rgba(166, 139, 91, 0.1); }
+
+        /* Shared section */
+        .section { max-width: 1200px; margin: 0 auto; padding: 5rem 2rem; }
+        .section-label {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2.5px;
+            color: var(--sand-500); margin-bottom: 0.75rem; font-weight: 600;
+        }
+        .section-title { font-size: 2.25rem; font-weight: 700; margin-bottom: 0.75rem; line-height: 1.15; }
+        .section-title span {
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .section-desc { font-size: 1.1rem; color: var(--sand-400); max-width: 560px; margin-bottom: 3rem; }
+
+        /* Dashboard Preview */
+        .dashboard-preview {
+            background: var(--navy-700);
+            border: 1px solid rgba(166, 139, 91, 0.15);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+
+        .dash-bar {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 12px 20px;
+            background: var(--navy-800);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .dash-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .dash-body {
+            display: flex; min-height: 420px;
+        }
+
+        .dash-sidebar {
+            width: 180px; background: var(--navy-800);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            padding: 16px 10px;
+            flex-shrink: 0;
+        }
+
+        .dash-nav-item {
+            padding: 8px 12px; border-radius: 8px;
+            font-size: 0.8rem; color: var(--sand-400);
+            margin-bottom: 2px; display: flex; align-items: center; gap: 8px;
+        }
+
+        .dash-nav-item.active {
+            background: rgba(255,255,255,0.06);
+            color: var(--sand-50); font-weight: 500;
+        }
+
+        .dash-nav-icon { font-size: 0.85rem; width: 18px; text-align: center; }
+
+        .dash-main { flex: 1; padding: 20px; }
+
+        .dash-stats {
+            display: flex; gap: 12px; margin-bottom: 20px;
+        }
+
+        .dash-stat {
+            flex: 1; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 14px 16px;
+        }
+
+        .dash-stat-label { font-size: 0.65rem; color: var(--sand-400); text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .dash-stat-value {
+            font-size: 1.75rem; font-weight: 300;
+            letter-spacing: -1px; margin-top: 4px;
+        }
+
+        .dash-table {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; overflow: hidden;
+        }
+
+        .dash-table-header {
+            display: flex; padding: 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.7rem; color: var(--sand-400);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .dash-table-row {
+            display: flex; padding: 12px 16px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.85rem;
+        }
+
+        .dash-table-row:last-child { border-bottom: none; }
+
+        .dash-col-name { flex: 2; }
+        .dash-col-states { flex: 2; font-size: 0.75rem; color: var(--sand-400); }
+        .dash-col-credits { flex: 1; text-align: right; }
+        .dash-col-status { flex: 1; text-align: right; }
+
+        .dash-badge {
+            display: inline-block;
+            padding: 2px 10px; border-radius: 20px;
+            font-size: 0.7rem; font-weight: 500;
+        }
+        .dash-badge-green { background: rgba(91,140,107,0.15); color: var(--green); }
+        .dash-badge-amber { background: rgba(196,154,74,0.15); color: var(--amber); }
+        .dash-badge-red { background: rgba(184,92,92,0.15); color: var(--red); }
+
+        /* Feature Showcase */
+        .feature-showcase {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 4rem; align-items: center;
+        }
+
+        .feature-showcase.reverse { direction: rtl; }
+        .feature-showcase.reverse > * { direction: ltr; }
+
+        .feature-visual {
+            background: var(--navy-700);
+            border: 1px solid rgba(166, 139, 91, 0.15);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .feature-content h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+
+        .feature-content p {
+            font-size: 1rem; color: rgba(253, 252, 251, 0.7);
+            margin-bottom: 1.5rem; line-height: 1.7;
+        }
+
+        .feature-bullets { list-style: none; }
+
+        .feature-bullets li {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            margin-bottom: 1rem; font-size: 0.95rem; color: var(--sand-400);
+        }
+
+        .bullet-check {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; color: var(--navy-900);
+            font-size: 0.7rem; font-weight: 700; margin-top: 2px;
+        }
+
+        /* Heatmap visual */
+        .heatmap-visual { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .heatmap-cell {
+            width: 80px; height: 80px;
+            border-radius: 12px; display: flex;
+            flex-direction: column; align-items: center;
+            justify-content: center; gap: 4px;
+        }
+
+        .heatmap-pct { font-size: 1.1rem; font-weight: 600; }
+        .heatmap-name { font-size: 0.65rem; color: rgba(255,255,255,0.7); }
+
+        /* Alert visual */
+        .alert-visual { display: flex; flex-direction: column; gap: 10px; }
+
+        .alert-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            border-left: 3px solid;
+        }
+
+        .alert-item.critical { border-color: var(--red); }
+        .alert-item.warning { border-color: var(--amber); }
+        .alert-item.info { border-color: var(--green); }
+
+        .alert-text { font-size: 0.85rem; flex: 1; }
+        .alert-text strong { display: block; font-size: 0.8rem; margin-bottom: 2px; }
+        .alert-text span { color: var(--sand-400); font-size: 0.78rem; }
+        .alert-time { font-size: 0.7rem; color: rgba(255,255,255,0.4); white-space: nowrap; }
+
+        /* Report visual */
+        .report-visual { display: flex; flex-direction: column; gap: 10px; }
+
+        .report-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+        }
+
+        .report-icon { font-size: 1.25rem; color: var(--sand-500); width: 24px; text-align: center; }
+        .report-info { flex: 1; }
+        .report-info strong { font-size: 0.85rem; display: block; margin-bottom: 2px; }
+        .report-info span { font-size: 0.75rem; color: var(--sand-400); }
+        .report-action {
+            padding: 5px 14px; border-radius: 6px; font-size: 0.72rem;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--sand-400); font-weight: 500;
+        }
+
+        /* Divider */
+        .divider {
+            border: none; height: 1px;
+            background: rgba(166, 139, 91, 0.15);
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* CTA */
+        .cta-section {
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .cta-card {
+            max-width: 800px; margin: 0 auto;
+            background: linear-gradient(135deg, rgba(166,139,91,0.12), rgba(139,115,73,0.06));
+            border: 1px solid rgba(166,139,91,0.2);
+            border-radius: 24px;
+            padding: 4rem 3rem;
+        }
+
+        .cta-card h2 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+        .cta-card p { color: var(--sand-400); font-size: 1.1rem; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem 2rem;
+            border-top: 1px solid rgba(166, 139, 91, 0.15);
+        }
+
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 1rem;
+        }
+
+        .footer-brand { font-size: 0.85rem; color: var(--sand-400); }
+        .footer-links { display: flex; gap: 2rem; }
+        .footer-links a { font-size: 0.8rem; color: rgba(255,255,255,0.4); text-decoration: none; }
+        .footer-links a:hover { color: var(--sand-500); }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero h1 { font-size: 2.25rem; }
+            .feature-showcase, .feature-showcase.reverse { grid-template-columns: 1fr; direction: ltr; }
+            .dash-sidebar { display: none; }
+            .dash-stats { flex-wrap: wrap; }
+            .nav-links { display: none; }
+            .dash-col-states { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-container">
+        <a href="/" class="logo">CME Agent</a>
+        <ul class="nav-links">
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/admin-teams" class="active">For Admin Teams</a></li>
+            <li><a href="/#how-it-works">How It Works</a></li>
+        </ul>
+        <div class="nav-right">
+            <a href="/app" class="nav-cta">Try Live Demo</a>
+            <a href="/admin/login" class="nav-login">Login</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <h1>AI That Manages <span>Every Doctor's CME</span> So You Don't Have To</h1>
+    <p class="hero-sub">Your physicians hold licenses in 5, 10, 15 states — each with different requirements, categories, and deadlines. CME Agent's AI monitors it all from a single dashboard.</p>
+    <div class="hero-ctas">
+        <a href="/admin/login" class="btn-primary">Open Admin Dashboard →</a>
+        <a href="/#download" class="btn-outline">Request a Demo</a>
+    </div>
+</section>
+
+<!-- Dashboard Preview -->
+<div class="section" style="padding-top:0">
+    <div class="dashboard-preview">
+        <div class="dash-bar">
+            <div class="dash-dot" style="background:#B85C5C"></div>
+            <div class="dash-dot" style="background:#C49A4A"></div>
+            <div class="dash-dot" style="background:#5B8C6B"></div>
+            <span style="font-size:0.75rem;color:var(--sand-400);margin-left:8px">CME Admin — Staff Portal</span>
+        </div>
+        <div class="dash-body">
+            <div class="dash-sidebar">
+                <div class="dash-nav-item active"><span class="dash-nav-icon">◉</span> Overview</div>
+                <div class="dash-nav-item"><span class="dash-nav-icon">◎</span> Physicians</div>
+                <div class="dash-nav-item"><span class="dash-nav-icon">▤</span> Licenses</div>
+                <div class="dash-nav-item"><span class="dash-nav-icon">△</span> Alerts <span style="background:var(--red);color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:8px;margin-left:auto">3</span></div>
+                <div class="dash-nav-item"><span class="dash-nav-icon">▧</span> Reports</div>
+                <div class="dash-nav-item"><span class="dash-nav-icon">⊕</span> Courses</div>
+            </div>
+            <div class="dash-main">
+                <div class="dash-stats">
+                    <div class="dash-stat">
+                        <div class="dash-stat-label">Physicians</div>
+                        <div class="dash-stat-value" style="color:var(--sand-50)">12</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="dash-stat-label">Active Licenses</div>
+                        <div class="dash-stat-value" style="color:var(--sand-500)">47</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="dash-stat-label">Compliant</div>
+                        <div class="dash-stat-value" style="color:var(--green)">83%</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="dash-stat-label">Alerts</div>
+                        <div class="dash-stat-value" style="color:var(--red)">3</div>
+                    </div>
+                </div>
+                <div class="dash-table">
+                    <div class="dash-table-header">
+                        <div class="dash-col-name">Physician</div>
+                        <div class="dash-col-states">States</div>
+                        <div class="dash-col-credits">Credits</div>
+                        <div class="dash-col-status">Status</div>
+                    </div>
+                    <div class="dash-table-row">
+                        <div class="dash-col-name" style="font-weight:500">Dr. Rachel Martinez</div>
+                        <div class="dash-col-states">CA, TX, NY, FL, IL, OH, PA, AZ</div>
+                        <div class="dash-col-credits">142/160</div>
+                        <div class="dash-col-status"><span class="dash-badge dash-badge-green">Compliant</span></div>
+                    </div>
+                    <div class="dash-table-row">
+                        <div class="dash-col-name" style="font-weight:500">Dr. James Kowalski</div>
+                        <div class="dash-col-states">TX, NY, FL, GA, NC, VA, WA, OR, CO, NV, MA, IL</div>
+                        <div class="dash-col-credits">84/180</div>
+                        <div class="dash-col-status"><span class="dash-badge dash-badge-amber">3 Due Soon</span></div>
+                    </div>
+                    <div class="dash-table-row">
+                        <div class="dash-col-name" style="font-weight:500">Dr. Sarah Patel</div>
+                        <div class="dash-col-states">CA, TX, FL, NY, AZ, NV</div>
+                        <div class="dash-col-credits">96/96</div>
+                        <div class="dash-col-status"><span class="dash-badge dash-badge-green">Compliant</span></div>
+                    </div>
+                    <div class="dash-table-row">
+                        <div class="dash-col-name" style="font-weight:500">Dr. Michael Torres</div>
+                        <div class="dash-col-states">NY, NJ, CT, PA, MA</div>
+                        <div class="dash-col-credits">22/75</div>
+                        <div class="dash-col-status"><span class="dash-badge dash-badge-red">2 Overdue</span></div>
+                    </div>
+                    <div class="dash-table-row">
+                        <div class="dash-col-name" style="font-weight:500">Dr. Lisa Washington</div>
+                        <div class="dash-col-states">WA, OR, CA, HI, AK, NV, ID</div>
+                        <div class="dash-col-credits">108/112</div>
+                        <div class="dash-col-status"><span class="dash-badge dash-badge-green">Compliant</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="divider">
+
+<!-- Feature 1: Compliance at a Glance -->
+<div class="section">
+    <div class="section-label">Compliance Overview</div>
+    <div class="feature-showcase">
+        <div class="feature-visual">
+            <div class="heatmap-visual">
+                <div class="heatmap-cell" style="background:rgba(91,140,107,0.2);border:1px solid rgba(91,140,107,0.3)">
+                    <div class="heatmap-pct" style="color:var(--green)">94%</div>
+                    <div class="heatmap-name">Dr. Martinez</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(196,154,74,0.2);border:1px solid rgba(196,154,74,0.3)">
+                    <div class="heatmap-pct" style="color:var(--amber)">47%</div>
+                    <div class="heatmap-name">Dr. Kowalski</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(91,140,107,0.2);border:1px solid rgba(91,140,107,0.3)">
+                    <div class="heatmap-pct" style="color:var(--green)">100%</div>
+                    <div class="heatmap-name">Dr. Patel</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(184,92,92,0.2);border:1px solid rgba(184,92,92,0.3)">
+                    <div class="heatmap-pct" style="color:var(--red)">29%</div>
+                    <div class="heatmap-name">Dr. Torres</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(91,140,107,0.2);border:1px solid rgba(91,140,107,0.3)">
+                    <div class="heatmap-pct" style="color:var(--green)">96%</div>
+                    <div class="heatmap-name">Dr. Washington</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(91,140,107,0.2);border:1px solid rgba(91,140,107,0.3)">
+                    <div class="heatmap-pct" style="color:var(--green)">88%</div>
+                    <div class="heatmap-name">Dr. Chen</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(196,154,74,0.2);border:1px solid rgba(196,154,74,0.3)">
+                    <div class="heatmap-pct" style="color:var(--amber)">62%</div>
+                    <div class="heatmap-name">Dr. Kim</div>
+                </div>
+                <div class="heatmap-cell" style="background:rgba(91,140,107,0.2);border:1px solid rgba(91,140,107,0.3)">
+                    <div class="heatmap-pct" style="color:var(--green)">91%</div>
+                    <div class="heatmap-name">Dr. Brooks</div>
+                </div>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h3>Compliance Heatmap — Know Who Needs Attention Now</h3>
+            <p>The overview dashboard shows every physician's compliance percentage at a glance. Color-coded heatmaps instantly surface who's on track, who's falling behind, and who needs urgent intervention.</p>
+            <ul class="feature-bullets">
+                <li><span class="bullet-check">✓</span> Green/amber/red status for each physician across all their licenses</li>
+                <li><span class="bullet-check">✓</span> AI calculates composite compliance scores from all states and categories</li>
+                <li><span class="bullet-check">✓</span> Click any physician to drill down into their license-by-license breakdown</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<hr class="divider">
+
+<!-- Feature 2: Proactive Risk Detection -->
+<div class="section">
+    <div class="section-label">Risk Detection</div>
+    <div class="feature-showcase reverse">
+        <div class="feature-content">
+            <h3>AI Alerts You Before Deadlines Become Emergencies</h3>
+            <p>The alerts system doesn't just track due dates — it monitors each physician's credit trajectory and flags risks months in advance. You'll never be surprised by a lapsed license again.</p>
+            <ul class="feature-bullets">
+                <li><span class="bullet-check">✓</span> Critical, warning, and informational alert tiers with smart prioritization</li>
+                <li><span class="bullet-check">✓</span> AI predicts which physicians won't finish credits at their current pace</li>
+                <li><span class="bullet-check">✓</span> Filter and sort alerts by type, physician, or urgency</li>
+            </ul>
+        </div>
+        <div class="feature-visual">
+            <div class="alert-visual">
+                <div class="alert-item critical">
+                    <div class="alert-text">
+                        <strong>Dr. Torres — NY License Overdue</strong>
+                        <span>Renewal was due Feb 1. 18 of 40 credits completed. Action required immediately.</span>
+                    </div>
+                    <div class="alert-time">2 days ago</div>
+                </div>
+                <div class="alert-item critical">
+                    <div class="alert-text">
+                        <strong>Dr. Torres — CT Ethics Requirement</strong>
+                        <span>0 of 2 required ethics credits completed. Deadline passed Jan 31.</span>
+                    </div>
+                    <div class="alert-time">3 days ago</div>
+                </div>
+                <div class="alert-item warning">
+                    <div class="alert-text">
+                        <strong>Dr. Kowalski — GA License Due in 45 Days</strong>
+                        <span>14 of 40 credits completed. At current pace, will fall 12 credits short.</span>
+                    </div>
+                    <div class="alert-time">Today</div>
+                </div>
+                <div class="alert-item warning">
+                    <div class="alert-text">
+                        <strong>Dr. Kim — OR Prescriber Education</strong>
+                        <span>Required 1-hour pain management course not yet completed. Due in 60 days.</span>
+                    </div>
+                    <div class="alert-time">Yesterday</div>
+                </div>
+                <div class="alert-item info">
+                    <div class="alert-text">
+                        <strong>Dr. Martinez — Certificate Verified</strong>
+                        <span>AAFP Board Review 25.0 credits automatically allocated across CA, TX, NY, FL.</span>
+                    </div>
+                    <div class="alert-time">3 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="divider">
+
+<!-- Feature 3: Physician Detail View -->
+<div class="section">
+    <div class="section-label">Physician Management</div>
+    <div class="feature-showcase">
+        <div class="feature-visual" style="padding:0; overflow:hidden">
+            <div style="padding:20px 20px 12px; border-bottom:1px solid rgba(255,255,255,0.06)">
+                <div style="font-size:1.1rem;font-weight:500">Dr. James Kowalski</div>
+                <div style="font-size:0.8rem;color:var(--sand-400);margin-top:2px">Hospitalist · 12 State Licenses · NPI: 1234567890</div>
+            </div>
+            <div style="padding:16px 20px; display:flex; gap:12px; flex-wrap:wrap">
+                <div style="flex:1;min-width:140px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px">
+                    <div style="font-size:0.65rem;color:var(--sand-400);text-transform:uppercase;letter-spacing:0.5px">Total Credits</div>
+                    <div style="font-size:1.5rem;font-weight:300;color:var(--sand-500);margin-top:4px">84 / 180</div>
+                </div>
+                <div style="flex:1;min-width:140px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px">
+                    <div style="font-size:0.65rem;color:var(--sand-400);text-transform:uppercase;letter-spacing:0.5px">Next Deadline</div>
+                    <div style="font-size:1.5rem;font-weight:300;color:var(--amber);margin-top:4px">45 days</div>
+                </div>
+                <div style="flex:1;min-width:140px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px">
+                    <div style="font-size:0.65rem;color:var(--sand-400);text-transform:uppercase;letter-spacing:0.5px">Certificates</div>
+                    <div style="font-size:1.5rem;font-weight:300;color:var(--sand-50);margin-top:4px">8</div>
+                </div>
+            </div>
+            <div style="padding:4px 20px 16px">
+                <div style="font-size:0.75rem;color:var(--sand-400);margin-bottom:8px;font-weight:500">License Breakdown</div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem">
+                    <span style="font-weight:500;width:30px">TX</span>
+                    <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px"><div style="width:70%;height:100%;background:var(--amber);border-radius:2px"></div></div>
+                    <span style="color:var(--sand-400);font-size:0.75rem">28/40</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem">
+                    <span style="font-weight:500;width:30px">NY</span>
+                    <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px"><div style="width:40%;height:100%;background:var(--red);border-radius:2px"></div></div>
+                    <span style="color:var(--sand-400);font-size:0.75rem">14/36</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem">
+                    <span style="font-weight:500;width:30px">FL</span>
+                    <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px"><div style="width:85%;height:100%;background:var(--green);border-radius:2px"></div></div>
+                    <span style="color:var(--sand-400);font-size:0.75rem">34/40</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;font-size:0.82rem">
+                    <span style="font-weight:500;width:30px">GA</span>
+                    <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px"><div style="width:20%;height:100%;background:var(--red);border-radius:2px"></div></div>
+                    <span style="color:var(--sand-400);font-size:0.75rem">8/40</span>
+                </div>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h3>Deep Drill-Down Into Every Physician</h3>
+            <p>Click any physician to see their complete compliance picture — every license, every state, every category requirement, with credit progress bars and upcoming deadlines.</p>
+            <ul class="feature-bullets">
+                <li><span class="bullet-check">✓</span> License-by-license credit tracking with category breakdowns (ethics, opioid, etc.)</li>
+                <li><span class="bullet-check">✓</span> Add, edit, or remove physicians and their licenses directly from the dashboard</li>
+                <li><span class="bullet-check">✓</span> View uploaded certificates and how credits were allocated across licenses</li>
+                <li><span class="bullet-check">✓</span> AI highlights the most efficient path to fill remaining credit gaps</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<hr class="divider">
+
+<!-- Feature 4: Reports -->
+<div class="section">
+    <div class="section-label">Reporting</div>
+    <div class="feature-showcase reverse">
+        <div class="feature-content">
+            <h3>Audit-Ready Reports, Generated Instantly</h3>
+            <p>When auditors come calling — or when leadership needs a compliance summary — generate detailed reports across your entire roster with a single click. No more assembling data from multiple sources.</p>
+            <ul class="feature-bullets">
+                <li><span class="bullet-check">✓</span> Full compliance summary across all physicians and states</li>
+                <li><span class="bullet-check">✓</span> Individual physician compliance reports with certificate details</li>
+                <li><span class="bullet-check">✓</span> Expiring licenses report for proactive renewal planning</li>
+                <li><span class="bullet-check">✓</span> Credit gap analysis showing exactly what each physician still needs</li>
+            </ul>
+        </div>
+        <div class="feature-visual">
+            <div class="report-visual">
+                <div class="report-item">
+                    <div class="report-icon">▤</div>
+                    <div class="report-info">
+                        <strong>Full Compliance Summary</strong>
+                        <span>All physicians, all states, all requirements</span>
+                    </div>
+                    <div class="report-action">Generate</div>
+                </div>
+                <div class="report-item">
+                    <div class="report-icon">◎</div>
+                    <div class="report-info">
+                        <strong>Individual Physician Report</strong>
+                        <span>Detailed per-license credit breakdown with certificates</span>
+                    </div>
+                    <div class="report-action">Generate</div>
+                </div>
+                <div class="report-item">
+                    <div class="report-icon">△</div>
+                    <div class="report-info">
+                        <strong>Expiring Licenses — Next 90 Days</strong>
+                        <span>7 licenses across 4 physicians require attention</span>
+                    </div>
+                    <div class="report-action">Generate</div>
+                </div>
+                <div class="report-item">
+                    <div class="report-icon">▧</div>
+                    <div class="report-info">
+                        <strong>Credit Gap Analysis</strong>
+                        <span>Outstanding requirements by physician, state, and category</span>
+                    </div>
+                    <div class="report-action">Generate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section">
+    <div class="cta-card">
+        <h2>Ready to stop managing CME in spreadsheets?</h2>
+        <p>See the admin dashboard in action with your own physician data. It takes minutes to set up.</p>
+        <div class="hero-ctas">
+            <a href="/admin/login" class="btn-primary">Open Admin Dashboard →</a>
+            <a href="/" class="btn-outline">Back to Homepage</a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-brand">CME Agent &copy; 2026</div>
+        <div class="footer-links">
+            <a href="/">Home</a>
+            <a href="/#features">Features</a>
+            <a href="/admin-teams">For Admin Teams</a>
+            <a href="/admin/login">Login</a>
+            <a href="/app">Doctor App</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
