@@ -156,13 +156,18 @@ export default function LicensesScreen() {
         .eq('user_id', user!.id)
         .single();
 
-      // Calculate credits earned per license
-      const { data: allocations, error: allocError } = await supabase
-        .from('credit_allocations')
-        .select('license_id, credits_applied')
-        .in('license_id', licensesData?.map(l => l.id) || []);
+      // Calculate credits earned per license (skip if no licenses to avoid empty IN clause)
+      let allocations: { license_id: string; credits_applied: number }[] = [];
+      const licenseIds = licensesData?.map(l => l.id) || [];
+      if (licenseIds.length > 0) {
+        const { data: allocData, error: allocError } = await supabase
+          .from('credit_allocations')
+          .select('license_id, credits_applied')
+          .in('license_id', licenseIds);
 
-      if (allocError) throw allocError;
+        if (allocError) throw allocError;
+        allocations = allocData || [];
+      }
 
       const creditMap = new Map<string, number>();
       allocations?.forEach(a => {

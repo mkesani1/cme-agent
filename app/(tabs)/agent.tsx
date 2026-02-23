@@ -86,16 +86,18 @@ export default function AgentScreen() {
         .eq('user_id', user.id);
 
       if (licensesData) {
-        const { data: allocations } = await supabase
-          .from('credit_allocations')
-          .select('license_id, credits_applied')
-          .in('license_id', licensesData.map((l: any) => l.id) || []);
-
         const creditMap = new Map<string, number>();
-        allocations?.forEach((a: any) => {
-          const current = creditMap.get(a.license_id) || 0;
-          creditMap.set(a.license_id, current + a.credits_applied);
-        });
+        if (licensesData.length > 0) {
+          const { data: allocations } = await supabase
+            .from('credit_allocations')
+            .select('license_id, credits_applied')
+            .in('license_id', licensesData.map((l: any) => l.id));
+
+          allocations?.forEach((a: any) => {
+            const current = creditMap.get(a.license_id) || 0;
+            creditMap.set(a.license_id, current + a.credits_applied);
+          });
+        }
 
         setLicenses(licensesData.map((l: any) => ({
           ...l,

@@ -224,12 +224,18 @@ export default function DashboardScreen() {
 
       if (licensesError) throw licensesError;
 
-      const { data: allocations, error: allocError } = await supabase
-        .from('credit_allocations')
-        .select('license_id, requirement_id, credits_applied')
-        .in('license_id', licensesData?.map(l => l.id) || []);
+      // Skip credit_allocations query if no licenses (empty IN clause causes SQL error)
+      let allocations: { license_id: string; requirement_id: string | null; credits_applied: number }[] = [];
+      const licenseIds = licensesData?.map(l => l.id) || [];
+      if (licenseIds.length > 0) {
+        const { data: allocData, error: allocError } = await supabase
+          .from('credit_allocations')
+          .select('license_id, requirement_id, credits_applied')
+          .in('license_id', licenseIds);
 
-      if (allocError) throw allocError;
+        if (allocError) throw allocError;
+        allocations = allocData || [];
+      }
 
       const allocationMap = new Map<string, number>();
       const reqAllocationMap = new Map<string, number>();
