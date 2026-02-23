@@ -1,6 +1,3 @@
-// Auto-generated Supabase types - DO NOT EDIT
-// Generated from: https://drwpnasiqgzqdubmlwxj.supabase.co
-
 export type Json =
   | string
   | number
@@ -94,7 +91,15 @@ export type Database = {
           user_id?: string
           verified?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "certificates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -118,7 +123,101 @@ export type Database = {
           role?: string
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cme_courses: {
+        Row: {
+          accreditation_type: string | null
+          created_at: string | null
+          description: string | null
+          format: string | null
+          hours: number
+          id: string
+          is_active: boolean | null
+          last_verified_at: string | null
+          name: string
+          price: number | null
+          provider: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          accreditation_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: string | null
+          hours: number
+          id?: string
+          is_active?: boolean | null
+          last_verified_at?: string | null
+          name: string
+          price?: number | null
+          provider: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          accreditation_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: string | null
+          hours?: number
+          id?: string
+          is_active?: boolean | null
+          last_verified_at?: string | null
+          name?: string
+          price?: number | null
+          provider?: string
+          updated_at?: string | null
+          url?: string | null
+        }
         Relationships: []
+      }
+      course_state_coverage: {
+        Row: {
+          category: string
+          course_id: string | null
+          created_at: string | null
+          credits_awarded: number
+          id: string
+          notes: string | null
+          state_code: string
+        }
+        Insert: {
+          category: string
+          course_id?: string | null
+          created_at?: string | null
+          credits_awarded: number
+          id?: string
+          notes?: string | null
+          state_code: string
+        }
+        Update: {
+          category?: string
+          course_id?: string | null
+          created_at?: string | null
+          credits_awarded?: number
+          id?: string
+          notes?: string | null
+          state_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_state_coverage_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "cme_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       courses: {
         Row: {
@@ -214,7 +313,29 @@ export type Database = {
           license_id?: string
           requirement_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_allocations_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "certificates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_allocations_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_allocations_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "license_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dea_registrations: {
         Row: {
@@ -241,6 +362,122 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           linked_states?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dea_registrations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovered_courses: {
+        Row: {
+          accreditation: string[] | null
+          created_at: string | null
+          credit_types: string[] | null
+          credits: number
+          description: string | null
+          discovered_at: string | null
+          duration_hours: number | null
+          efficiency_score: number | null
+          format: string
+          id: string
+          price: number | null
+          provider: string
+          provider_url: string | null
+          relevance_score: number | null
+          source_url: string | null
+          specialty_focus: string[] | null
+          states_accepted: string[] | null
+          title: string
+          topics: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accreditation?: string[] | null
+          created_at?: string | null
+          credit_types?: string[] | null
+          credits?: number
+          description?: string | null
+          discovered_at?: string | null
+          duration_hours?: number | null
+          efficiency_score?: number | null
+          format?: string
+          id?: string
+          price?: number | null
+          provider: string
+          provider_url?: string | null
+          relevance_score?: number | null
+          source_url?: string | null
+          specialty_focus?: string[] | null
+          states_accepted?: string[] | null
+          title: string
+          topics?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accreditation?: string[] | null
+          created_at?: string | null
+          credit_types?: string[] | null
+          credits?: number
+          description?: string | null
+          discovered_at?: string | null
+          duration_hours?: number | null
+          efficiency_score?: number | null
+          format?: string
+          id?: string
+          price?: number | null
+          provider?: string
+          provider_url?: string | null
+          relevance_score?: number | null
+          source_url?: string | null
+          specialty_focus?: string[] | null
+          states_accepted?: string[] | null
+          title?: string
+          topics?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      discovery_logs: {
+        Row: {
+          completed_at: string | null
+          courses_found: number | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          queries_used: string[] | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          courses_found?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          queries_used?: string[] | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          courses_found?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          queries_used?: string[] | null
+          status?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -298,7 +535,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expert_consultations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       license_requirements: {
         Row: {
@@ -332,7 +577,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "licenses"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       licenses: {
@@ -369,7 +614,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "licenses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -417,7 +670,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -447,7 +708,15 @@ export type Database = {
           specialty?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       provider_connections: {
         Row: {
@@ -477,7 +746,15 @@ export type Database = {
           refresh_token?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "provider_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
@@ -510,7 +787,15 @@ export type Database = {
           token?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       state_requirements: {
         Row: {
@@ -627,7 +912,75 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_recommendations: {
+        Row: {
+          ai_insight: string | null
+          breakdown: Json | null
+          categories_covered: string[] | null
+          course_id: string | null
+          efficiency_score: number | null
+          expires_at: string | null
+          generated_at: string | null
+          id: string
+          priority_rank: number | null
+          states_covered: string[] | null
+          total_credits_toward_gaps: number | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_insight?: string | null
+          breakdown?: Json | null
+          categories_covered?: string[] | null
+          course_id?: string | null
+          efficiency_score?: number | null
+          expires_at?: string | null
+          generated_at?: string | null
+          id?: string
+          priority_rank?: number | null
+          states_covered?: string[] | null
+          total_credits_toward_gaps?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_insight?: string | null
+          breakdown?: Json | null
+          categories_covered?: string[] | null
+          course_id?: string | null
+          efficiency_score?: number | null
+          expires_at?: string | null
+          generated_at?: string | null
+          id?: string
+          priority_rank?: number | null
+          states_covered?: string[] | null
+          total_credits_toward_gaps?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_recommendations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "cme_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_recommendations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -69,7 +69,6 @@ export function useRecommendations() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
             ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
           },
           body: JSON.stringify({

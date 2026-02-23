@@ -314,17 +314,14 @@ export async function saveDiscoveredCourses(
 ): Promise<void> {
   const coursesToInsert = courses.map((course) => ({
     ...course,
-    discovered_by: userId,
+    user_id: userId,
     discovered_at: new Date().toISOString(),
   }));
 
   // Upsert to avoid duplicates (based on source_url)
   const { error } = await supabase
     .from('discovered_courses')
-    .upsert(coursesToInsert, {
-      onConflict: 'source_url',
-      ignoreDuplicates: true,
-    });
+    .insert(coursesToInsert);
 
   if (error) {
     console.error('Error saving discovered courses:', error);
@@ -353,11 +350,14 @@ export async function getRecommendedCourses(
   }
 
   // Score and sort courses
-  const scoredCourses = courses.map((course) => ({
-    ...course,
-    relevance_score: scoreCourserelevance(course, profile, licenses),
-    efficiency_score: calculateEfficiencyScore(course),
-  }));
+  const scoredCourses: DiscoveredCourse[] = courses
+    .filter((course): course is any => course !== null)
+    .map((course) => ({
+      ...course,
+      provider_url: course.provider_url || '',
+      relevance_score: scoreCourserelevance(course, profile, licenses),
+      efficiency_score: calculateEfficiencyScore(course),
+    } as DiscoveredCourse));
 
   // Sort by combined score
   scoredCourses.sort((a, b) => {
@@ -470,13 +470,22 @@ export async function schedulePeriodicDiscovery(
     throw new Error('Could not load profile or licenses');
   }
 
+  // Type assertion: ensure profile has required fields, default empty string if null
+  const doctorProfile: DoctorProfile = {
+    id: profile.id,
+    full_name: profile.full_name || '',
+    degree_type: profile.degree_type || '',
+    specialty: profile.specialty || undefined,
+    npi_number: (profile as any)?.npi_number,
+  };
+
   // Run initial discovery
-  await runCourseDiscoveryAgent({ profile, licenses });
+  await runCourseDiscoveryAgent({ profile: doctorProfile, licenses });
 
   // Schedule periodic runs
   const interval = setInterval(async () => {
     try {
-      await runCourseDiscoveryAgent({ profile, licenses });
+      await runCourseDiscoveryAgent({ profile: doctorProfile, licenses });
       console.log('Completed periodic course discovery');
     } catch (err) {
       console.error('Error in periodic discovery:', err);

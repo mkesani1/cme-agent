@@ -12,9 +12,10 @@ import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { colors, spacing, typography } from '../../../src/lib/theme';
 import { useAuth } from '../../../src/hooks/useAuth';
+import { supabase } from '../../../src/lib/supabase';
 
 interface ExportOptionProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -67,31 +68,40 @@ export default function ExportDataScreen() {
   const handleExportLicenses = async () => {
     setIsExportingLicenses(true);
     try {
-      // In production, fetch from Supabase
-      const sampleData = {
+      if (!profile?.id) {
+        Alert.alert('Error', 'User profile not loaded');
+        return;
+      }
+
+      // Fetch licenses from Supabase
+      const { data: licenses, error } = await supabase
+        .from('licenses')
+        .select('*, license_requirements(*)')
+        .eq('user_id', profile.id);
+
+      if (error) throw error;
+
+      // Calculate credits for each license
+      const licensesData = (licenses || []).map(license => {
+        const totalRequired = license.license_requirements?.reduce((sum, req) => sum + (req.credits_required || 0), 0) || 0;
+        return {
+          state: license.state,
+          licenseNumber: license.license_number,
+          expirationDate: license.expiry_date,
+          creditsRequired: totalRequired,
+          creditsCompleted: license.total_credits_required || 0,
+        };
+      });
+
+      const exportData = {
         exportDate: new Date().toISOString(),
-        user: profile?.full_name,
-        licenses: [
-          {
-            state: 'Texas',
-            licenseNumber: 'TX-12345',
-            expirationDate: '2025-06-30',
-            creditsRequired: 48,
-            creditsCompleted: 32,
-          },
-          {
-            state: 'California',
-            licenseNumber: 'CA-67890',
-            expirationDate: '2025-12-31',
-            creditsRequired: 50,
-            creditsCompleted: 25,
-          },
-        ],
+        user: profile.full_name,
+        licenses: licensesData,
       };
 
       const filename = `cme_licenses_${Date.now()}.json`;
-      const path = FileSystem.documentDirectory + filename;
-      await FileSystem.writeAsStringAsync(path, JSON.stringify(sampleData, null, 2));
+      const path = (FileSystem.documentDirectory || '') + filename;
+      await FileSystem.writeAsStringAsync(path, JSON.stringify(exportData, null, 2));
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(path);
@@ -108,30 +118,38 @@ export default function ExportDataScreen() {
   const handleExportCertificates = async () => {
     setIsExportingCertificates(true);
     try {
-      const sampleData = {
+      if (!profile?.id) {
+        Alert.alert('Error', 'User profile not loaded');
+        return;
+      }
+
+      // Fetch certificates from Supabase
+      const { data: certificates, error } = await supabase
+        .from('certificates')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('completion_date', { ascending: false });
+
+      if (error) throw error;
+
+      const certificatesData = (certificates || []).map(cert => ({
+        courseName: cert.course_name,
+        provider: cert.provider,
+        completionDate: cert.completion_date,
+        credits: cert.credit_hours,
+        creditType: cert.category,
+        verified: cert.verified,
+      }));
+
+      const exportData = {
         exportDate: new Date().toISOString(),
-        user: profile?.full_name,
-        certificates: [
-          {
-            courseName: 'Advanced Cardiac Life Support',
-            provider: 'AHA',
-            completionDate: '2024-03-15',
-            credits: 8,
-            creditType: 'Category 1',
-          },
-          {
-            courseName: 'Ethics in Medicine',
-            provider: 'AMA',
-            completionDate: '2024-02-28',
-            credits: 4,
-            creditType: 'Ethics',
-          },
-        ],
+        user: profile.full_name,
+        certificates: certificatesData,
       };
 
       const filename = `cme_certificates_${Date.now()}.json`;
-      const path = FileSystem.documentDirectory + filename;
-      await FileSystem.writeAsStringAsync(path, JSON.stringify(sampleData, null, 2));
+      const path = (FileSystem.documentDirectory || '') + filename;
+      await FileSystem.writeAsStringAsync(path, JSON.stringify(exportData, null, 2));
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(path);
@@ -148,21 +166,73 @@ export default function ExportDataScreen() {
   const handleExportAll = async () => {
     setIsExportingAll(true);
     try {
-      const sampleData = {
+      if (!profile?.id) {
+        Alert.alert('Error', 'User profile not loaded');
+        return;
+      }
+
+      // Fetch licenses
+      const { data: licenses } = await supabase
+        .from('licenses')
+        .select('*, license_requirements(*)')
+        .eq('user_id', profile.id);
+
+      // Fetch certificates
+      const { data: certificates } = await supabase
+        .from('certificates')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('completion_date', { ascending: false });
+
+      // Fetch credit allocations for overview
+      const { data: allocations } = await supabase
+        .from('credit_allocations')
+        .select('*');
+
+      // Format licenses data
+      const licensesData = (licenses || []).map(license => {
+        const totalRequired = license.license_requirements?.reduce((sum, req) => sum + (req.credits_required || 0), 0) || 0;
+        return {
+          state: license.state,
+          licenseNumber: license.license_number,
+          expirationDate: license.expiry_date,
+          creditsRequired: totalRequired,
+          creditsCompleted: license.total_credits_required || 0,
+        };
+      });
+
+      // Format certificates data
+      const certificatesData = (certificates || []).map(cert => ({
+        courseName: cert.course_name,
+        provider: cert.provider,
+        completionDate: cert.completion_date,
+        credits: cert.credit_hours,
+        creditType: cert.category,
+        verified: cert.verified,
+      }));
+
+      // Format allocations summary
+      const allocationsData = (allocations || []).map(alloc => ({
+        certificateId: alloc.certificate_id,
+        licenseId: alloc.license_id,
+        creditsApplied: alloc.credits_applied,
+        allocationDate: alloc.created_at,
+      }));
+
+      const exportData = {
         exportDate: new Date().toISOString(),
         user: {
-          name: profile?.full_name,
-          email: profile?.email,
-          degreeType: profile?.degree_type,
+          name: profile.full_name,
+          degreeType: profile.degree_type,
         },
-        licenses: [],
-        certificates: [],
-        courses: [],
+        licenses: licensesData,
+        certificates: certificatesData,
+        creditAllocations: allocationsData,
       };
 
       const filename = `cme_agent_export_${Date.now()}.json`;
-      const path = FileSystem.documentDirectory + filename;
-      await FileSystem.writeAsStringAsync(path, JSON.stringify(sampleData, null, 2));
+      const path = (FileSystem.documentDirectory || '') + filename;
+      await FileSystem.writeAsStringAsync(path, JSON.stringify(exportData, null, 2));
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(path);

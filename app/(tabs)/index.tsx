@@ -461,8 +461,8 @@ export default function DashboardScreen() {
               key={license.id}
               style={[
                 styles.licenseRow,
-                urgency === 'critical' && styles.licenseRowCritical,
-                urgency === 'thisYear' && styles.licenseRowThisYear,
+                ...(urgency === 'critical' ? [styles.licenseRowCritical] : []),
+                ...(urgency === 'thisYear' ? [styles.licenseRowThisYear] : []),
               ]}
               onPress={() => router.push(`/(tabs)/licenses/${license.id}`)}
               hapticStyle="light"

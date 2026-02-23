@@ -15,6 +15,7 @@ interface AuthContextType {
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (password: string) => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -212,6 +213,22 @@ export function useAuthProvider() {
     return { error: error as Error | null };
   }
 
+  async function refreshProfile() {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      if (!error && data) {
+        setProfile(data as Profile);
+      }
+    } catch (err) {
+      console.warn('[Auth] Profile refresh failed:', err);
+    }
+  }
+
   return {
     session,
     user,
@@ -223,6 +240,7 @@ export function useAuthProvider() {
     updateProfile,
     resetPassword,
     updatePassword,
+    refreshProfile,
   };
 }
 

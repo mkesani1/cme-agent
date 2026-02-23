@@ -193,10 +193,10 @@ export default function AgentScreen() {
 
       // Persist messages to database if authenticated
       if (user) {
-        await supabase.from('chat_messages').insert([
+        void supabase.from('chat_messages').insert([
           { user_id: user.id, role: 'user', content: text },
           { user_id: user.id, role: 'assistant', content: aiMessage.content },
-        ]).then(() => {}).catch(() => {});
+        ]);
       }
 
     } catch (err) {

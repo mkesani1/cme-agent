@@ -46,7 +46,7 @@ export default function EditProfileScreen() {
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [degreeType, setDegreeType] = useState(profile?.degree_type || '');
   const [specialty, setSpecialty] = useState(profile?.specialty || '');
-  const [npiNumber, setNpiNumber] = useState(profile?.npi_number || '');
+  const [npiNumber, setNpiNumber] = useState((profile as any)?.npi_number || '');
   const [isSaving, setIsSaving] = useState(false);
   const [showDegreeModal, setShowDegreeModal] = useState(false);
   const [showSpecialtyModal, setShowSpecialtyModal] = useState(false);
@@ -56,7 +56,7 @@ export default function EditProfileScreen() {
       setFullName(profile.full_name || '');
       setDegreeType(profile.degree_type || '');
       setSpecialty(profile.specialty || '');
-      setNpiNumber(profile.npi_number || '');
+      setNpiNumber((profile as any)?.npi_number || '');
     }
   }, [profile]);
 
@@ -74,10 +74,9 @@ export default function EditProfileScreen() {
           full_name: fullName.trim(),
           degree_type: degreeType || null,
           specialty: specialty || null,
-          npi_number: npiNumber || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', profile?.id);
+        .eq('id', profile?.id || '');
 
       if (error) throw error;
 
@@ -192,7 +191,7 @@ export default function EditProfileScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email</Text>
                 <View style={[styles.input, styles.inputDisabled]}>
-                  <Text style={styles.disabledText}>{profile?.email || 'Not set'}</Text>
+                  <Text style={styles.disabledText}>{(profile as any)?.email || 'Not set'}</Text>
                 </View>
                 <Text style={styles.hint}>Contact support to change your email</Text>
               </View>

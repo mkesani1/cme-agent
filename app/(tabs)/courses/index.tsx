@@ -28,12 +28,12 @@ interface Course {
   id: string;
   title: string;
   provider: string;
-  credit_hours: number;
+  credit_hours?: number | null;
   category: CMECategory | null;
-  price_cents: number | null;
+  price_cents?: number | null;
   is_free: boolean | null;
-  course_url: string | null;
-  description: string | null;
+  course_url?: string | null;
+  description?: string | null;
   approved_states: string[] | null;
   accme_accredited: boolean | null;
   format: string | null;
@@ -127,14 +127,19 @@ export default function CoursesScreen() {
     return matchesSearch && matchesCategory;
   });
 
-  function formatPrice(priceCents: number | null, isFree: boolean | null): string {
+  function formatPrice(priceCents: number | null | undefined, isFree: boolean | null): string {
     if (isFree) return 'Free';
     if (!priceCents || priceCents === 0) return 'Free';
     return `$${(priceCents / 100).toFixed(0)}`;
   }
 
-  function openCourse(url: string | null) {
-    if (url) Linking.openURL(url);
+  function openCourse(url: string | null | undefined) {
+    if (url && typeof url === 'string' && url.length > 0) {
+      Linking.openURL(url).catch(err => {
+        console.error('Failed to open URL:', err);
+        Alert.alert('Error', 'Unable to open course link');
+      });
+    }
   }
 
   // Don't block the entire screen — let each tab handle its own loading state
@@ -394,13 +399,19 @@ export default function CoursesScreen() {
                       </View>
                     )}
 
-                    <TouchableOpacity
-                      style={styles.viewCourseButton}
-                      onPress={() => course.source_url && Linking.openURL(course.source_url)}
-                    >
-                      <Text style={styles.viewCourseText}>View Course</Text>
-                      <Ionicons name="open-outline" size={16} color={colors.accent} />
-                    </TouchableOpacity>
+                    {course.source_url ? (
+                      <TouchableOpacity
+                        style={styles.viewCourseButton}
+                        onPress={() => course.source_url && Linking.openURL(course.source_url)}
+                      >
+                        <Text style={styles.viewCourseText}>View Course</Text>
+                        <Ionicons name="open-outline" size={16} color={colors.accent} />
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={styles.viewCourseButtonDisabled}>
+                        <Text style={styles.viewCourseTextDisabled}>No Link Available</Text>
+                      </View>
+                    )}
                   </Card>
                 ))}
               </>
@@ -488,7 +499,7 @@ export default function CoursesScreen() {
                     <Text style={styles.courseProvider}>{course.provider}</Text>
                   </View>
                   <View style={styles.courseHours}>
-                    <Text style={styles.hoursNumber}>{course.credit_hours}</Text>
+                    <Text style={styles.hoursNumber}>{typeof course.credit_hours === 'number' ? course.credit_hours : 'N/A'}</Text>
                     <Text style={styles.hoursLabel}>hrs</Text>
                   </View>
                 </View>
@@ -1012,5 +1023,21 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.accent,
     fontWeight: '600',
+  },
+  viewCourseButtonDisabled: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: spacing.sm,
+    opacity: 0.5,
+  },
+  viewCourseTextDisabled: {
+    ...typography.body,
+    color: colors.textMuted,
+    fontWeight: '500',
   },
 });

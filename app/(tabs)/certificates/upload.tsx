@@ -221,20 +221,24 @@ export default function UploadCertificateScreen() {
 
       if (licenses) {
         for (const license of licenses) {
-          const { data: requirement } = await supabase
+          const { data: requirement, error: requirementError } = await supabase
             .from('license_requirements')
             .select('id')
             .eq('license_id', license.id)
             .eq('category', category)
-            .single();
+            .maybeSingle();
 
-          if (requirement) {
-            await supabase.from('credit_allocations').insert({
+          if (requirement && !requirementError) {
+            const { error: allocationError } = await supabase.from('credit_allocations').insert({
               certificate_id: data.id,
               license_id: license.id,
               requirement_id: requirement.id,
               credits_applied: hours,
             });
+
+            if (allocationError) {
+              console.error('Failed to allocate credits:', allocationError);
+            }
           }
         }
       }
