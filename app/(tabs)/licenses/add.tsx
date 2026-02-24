@@ -215,7 +215,21 @@ export default function AddLicenseScreen() {
               label="Expiry Date (YYYY-MM-DD)"
               placeholder="2025-12-31"
               value={form.expiryDate}
-              onChangeText={(text) => setForm({ ...form, expiryDate: text })}
+              onChangeText={(text) => {
+                // Only allow digits and dashes for YYYY-MM-DD format
+                const cleaned = text.replace(/[^0-9-]/g, '');
+                // Auto-insert dashes at positions 4 and 7
+                let formatted = cleaned;
+                if (cleaned.length >= 5 && cleaned[4] !== '-') {
+                  formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+                }
+                if (formatted.length >= 8 && formatted[7] !== '-') {
+                  formatted = formatted.slice(0, 7) + '-' + formatted.slice(7);
+                }
+                // Limit to 10 chars (YYYY-MM-DD)
+                setForm({ ...form, expiryDate: formatted.slice(0, 10) });
+              }}
+              keyboardType="numeric"
               error={errors.expiryDate}
             />
           </View>

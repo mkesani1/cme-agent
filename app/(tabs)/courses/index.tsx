@@ -121,8 +121,10 @@ export default function CoursesScreen() {
 
   // Filter all courses by search and category
   const filteredCourses = allCourses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          course.provider.toLowerCase().includes(searchQuery.toLowerCase());
+    const title = (course.title || '').toLowerCase();
+    const provider = (course.provider || '').toLowerCase();
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = title.includes(query) || provider.includes(query);
     const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });

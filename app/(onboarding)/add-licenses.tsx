@@ -258,7 +258,18 @@ export default function AddLicensesScreen() {
               <Input
                 label="Expiry Date (Optional)"
                 value={license.expiryDate}
-                onChangeText={(value) => updateLicense(index, 'expiryDate', value)}
+                onChangeText={(value) => {
+                  const cleaned = value.replace(/[^0-9-]/g, '');
+                  let formatted = cleaned;
+                  if (cleaned.length >= 5 && cleaned[4] !== '-') {
+                    formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+                  }
+                  if (formatted.length >= 8 && formatted[7] !== '-') {
+                    formatted = formatted.slice(0, 7) + '-' + formatted.slice(7);
+                  }
+                  updateLicense(index, 'expiryDate', formatted.slice(0, 10));
+                }}
+                keyboardType="numeric"
                 placeholder="2026-12-31"
                 containerStyle={styles.input}
               />

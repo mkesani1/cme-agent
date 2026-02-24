@@ -214,11 +214,21 @@ export default function AddDEAScreen() {
             label="Expiry Date (Optional)"
             value={form.expiryDate}
             onChangeText={(value) => {
-              setForm(prev => ({ ...prev, expiryDate: value }));
+              // Only allow digits and dashes for YYYY-MM-DD format
+              const cleaned = value.replace(/[^0-9-]/g, '');
+              let formatted = cleaned;
+              if (cleaned.length >= 5 && cleaned[4] !== '-') {
+                formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+              }
+              if (formatted.length >= 8 && formatted[7] !== '-') {
+                formatted = formatted.slice(0, 7) + '-' + formatted.slice(7);
+              }
+              setForm(prev => ({ ...prev, expiryDate: formatted.slice(0, 10) }));
               if (errors.expiryDate) {
                 setErrors(prev => ({ ...prev, expiryDate: '' }));
               }
             }}
+            keyboardType="numeric"
             placeholder="YYYY-MM-DD"
             containerStyle={styles.input}
             error={errors.expiryDate}
