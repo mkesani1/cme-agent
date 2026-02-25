@@ -351,56 +351,190 @@
             animation: fadeInScale 1s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
+        /* ── Phone Mockup ── */
         .phone-mockup {
-            width: 300px; height: 600px;
-            background: var(--navy-700);
-            border-radius: 40px;
-            padding: 10px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(166, 139, 91, 0.1);
+            width: 300px; height: 620px;
+            background: #2C2C2E;
+            border-radius: 44px;
+            padding: 12px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.08), inset 0 0 0 1px rgba(255,255,255,0.05);
             margin: 0 auto;
             position: relative;
             overflow: hidden;
             animation: float 6s ease-in-out infinite;
         }
 
+        .phone-mockup::before {
+            content: '';
+            position: absolute;
+            top: 12px; left: 50%; transform: translateX(-50%);
+            width: 100px; height: 28px;
+            background: #1C1C1E;
+            border-radius: 0 0 16px 16px;
+            z-index: 10;
+        }
+
         .phone-screen {
             width: 100%; height: 100%;
             background: var(--navy-900);
-            border-radius: 32px;
+            border-radius: 34px;
             overflow: hidden;
+            position: relative;
         }
 
         .phone-screen-content {
             width: 100%; height: 100%;
             display: flex; flex-direction: column;
-            padding: 20px 16px;
-            gap: 12px;
+            padding: 44px 16px 12px;
+            gap: 10px;
         }
-        .phone-status-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 11px; color: var(--sand-400); padding: 4px 0;
+
+        /* Phone mockup — Dashboard screen */
+        .phone-greeting {
+            font-size: 13px; color: var(--sand-400); margin-bottom: -6px;
         }
-        .phone-app-header {
-            font-size: 16px; font-weight: 700; color: var(--sand-50);
-            padding: 8px 0 4px;
+        .phone-greeting-name {
+            font-size: 20px; font-weight: 700; color: var(--sand-50); margin-bottom: 4px;
         }
-        .phone-card {
-            background: var(--navy-700); border-radius: 12px; padding: 14px;
-            border: 1px solid rgba(166, 139, 91, 0.15);
+
+        .phone-hero-card {
+            background: linear-gradient(135deg, #C4A574, #A68B5B, #8B7349);
+            border-radius: 16px; padding: 16px;
+            position: relative; overflow: hidden;
+            min-height: 120px;
         }
-        .phone-card-title { font-size: 11px; color: var(--sand-400); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .phone-card-value { font-size: 22px; font-weight: 700; color: var(--sand-50); }
-        .phone-card-sub { font-size: 11px; color: var(--green); margin-top: 2px; }
-        .phone-progress { height: 6px; background: var(--navy-600); border-radius: 3px; margin-top: 8px; overflow: hidden; }
-        .phone-progress-fill { height: 100%; border-radius: 3px; background: var(--gold-gradient); }
-        .phone-nav-bar {
+        .phone-hero-card::before {
+            content: '';
+            position: absolute; top: -20px; right: -20px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .phone-hero-card::after {
+            content: '';
+            position: absolute; bottom: -15px; left: 20px;
+            width: 60px; height: 60px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .phone-hero-state {
+            font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .phone-hero-license {
+            font-size: 16px; font-weight: 700; color: #fff; margin: 4px 0;
+        }
+        .phone-hero-row {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            position: relative; z-index: 1; margin-top: 8px;
+        }
+        .phone-hero-credits {
+            font-size: 11px; color: rgba(255,255,255,0.85);
+        }
+        .phone-hero-credits strong {
+            font-size: 20px; display: block; color: #fff;
+        }
+        .phone-hero-progress-ring {
+            width: 48px; height: 48px;
+            position: relative;
+        }
+        .phone-hero-progress-ring svg { transform: rotate(-90deg); }
+        .phone-hero-progress-ring .ring-pct {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px; font-weight: 700; color: #fff;
+        }
+        .phone-category-pills {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+            position: relative; z-index: 1;
+        }
+        .phone-pill {
+            background: rgba(255,255,255,0.15); border-radius: 10px;
+            padding: 3px 8px; font-size: 9px; color: rgba(255,255,255,0.9);
+            font-weight: 500;
+        }
+
+        .phone-mini-cards {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .phone-mini-card {
+            background: var(--navy-700); border-radius: 12px; padding: 12px;
+            border: 1px solid rgba(166, 139, 91, 0.12);
+        }
+        .phone-mini-label { font-size: 9px; color: var(--sand-400); text-transform: uppercase; letter-spacing: 0.5px; }
+        .phone-mini-value { font-size: 18px; font-weight: 700; color: var(--sand-50); margin-top: 2px; }
+        .phone-mini-sub { font-size: 9px; margin-top: 2px; }
+
+        .phone-alert-card {
+            background: var(--navy-700); border-radius: 12px; padding: 12px;
+            border: 1px solid rgba(166, 139, 91, 0.12);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .phone-alert-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .phone-alert-text { font-size: 11px; color: var(--sand-50); line-height: 1.4; }
+        .phone-alert-text strong { display: block; margin-bottom: 1px; }
+
+        .phone-tab-bar {
             margin-top: auto; display: flex; justify-content: space-around;
-            padding: 10px 0 4px; border-top: 1px solid var(--navy-600);
+            padding: 8px 0 2px; border-top: 1px solid rgba(166, 139, 91, 0.1);
         }
-        .phone-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-        .phone-nav-dot { width: 20px; height: 20px; border-radius: 6px; background: var(--navy-600); }
-        .phone-nav-dot.active { background: var(--sand-500); }
-        .phone-nav-label { font-size: 9px; color: var(--sand-400); }
+        .phone-tab {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+        }
+        .phone-tab svg { width: 20px; height: 20px; }
+        .phone-tab-label { font-size: 8px; color: var(--sand-400); }
+        .phone-tab.active svg { color: var(--sand-500); }
+        .phone-tab.active .phone-tab-label { color: var(--sand-500); }
+        .phone-tab:not(.active) svg { color: var(--navy-600); }
+
+        /* Phone mockup — AI Agent screen */
+        .phone-ai-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+        }
+        .phone-ai-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: var(--navy-900); font-weight: 700;
+        }
+        .phone-ai-name { font-size: 16px; font-weight: 700; color: var(--sand-50); }
+        .phone-ai-status { font-size: 10px; color: var(--green); }
+
+        .phone-chat-bubble {
+            border-radius: 14px; padding: 12px 14px;
+            font-size: 12px; line-height: 1.5; margin-bottom: 8px;
+        }
+        .phone-chat-ai {
+            background: var(--navy-700); color: var(--sand-50);
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(166, 139, 91, 0.12);
+        }
+        .phone-chat-user {
+            background: linear-gradient(135deg, #A68B5B, #8B7349);
+            color: #fff; margin-left: 40px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .phone-course-rec {
+            background: var(--navy-700); border-radius: 12px;
+            padding: 10px 12px;
+            border: 1px solid rgba(166, 139, 91, 0.15);
+            margin-bottom: 6px;
+        }
+        .phone-course-rec-title { font-size: 11px; font-weight: 600; color: var(--sand-50); }
+        .phone-course-rec-meta { font-size: 9px; color: var(--sand-400); margin-top: 2px; }
+        .phone-course-rec-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 4px;
+        }
+        .phone-course-badge {
+            font-size: 8px; padding: 2px 8px; border-radius: 8px;
+            font-weight: 600; color: #fff;
+        }
 
         /* ── Stats ── */
         .stats { padding: 4rem 2rem; background: var(--navy-700); }
@@ -521,31 +655,98 @@
         .feature-list li div h4 { font-size: 1.125rem; margin-bottom: 0.25rem; }
         .feature-list li div p { color: rgba(253, 252, 251, 0.7); font-size: 0.95rem; }
 
-        /* ── Admin Teaser ── */
+        /* ── Admin Section ── */
         .admin-section { padding: 6rem 2rem; }
 
-        .admin-teaser-cards {
-            display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.5rem;
+        .admin-section .solution-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 4rem; align-items: center;
         }
 
-        .admin-teaser-card {
-            text-align: center; padding: 1.5rem;
-            background: rgba(29, 42, 63, 0.5);
-            border-radius: 12px;
+        .admin-dashboard-mockup {
+            background: var(--navy-700);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(166, 139, 91, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-mockup-toolbar {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+            padding-bottom: 12px; border-bottom: 1px solid rgba(166, 139, 91, 0.1);
+        }
+        .admin-mockup-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+        }
+        .admin-mockup-title {
+            font-size: 13px; font-weight: 600; color: var(--sand-400);
+            margin-left: auto;
+        }
+
+        .admin-mockup-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;
+        }
+        .admin-stat-card {
+            background: var(--navy-900); border-radius: 10px; padding: 14px;
+            border: 1px solid rgba(166, 139, 91, 0.1);
+            text-align: center;
+        }
+        .admin-stat-num {
+            font-size: 22px; font-weight: 700;
+        }
+        .admin-stat-label { font-size: 10px; color: var(--sand-400); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .admin-physician-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px;
+            background: var(--navy-900);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(166, 139, 91, 0.08);
+        }
+        .admin-physician-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: var(--navy-900);
+            flex-shrink: 0;
+        }
+        .admin-physician-name { font-size: 12px; font-weight: 600; color: var(--sand-50); }
+        .admin-physician-detail { font-size: 10px; color: var(--sand-400); }
+        .admin-physician-status {
+            margin-left: auto; font-size: 10px; font-weight: 600;
+            padding: 3px 10px; border-radius: 10px;
+        }
+
+        .admin-feature-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem; margin-top: 2.5rem;
+        }
+
+        .admin-feature-card {
+            background: var(--navy-700);
+            border-radius: 14px; padding: 1.5rem;
             border: 1px solid rgba(166, 139, 91, 0.15);
-            flex: 1; max-width: 220px;
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s, border-color 0.4s;
         }
 
-        .admin-teaser-card:hover {
-            transform: translateY(-6px);
+        .admin-feature-card:hover {
+            transform: translateY(-4px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
             border-color: rgba(166, 139, 91, 0.3);
         }
 
-        .admin-teaser-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        .admin-teaser-card h4 { color: var(--sand-500); margin-bottom: 0.25rem; font-size: 0.95rem; }
-        .admin-teaser-card p { font-size: 0.85rem; color: var(--sand-400); }
+        .admin-feature-icon {
+            width: 44px; height: 44px;
+            background: rgba(166, 139, 91, 0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--sand-500);
+        }
+
+        .admin-feature-card h4 { font-size: 1rem; color: var(--sand-50); margin-bottom: 0.5rem; }
+        .admin-feature-card p { font-size: 0.875rem; color: rgba(253, 252, 251, 0.6); line-height: 1.5; }
 
         /* ── Pricing ── */
         .pricing { padding: 6rem 2rem; background: var(--navy-700); }
@@ -891,6 +1092,8 @@
             .stats-container { grid-template-columns: repeat(2, 1fr); }
             .problem-grid, .testimonial-grid { grid-template-columns: 1fr; }
             .solution-grid { grid-template-columns: 1fr; }
+            .admin-section .solution-grid { grid-template-columns: 1fr; }
+            .admin-feature-grid { grid-template-columns: 1fr; }
             .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
             .footer-grid { grid-template-columns: 1fr 1fr; }
             .nav-links { display: none; }
@@ -903,6 +1106,8 @@
             .stat-item h3 { font-size: 2.25rem; }
             .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
             .pricing-grid { max-width: 100%; }
+            .admin-mockup-stats { grid-template-columns: 1fr; }
+            .phone-mockup { width: 260px; height: 540px; }
         }
     </style>
 </head>
@@ -912,14 +1117,14 @@
         <div class="nav-container">
             <a href="/" class="logo">CME Agent</a>
             <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="/admin-teams">For Admin Teams</a></li>
+                <li><a href="#features">For Physicians</a></li>
+                <li><a href="#admin">For Admin Teams</a></li>
                 <li><a href="#pricing">Pricing</a></li>
-                <li><a href="/blog">Blog</a></li>
+                <li><a href="#faq">FAQ</a></li>
             </ul>
             <div class="nav-right">
                 <a href="#download" class="nav-cta">Download App</a>
-                <a href="/admin/login" class="nav-login">Login</a>
+                <a href="/admin/login" class="nav-login">Staff Login</a>
             </div>
         </div>
     </nav>
@@ -938,7 +1143,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Download Free
                     </a>
-                    <a href="/app" class="btn-secondary">Try Live Demo</a>
+                    <a href="#admin" class="btn-secondary">For Admin Teams</a>
                 </div>
                 <div class="store-badges">
                     <a href="#download" class="store-badge">
@@ -958,31 +1163,84 @@
                 </div>
             </div>
             <div class="hero-image">
+                <!-- Phone: Dashboard screen matching locked design -->
                 <div class="phone-mockup">
                     <div class="phone-screen">
                         <div class="phone-screen-content">
-                            <div class="phone-status-bar"><span>9:41</span><span>CME Agent</span><span>100%</span></div>
-                            <div class="phone-app-header">Dashboard</div>
-                            <div class="phone-card">
-                                <div class="phone-card-title">Compliance Score</div>
-                                <div class="phone-card-value" style="color: var(--green);">94%</div>
-                                <div class="phone-progress"><div class="phone-progress-fill" style="width: 94%;"></div></div>
+                            <div class="phone-greeting">Good morning,</div>
+                            <div class="phone-greeting-name">Dr. Williams</div>
+
+                            <!-- Hero license card with gold gradient -->
+                            <div class="phone-hero-card">
+                                <div class="phone-hero-state">California</div>
+                                <div class="phone-hero-license">Medical License</div>
+                                <div class="phone-hero-row">
+                                    <div class="phone-hero-credits">
+                                        <strong>42/50</strong>
+                                        Credits earned
+                                    </div>
+                                    <div class="phone-hero-progress-ring">
+                                        <svg width="48" height="48" viewBox="0 0 48 48">
+                                            <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
+                                            <circle cx="24" cy="24" r="20" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="12.56"/>
+                                        </svg>
+                                        <span class="ring-pct">84%</span>
+                                    </div>
+                                </div>
+                                <div class="phone-category-pills">
+                                    <span class="phone-pill">Ethics 4/4</span>
+                                    <span class="phone-pill">Pain Mgmt 6/8</span>
+                                    <span class="phone-pill">AMA 32/38</span>
+                                </div>
                             </div>
-                            <div class="phone-card">
-                                <div class="phone-card-title">Credits This Cycle</div>
-                                <div class="phone-card-value">42 <span style="font-size:13px;color:var(--sand-400);">/ 50</span></div>
-                                <div class="phone-card-sub">8 credits remaining</div>
+
+                            <!-- Mini stat cards -->
+                            <div class="phone-mini-cards">
+                                <div class="phone-mini-card">
+                                    <div class="phone-mini-label">Active Licenses</div>
+                                    <div class="phone-mini-value">7</div>
+                                    <div class="phone-mini-sub" style="color:var(--green);">All compliant</div>
+                                </div>
+                                <div class="phone-mini-card">
+                                    <div class="phone-mini-label">Next Deadline</div>
+                                    <div class="phone-mini-value" style="font-size:14px;">Mar 31</div>
+                                    <div class="phone-mini-sub" style="color:var(--amber);">36 days left</div>
+                                </div>
                             </div>
-                            <div class="phone-card">
-                                <div class="phone-card-title">Next Deadline</div>
-                                <div class="phone-card-value" style="font-size:16px;">CA License — Mar 31</div>
-                                <div class="phone-card-sub">36 days remaining</div>
+
+                            <!-- Alert card -->
+                            <div class="phone-alert-card">
+                                <div class="phone-alert-icon" style="background:rgba(196,154,74,0.15);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A4A" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                </div>
+                                <div class="phone-alert-text">
+                                    <strong style="color:var(--amber);">TX Pain Mgmt</strong>
+                                    2 credits needed by Jun 30
+                                </div>
                             </div>
-                            <div class="phone-nav-bar">
-                                <div class="phone-nav-item"><div class="phone-nav-dot active"></div><span class="phone-nav-label">Home</span></div>
-                                <div class="phone-nav-item"><div class="phone-nav-dot"></div><span class="phone-nav-label">Licenses</span></div>
-                                <div class="phone-nav-item"><div class="phone-nav-dot"></div><span class="phone-nav-label">Courses</span></div>
-                                <div class="phone-nav-item"><div class="phone-nav-dot"></div><span class="phone-nav-label">AI Agent</span></div>
+
+                            <!-- Tab bar matching locked 5-tab design -->
+                            <div class="phone-tab-bar">
+                                <div class="phone-tab active">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                                    <span class="phone-tab-label">Home</span>
+                                </div>
+                                <div class="phone-tab">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z" opacity="0.4"/></svg>
+                                    <span class="phone-tab-label">Licenses</span>
+                                </div>
+                                <div class="phone-tab">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L8.5 8.5 2 9.27l4.5 4.73L5.5 21 12 17.77 18.5 21l-1-7L22 9.27l-6.5-.77z" opacity="0.4"/></svg>
+                                    <span class="phone-tab-label">Certs</span>
+                                </div>
+                                <div class="phone-tab">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 4h2v5l-1-.75L9 9V4z" opacity="0.4"/></svg>
+                                    <span class="phone-tab-label">Courses</span>
+                                </div>
+                                <div class="phone-tab">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" opacity="0.4"/></svg>
+                                    <span class="phone-tab-label">Profile</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1048,28 +1306,28 @@
                     <h2>AI-Powered CME Management for <span>Multi-State Physicians</span></h2>
                     <ul class="feature-list">
                         <li>
-                            <span class="feature-check">✓</span>
+                            <span class="feature-check">&#10003;</span>
                             <div>
                                 <h4>AI-Unified Dashboard</h4>
                                 <p>Our AI aggregates compliance status across ALL your licenses in one intelligent view. No more logging into 10 different portals.</p>
                             </div>
                         </li>
                         <li>
-                            <span class="feature-check">✓</span>
+                            <span class="feature-check">&#10003;</span>
                             <div>
                                 <h4>AI Course Optimizer</h4>
                                 <p>AI analyzes your requirements across all states and finds courses that satisfy multiple states simultaneously. One course, five states.</p>
                             </div>
                         </li>
                         <li>
-                            <span class="feature-check">✓</span>
+                            <span class="feature-check">&#10003;</span>
                             <div>
                                 <h4>AI-Driven Smart Alerts</h4>
                                 <p>Our AI predicts deadlines and creates personalized action plans: "Your NY license renews in 90 days. You have 12 of 36 hours. Here's your plan."</p>
                             </div>
                         </li>
                         <li>
-                            <span class="feature-check">✓</span>
+                            <span class="feature-check">&#10003;</span>
                             <div>
                                 <h4>AI Certificate Scanner</h4>
                                 <p>Snap a photo of your certificate. Our AI extracts credits, categories, and provider details—logged automatically in seconds.</p>
@@ -1078,38 +1336,79 @@
                     </ul>
                 </div>
                 <div class="solution-image reveal-scale">
+                    <!-- Phone: AI Agent screen -->
                     <div class="phone-mockup">
                         <div class="phone-screen">
                             <div class="phone-screen-content">
-                                <div class="phone-status-bar"><span>9:41</span><span>CME Agent</span><span>100%</span></div>
-                                <div class="phone-app-header">AI Agent</div>
-                                <div class="phone-card" style="background: linear-gradient(135deg, var(--navy-700), var(--navy-800));">
-                                    <div class="phone-card-title">Smart Recommendation</div>
-                                    <div style="font-size:13px;color:var(--sand-50);line-height:1.5;margin-top:4px;">Based on your CA and TX licenses, I found 3 courses that cover both states' pain management requirements.</div>
-                                </div>
-                                <div class="phone-card">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                                        <div>
-                                            <div style="font-size:12px;font-weight:600;color:var(--sand-50);">Pain Mgmt Fundamentals</div>
-                                            <div style="font-size:10px;color:var(--sand-400);margin-top:2px;">AMA PRA Category 1 · 3 credits</div>
-                                        </div>
-                                        <div style="background:var(--green);color:white;font-size:9px;padding:3px 8px;border-radius:10px;font-weight:600;">MATCH</div>
+                                <div class="phone-ai-header">
+                                    <div class="phone-ai-avatar">AI</div>
+                                    <div>
+                                        <div class="phone-ai-name">CME Agent</div>
+                                        <div class="phone-ai-status">Online</div>
                                     </div>
                                 </div>
-                                <div class="phone-card">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                                        <div>
-                                            <div style="font-size:12px;font-weight:600;color:var(--sand-50);">Controlled Substances</div>
-                                            <div style="font-size:10px;color:var(--sand-400);margin-top:2px;">ACCME · 2 credits</div>
-                                        </div>
-                                        <div style="background:var(--green);color:white;font-size:9px;padding:3px 8px;border-radius:10px;font-weight:600;">MATCH</div>
+
+                                <div class="phone-chat-bubble phone-chat-ai">
+                                    Based on your CA and TX licenses, I found 3 courses that cover both states' pain management requirements simultaneously.
+                                </div>
+
+                                <div class="phone-chat-bubble phone-chat-user">
+                                    Show me the best options
+                                </div>
+
+                                <div class="phone-chat-bubble phone-chat-ai" style="padding-bottom:8px;">
+                                    Here are the top matches:
+                                </div>
+
+                                <div class="phone-course-rec">
+                                    <div class="phone-course-rec-title">Pain Mgmt Fundamentals</div>
+                                    <div class="phone-course-rec-meta">AMA PRA Category 1 &middot; 3 credits</div>
+                                    <div class="phone-course-rec-row">
+                                        <span style="font-size:10px;color:var(--sand-400);">Covers CA + TX + NY</span>
+                                        <span class="phone-course-badge" style="background:var(--green);">3-STATE MATCH</span>
                                     </div>
                                 </div>
-                                <div class="phone-nav-bar">
-                                    <div class="phone-nav-item"><div class="phone-nav-dot"></div><span class="phone-nav-label">Home</span></div>
-                                    <div class="phone-nav-item"><div class="phone-nav-dot"></div><span class="phone-nav-label">Licenses</span></div>
-                                    <div class="phone-nav-item"><div class="phone-nav-dot"></div><span class="phone-nav-label">Courses</span></div>
-                                    <div class="phone-nav-item"><div class="phone-nav-dot active"></div><span class="phone-nav-label">AI Agent</span></div>
+
+                                <div class="phone-course-rec">
+                                    <div class="phone-course-rec-title">Opioid Prescriber Update</div>
+                                    <div class="phone-course-rec-meta">ACCME &middot; 2 credits</div>
+                                    <div class="phone-course-rec-row">
+                                        <span style="font-size:10px;color:var(--sand-400);">Covers CA + TX</span>
+                                        <span class="phone-course-badge" style="background:var(--amber);">2-STATE MATCH</span>
+                                    </div>
+                                </div>
+
+                                <div class="phone-course-rec">
+                                    <div class="phone-course-rec-title">Controlled Substances CE</div>
+                                    <div class="phone-course-rec-meta">AMA PRA Category 1 &middot; 4 credits</div>
+                                    <div class="phone-course-rec-row">
+                                        <span style="font-size:10px;color:var(--sand-400);">Covers TX + FL + OH</span>
+                                        <span class="phone-course-badge" style="background:var(--green);">3-STATE MATCH</span>
+                                    </div>
+                                </div>
+
+                                <!-- Tab bar -->
+                                <div class="phone-tab-bar">
+                                    <div class="phone-tab">
+                                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" opacity="0.4"/></svg>
+                                        <span class="phone-tab-label">Home</span>
+                                    </div>
+                                    <div class="phone-tab">
+                                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z" opacity="0.4"/></svg>
+                                        <span class="phone-tab-label">Licenses</span>
+                                    </div>
+                                    <div class="phone-tab">
+                                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L8.5 8.5 2 9.27l4.5 4.73L5.5 21 12 17.77 18.5 21l-1-7L22 9.27l-6.5-.77z" opacity="0.4"/></svg>
+                                        <span class="phone-tab-label">Certs</span>
+                                    </div>
+                                    <div class="phone-tab active">
+                                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 4h2v5l-1-.75L9 9V4z"/></svg>
+                                        <span class="phone-tab-label">Courses</span>
+                                    </div>
+                                    <div class="phone-tab">
+                                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" opacity="0.4"/></svg>
+                                        <span class="phone-tab-label">Profile</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1119,32 +1418,145 @@
         </div>
     </section>
 
-    <!-- Admin Teams Teaser -->
+    <!-- Admin Teams Section — Full dedicated section -->
     <section class="admin-section" id="admin">
         <div class="section-container">
-            <div class="section-header reveal" style="margin-bottom:2rem">
-                <h2>Managing CME for <span style="background:var(--gold-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Multiple Physicians?</span></h2>
-                <p style="max-width:650px;margin:0 auto">Our AI-powered admin dashboard gives staffing agencies, hospital groups, and credentialing teams real-time compliance oversight across their entire roster.</p>
+            <div class="section-header reveal">
+                <h2>Built for <span style="background:var(--gold-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Admin Teams</span> Managing Multiple Physicians</h2>
+                <p>Staffing agencies, hospital groups, and credentialing teams get real-time compliance oversight across their entire physician roster—powered by AI.</p>
             </div>
-            <div class="admin-teaser-cards">
-                <div class="admin-teaser-card reveal stagger-1">
-                    <div class="admin-teaser-icon">📊</div>
-                    <h4>Live Dashboard</h4>
-                    <p>Every physician, every state, one view</p>
+
+            <div class="solution-grid">
+                <!-- Admin dashboard mockup -->
+                <div class="reveal-scale">
+                    <div class="admin-dashboard-mockup">
+                        <div class="admin-mockup-toolbar">
+                            <div class="admin-mockup-dot" style="background:#ff5f57;"></div>
+                            <div class="admin-mockup-dot" style="background:#febc2e;"></div>
+                            <div class="admin-mockup-dot" style="background:#28c840;"></div>
+                            <div class="admin-mockup-title">CME Agent &mdash; Admin Dashboard</div>
+                        </div>
+
+                        <!-- Stats row -->
+                        <div class="admin-mockup-stats">
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-num" style="color:var(--sand-50);">24</div>
+                                <div class="admin-stat-label">Physicians</div>
+                            </div>
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-num" style="color:var(--green);">89%</div>
+                                <div class="admin-stat-label">Compliant</div>
+                            </div>
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-num" style="color:var(--amber);">3</div>
+                                <div class="admin-stat-label">At Risk</div>
+                            </div>
+                        </div>
+
+                        <!-- Physician rows -->
+                        <div class="admin-physician-row">
+                            <div class="admin-physician-avatar">RM</div>
+                            <div>
+                                <div class="admin-physician-name">Dr. Rachel M.</div>
+                                <div class="admin-physician-detail">8 licenses &middot; 47/50 credits</div>
+                            </div>
+                            <div class="admin-physician-status" style="background:rgba(91,140,107,0.15);color:var(--green);">Compliant</div>
+                        </div>
+                        <div class="admin-physician-row">
+                            <div class="admin-physician-avatar">JK</div>
+                            <div>
+                                <div class="admin-physician-name">Dr. James K.</div>
+                                <div class="admin-physician-detail">12 licenses &middot; 28/50 credits</div>
+                            </div>
+                            <div class="admin-physician-status" style="background:rgba(196,154,74,0.15);color:var(--amber);">At Risk</div>
+                        </div>
+                        <div class="admin-physician-row">
+                            <div class="admin-physician-avatar">SP</div>
+                            <div>
+                                <div class="admin-physician-name">Dr. Sarah P.</div>
+                                <div class="admin-physician-detail">6 licenses &middot; 50/50 credits</div>
+                            </div>
+                            <div class="admin-physician-status" style="background:rgba(91,140,107,0.15);color:var(--green);">Compliant</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="admin-teaser-card reveal stagger-2">
-                    <div class="admin-teaser-icon">🤖</div>
-                    <h4>AI Risk Detection</h4>
-                    <p>Catch issues months before deadlines</p>
-                </div>
-                <div class="admin-teaser-card reveal stagger-3">
-                    <div class="admin-teaser-icon">📋</div>
-                    <h4>Audit-Ready Reports</h4>
-                    <p>One-click compliance documentation</p>
+
+                <!-- Admin feature description -->
+                <div class="solution-content reveal">
+                    <h2>One Dashboard for Your <span>Entire Roster</span></h2>
+                    <ul class="feature-list">
+                        <li>
+                            <span class="feature-check">&#10003;</span>
+                            <div>
+                                <h4>Multi-Physician Oversight</h4>
+                                <p>See every physician's compliance status across every state license in a single, real-time dashboard. No more chasing spreadsheets from individual doctors.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="feature-check">&#10003;</span>
+                            <div>
+                                <h4>AI Risk Detection</h4>
+                                <p>Our AI flags at-risk physicians months before deadlines hit. Know who needs attention now and who's on track—before it becomes an emergency.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="feature-check">&#10003;</span>
+                            <div>
+                                <h4>Audit-Ready Reports</h4>
+                                <p>Generate comprehensive compliance reports for any physician, any state, any time period—with a single click. Always ready for audits and credentialing reviews.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="feature-check">&#10003;</span>
+                            <div>
+                                <h4>Team Course Planning</h4>
+                                <p>AI recommends group courses that satisfy requirements for multiple physicians and states at once—saving your agency time and money on CME spending.</p>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            <div class="reveal" style="text-align:center">
-                <a href="/admin-teams" class="btn-secondary" style="font-size:1rem;padding:0.85rem 2rem">See How It Works →</a>
+
+            <!-- Additional admin feature cards -->
+            <div class="admin-feature-grid">
+                <div class="admin-feature-card reveal stagger-1">
+                    <div class="admin-feature-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    </div>
+                    <h4>Role-Based Access</h4>
+                    <p>Assign staff members specific roles and permissions. Credentialing coordinators, compliance officers, and agency directors each get the access they need.</p>
+                </div>
+                <div class="admin-feature-card reveal stagger-2">
+                    <div class="admin-feature-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h4>Compliance Heatmaps</h4>
+                    <p>Visual heatmaps show which states and physicians need the most attention, so your team can prioritize effort where it matters most.</p>
+                </div>
+                <div class="admin-feature-card reveal stagger-3">
+                    <div class="admin-feature-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    </div>
+                    <h4>HIPAA-Compliant Security</h4>
+                    <p>Bank-level encryption, SOC 2 Type II compliance, and strict data isolation between agencies. Your physicians' data stays yours.</p>
+                </div>
+                <div class="admin-feature-card reveal stagger-4">
+                    <div class="admin-feature-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                    </div>
+                    <h4>Automated Notifications</h4>
+                    <p>Set up automated alerts for your team when any physician falls behind. Customize notification thresholds for 90-day, 60-day, and 30-day warnings.</p>
+                </div>
+            </div>
+
+            <div class="reveal" style="text-align:center;margin-top:3rem">
+                <a href="/admin/login" class="btn-primary" style="font-size:1rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                    Access Staff Portal
+                </a>
+                <span style="display:inline-block;margin-left:1rem;">
+                    <a href="#pricing" class="btn-secondary" style="font-size:1rem;">See Enterprise Pricing</a>
+                </span>
             </div>
         </div>
     </section>
@@ -1162,11 +1574,11 @@
                     <div class="pricing-price">$0</div>
                     <div class="pricing-desc">1 doctor, 1 state license</div>
                     <ul class="pricing-features">
-                        <li><span class="pricing-check">✓</span> Single state license tracking</li>
-                        <li><span class="pricing-check">✓</span> AI deadline reminders</li>
-                        <li><span class="pricing-check">✓</span> Certificate scanner</li>
-                        <li><span class="pricing-check">✓</span> Basic compliance dashboard</li>
-                        <li><span class="pricing-check">✓</span> Email notifications</li>
+                        <li><span class="pricing-check">&#10003;</span> Single state license tracking</li>
+                        <li><span class="pricing-check">&#10003;</span> AI deadline reminders</li>
+                        <li><span class="pricing-check">&#10003;</span> Certificate scanner</li>
+                        <li><span class="pricing-check">&#10003;</span> Basic compliance dashboard</li>
+                        <li><span class="pricing-check">&#10003;</span> Email notifications</li>
                     </ul>
                     <a href="#download" class="pricing-btn pricing-btn-outline">Download Free</a>
                 </div>
@@ -1176,28 +1588,28 @@
                     <div class="pricing-price">$29 <span>/mo</span></div>
                     <div class="pricing-desc">1 doctor, unlimited state licenses</div>
                     <ul class="pricing-features">
-                        <li><span class="pricing-check">✓</span> Unlimited state licenses</li>
-                        <li><span class="pricing-check">✓</span> AI course optimizer</li>
-                        <li><span class="pricing-check">✓</span> Smart action plans</li>
-                        <li><span class="pricing-check">✓</span> Multi-state overlap engine</li>
-                        <li><span class="pricing-check">✓</span> Priority alerts & reminders</li>
-                        <li><span class="pricing-check">✓</span> Compliance reports</li>
+                        <li><span class="pricing-check">&#10003;</span> Unlimited state licenses</li>
+                        <li><span class="pricing-check">&#10003;</span> AI course optimizer</li>
+                        <li><span class="pricing-check">&#10003;</span> Smart action plans</li>
+                        <li><span class="pricing-check">&#10003;</span> Multi-state overlap engine</li>
+                        <li><span class="pricing-check">&#10003;</span> Priority alerts &amp; reminders</li>
+                        <li><span class="pricing-check">&#10003;</span> Compliance reports</li>
                     </ul>
                     <a href="#download" class="pricing-btn pricing-btn-gold">Get Started</a>
                 </div>
                 <div class="pricing-card reveal stagger-3">
-                    <div class="pricing-tier">Corporate</div>
+                    <div class="pricing-tier">Enterprise</div>
                     <div class="pricing-price">Custom</div>
-                    <div class="pricing-desc">Multiple doctors &amp; licenses</div>
+                    <div class="pricing-desc">Multiple doctors &amp; admin dashboard</div>
                     <ul class="pricing-features">
-                        <li><span class="pricing-check">✓</span> Everything in Pro</li>
-                        <li><span class="pricing-check">✓</span> Multi-physician management</li>
-                        <li><span class="pricing-check">✓</span> Admin dashboard</li>
-                        <li><span class="pricing-check">✓</span> AI compliance heatmaps</li>
-                        <li><span class="pricing-check">✓</span> Audit-ready reporting</li>
-                        <li><span class="pricing-check">✓</span> Dedicated support</li>
+                        <li><span class="pricing-check">&#10003;</span> Everything in Pro</li>
+                        <li><span class="pricing-check">&#10003;</span> Multi-physician management</li>
+                        <li><span class="pricing-check">&#10003;</span> Admin dashboard &amp; staff portal</li>
+                        <li><span class="pricing-check">&#10003;</span> AI compliance heatmaps</li>
+                        <li><span class="pricing-check">&#10003;</span> Audit-ready reporting</li>
+                        <li><span class="pricing-check">&#10003;</span> Dedicated support &amp; onboarding</li>
                     </ul>
-                    <a href="/admin-teams" class="pricing-btn pricing-btn-outline">Contact Sales</a>
+                    <a href="mailto:support@cmeagent.com" class="pricing-btn pricing-btn-outline">Contact Sales</a>
                 </div>
             </div>
         </div>
@@ -1249,6 +1661,15 @@
                 </div>
                 <div class="faq-item reveal">
                     <div class="faq-question" onclick="toggleFaq(this)">
+                        <h3>How does the admin dashboard work for staffing agencies?</h3>
+                        <div class="faq-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">The admin dashboard gives your credentialing team a bird's-eye view of every physician's compliance status across every state. You can add physicians to your roster, track their credits in real time, get AI-powered risk alerts when someone falls behind, and generate audit-ready reports with a single click. Role-based access lets you assign different permissions to coordinators, compliance officers, and directors.</div>
+                    </div>
+                </div>
+                <div class="faq-item reveal">
+                    <div class="faq-question" onclick="toggleFaq(this)">
                         <h3>How far in advance does the AI alert me about deadlines?</h3>
                         <div class="faq-icon">+</div>
                     </div>
@@ -1267,20 +1688,11 @@
                 </div>
                 <div class="faq-item reveal">
                     <div class="faq-question" onclick="toggleFaq(this)">
-                        <h3>Can our staffing agency manage all our physicians in one place?</h3>
-                        <div class="faq-icon">+</div>
-                    </div>
-                    <div class="faq-answer">
-                        <div class="faq-answer-inner">That's exactly what our Enterprise plan is built for. The admin dashboard gives your credentialing team a bird's-eye view of every physician's compliance status across every state. AI-powered risk heatmaps flag who needs attention, and one-click reports keep you audit-ready at all times. <a href="/admin-teams" style="color:var(--sand-500)">Learn more →</a></div>
-                    </div>
-                </div>
-                <div class="faq-item reveal">
-                    <div class="faq-question" onclick="toggleFaq(this)">
                         <h3>Is there a free trial?</h3>
                         <div class="faq-icon">+</div>
                     </div>
                     <div class="faq-answer">
-                        <div class="faq-answer-inner">Our Free plan is free forever for any physician with a single state license. For the Pro plan, we offer a 14-day free trial with full access to the AI Course Optimizer, unlimited state tracking, and all premium features. No credit card required to start. Corporate plans include a custom pilot for your team.</div>
+                        <div class="faq-answer-inner">Our Free plan is free forever for any physician with a single state license. For the Pro plan, we offer a 14-day free trial with full access to the AI Course Optimizer, unlimited state tracking, and all premium features. No credit card required to start. Enterprise plans include a custom pilot for your team.</div>
                     </div>
                 </div>
             </div>
@@ -1288,15 +1700,15 @@
     </section>
 
     <!-- Testimonials -->
-    <section class="testimonials" id="how-it-works">
+    <section class="testimonials" id="testimonials">
         <div class="section-container">
             <div class="section-header reveal">
-                <h2>Physicians Love Our AI</h2>
-                <p>See why doctors managing licenses across multiple states trust CME Agent's AI.</p>
+                <h2>Trusted by Physicians &amp; Admin Teams</h2>
+                <p>See why doctors and credentialing teams trust CME Agent's AI.</p>
             </div>
             <div class="testimonial-grid">
                 <div class="testimonial-card reveal stagger-1">
-                    <div class="testimonial-stars">★★★★★</div>
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                     <p class="testimonial-text">"The AI just handles everything. I manage 8 state licenses and it knows exactly what I need for each one. Hours of work reduced to minutes."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">DR</div>
@@ -1307,7 +1719,7 @@
                     </div>
                 </div>
                 <div class="testimonial-card reveal stagger-2">
-                    <div class="testimonial-stars">★★★★★</div>
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                     <p class="testimonial-text">"The AI course optimizer is genius. It found one course that satisfied requirements for 4 states at once. Saved me 20+ hours this year."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">JK</div>
@@ -1318,13 +1730,13 @@
                     </div>
                 </div>
                 <div class="testimonial-card reveal stagger-3">
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p class="testimonial-text">"Almost lost my Texas license last year. Now the AI alerts me months in advance with a personalized plan. It's like having a compliance assistant."</p>
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="testimonial-text">"Managing CME for 30+ locum physicians was a nightmare. Now the admin dashboard shows me exactly who needs attention. Game changer for our agency."</p>
                     <div class="testimonial-author">
-                        <div class="author-avatar">SP</div>
+                        <div class="author-avatar">LT</div>
                         <div class="author-info">
-                            <h4>Dr. Sarah P.</h4>
-                            <p>Anesthesiology, 6 States</p>
+                            <h4>Lisa T.</h4>
+                            <p>Credentialing Director, Staffing Agency</p>
                         </div>
                     </div>
                 </div>
@@ -1387,8 +1799,8 @@
                 <div class="footer-column">
                     <h4>Product</h4>
                     <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="/admin-teams">For Admin Teams</a></li>
+                        <li><a href="#features">For Physicians</a></li>
+                        <li><a href="#admin">For Admin Teams</a></li>
                         <li><a href="#pricing">Pricing</a></li>
                         <li><a href="#download">Download App</a></li>
                     </ul>
@@ -1405,7 +1817,7 @@
                 <div class="footer-column">
                     <h4>Account</h4>
                     <ul>
-                        <li><a href="/admin/login">Login</a></li>
+                        <li><a href="/admin/login">Staff Login</a></li>
                         <li><a href="#">Privacy Policy</a></li>
                         <li><a href="#">Terms of Service</a></li>
                     </ul>
@@ -1423,7 +1835,6 @@
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
-                // Only unobserve non-stat items
                 if (!entry.target.classList.contains('stat-item')) {
                     observer.unobserve(entry.target);
                 }
@@ -1439,7 +1850,6 @@
     });
 
     // ── Nav shrink on scroll ──
-    let lastScroll = 0;
     window.addEventListener('scroll', () => {
         const nav = document.querySelector('nav');
         if (window.scrollY > 80) {
@@ -1453,9 +1863,7 @@
     function toggleFaq(el) {
         const item = el.parentElement;
         const wasOpen = item.classList.contains('open');
-        // Close all
         document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-        // Open clicked if it was closed
         if (!wasOpen) item.classList.add('open');
     }
 
