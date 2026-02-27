@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cmeagent.app",
-      "buildNumber": "15",
+      "buildNumber": "16",
       "infoPlist": {
         "NSCameraUsageDescription": "Camera access is needed to capture and upload certificates for authentication.",
         "NSNotificationPermissionUsageDescription": "Notifications help you stay updated with important CME Agent information and reminders.",
@@ -33,7 +33,7 @@
       "targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FAF8F5"
+        "backgroundColor": "#0D1321"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [

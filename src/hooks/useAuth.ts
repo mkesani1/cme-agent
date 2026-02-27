@@ -106,29 +106,46 @@ export function useAuthProvider() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         if (!mounted) return;
+
+        // CRITICAL: Set loading=true immediately on sign-in so index.tsx
+        // shows the spinner while we process session + profile.
+        // Without this, there's a race where index.tsx sees session=null
+        // + loading=false and redirects back to login.
+        if (_event === 'SIGNED_IN' && newSession?.user) {
+          setLoading(true);
+        }
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
           try {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', newSession.user.id)
-              .single();
-            if (!error && data && mounted) {
-              setProfile(data);
-            } else if (error && error.code === 'PGRST116') {
+            // Fetch profile with timeout protection (max 2s) — same as initAuth()
+            const profileResult = await Promise.race([
+              supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', newSession.user.id)
+                .single(),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+            ]);
+
+            if (mounted && profileResult && 'data' in profileResult && profileResult.data) {
+              setProfile(profileResult.data as Profile);
+            } else if (mounted && profileResult && 'error' in profileResult && profileResult.error?.code === 'PGRST116') {
               // Profile doesn't exist — trigger may have failed. Create it now.
               console.warn('[Auth] Profile missing, creating fallback profile');
               const fullName = newSession.user.user_metadata?.full_name || '';
-              const { data: newProfile } = await supabase
-                .from('profiles')
-                .insert({ id: newSession.user.id, full_name: fullName })
-                .select()
-                .single();
+              const { data: newProfile } = await Promise.race([
+                supabase
+                  .from('profiles')
+                  .insert({ id: newSession.user.id, full_name: fullName })
+                  .select()
+                  .single(),
+                new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+              ]);
               if (newProfile && mounted) {
-                setProfile(newProfile);
+                setProfile(newProfile as Profile);
               }
             }
           } catch (err) {
