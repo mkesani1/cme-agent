@@ -46,6 +46,15 @@
             background-clip: text;
             text-decoration: none;
             transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
         }
 
         .logo:hover {
@@ -571,7 +580,7 @@
     <!-- Navigation -->
     <nav>
         <div class="nav-container">
-            <a href="/" class="logo">CME Agent</a>
+            <a href="/" class="logo"><img src="app-icon.png" alt="CME Agent" class="logo-icon">CME Agent</a>
             <ul class="nav-links">
                 <li><a href="/#features">Features</a></li>
                 <li><a href="/admin-teams">For Admin Teams</a></li>

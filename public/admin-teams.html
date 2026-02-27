@@ -48,7 +48,9 @@
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .logo { font-size: 1.5rem; font-weight: 700; color: var(--sand-500); text-decoration: none; }
+        .logo { font-size: 1.5rem; font-weight: 700; color: var(--sand-500); text-decoration: none; display: flex; align-items: center; gap: 0.6rem; }
+
+        .logo-icon { width: 36px; height: 36px; border-radius: 8px; }
 
         .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
         .nav-links a { color: var(--sand-400); text-decoration: none; font-weight: 500; transition: color 0.3s; }
@@ -389,7 +391,7 @@
 <!-- Navigation -->
 <nav>
     <div class="nav-container">
-        <a href="/" class="logo">CME Agent</a>
+        <a href="/" class="logo"><img src="app-icon.png" alt="CME Agent" class="logo-icon">CME Agent</a>
         <ul class="nav-links">
             <li><a href="/#features">Features</a></li>
             <li><a href="/admin-teams" class="active">For Admin Teams</a></li>

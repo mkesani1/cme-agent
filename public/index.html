@@ -126,6 +126,9 @@
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--sand-500);
@@ -134,6 +137,18 @@
         }
 
         .logo:hover { opacity: 0.85; }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .footer-logo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+        }
 
         .nav-links {
             display: flex;
@@ -1115,7 +1130,7 @@
     <!-- Navigation -->
     <nav>
         <div class="nav-container">
-            <a href="/" class="logo">CME Agent</a>
+            <a href="/" class="logo"><img src="app-icon.png" alt="CME Agent" class="logo-icon">CME Agent</a>
             <ul class="nav-links">
                 <li><a href="#features">For Physicians</a></li>
                 <li><a href="#admin">For Admin Teams</a></li>
@@ -1779,7 +1794,7 @@
         <div class="footer-container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <a href="/" class="logo">CME Agent</a>
+                    <a href="/" class="logo"><img src="app-icon.png" alt="CME Agent" class="footer-logo-icon">CME Agent</a>
                     <p>AI-powered CME compliance for multi-state physicians and the administrative teams who manage them.</p>
                     <div class="store-badges" style="margin-top:1.5rem">
                         <a href="#download" class="store-badge" style="font-size:0.8rem;padding:0.5rem 0.75rem">
