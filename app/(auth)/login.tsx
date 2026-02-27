@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -105,9 +106,10 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Animated.View style={logoAnim}>
-              <View style={styles.logo}>
-                <Text style={styles.logoIcon}>◎</Text>
-              </View>
+              <Image
+                source={require('../../assets/icon.png')}
+                style={styles.logo}
+              />
             </Animated.View>
             <Animated.View style={brandAnim}>
               <Text style={styles.appName}>CME Agent</Text>
@@ -197,15 +199,8 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 16,
     marginBottom: spacing.md,
-  },
-  logoIcon: {
-    fontSize: 36,
-    color: '#FFFFFF',
   },
   appName: {
     fontSize: typography.h1.fontSize,

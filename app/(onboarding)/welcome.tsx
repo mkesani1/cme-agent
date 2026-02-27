@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,9 +28,10 @@ export default function WelcomeScreen() {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Animated.View style={logoAnim}>
-            <View style={styles.logo}>
-              <Text style={styles.logoIcon}>◎</Text>
-            </View>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.logo}
+            />
           </Animated.View>
           <Animated.View style={appNameAnim}>
             <Text style={styles.appName}>CME Agent</Text>
@@ -91,15 +92,8 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 20,
     marginBottom: spacing.md,
-  },
-  logoIcon: {
-    fontSize: 48,
-    color: '#FFFFFF',
   },
   appName: {
     fontSize: 32,
