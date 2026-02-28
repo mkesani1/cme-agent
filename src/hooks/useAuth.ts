@@ -136,7 +136,7 @@ export function useAuthProvider() {
               // Profile doesn't exist — trigger may have failed. Create it now.
               console.warn('[Auth] Profile missing, creating fallback profile');
               const fullName = newSession.user.user_metadata?.full_name || '';
-              const { data: newProfile } = await Promise.race([
+              const insertResult = await Promise.race([
                 supabase
                   .from('profiles')
                   .insert({ id: newSession.user.id, full_name: fullName })
@@ -144,8 +144,8 @@ export function useAuthProvider() {
                   .single(),
                 new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
               ]);
-              if (newProfile && mounted) {
-                setProfile(newProfile as Profile);
+              if (insertResult && 'data' in insertResult && insertResult.data && mounted) {
+                setProfile(insertResult.data as Profile);
               }
             }
           } catch (err) {
