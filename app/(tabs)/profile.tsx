@@ -17,7 +17,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { supabase } from '../../src/lib/supabase';
 import { colors, spacing, typography, degreeTypes } from '../../src/lib/theme';
 import { useFadeInUp, useCountUp } from '../../src/lib/animations';
-import { GOLD_GRADIENT } from '../../src/lib/license-utils';
+import { TEAL_GRADIENT } from '../../src/lib/license-utils';
 import { BubbleOverlay } from '../../src/components/ui';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -117,7 +117,7 @@ export default function ProfileScreen() {
         {/* Profile Card with Gradient */}
         <Animated.View style={cardAnim}>
           <LinearGradient
-            colors={[...GOLD_GRADIENT]}
+            colors={[...TEAL_GRADIENT]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileCard}

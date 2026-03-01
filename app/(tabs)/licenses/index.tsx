@@ -618,8 +618,8 @@ const styles = StyleSheet.create({
   },
   licenseCardThisYear: {
     borderWidth: 2,
-    borderColor: '#D4A636',
-    shadowColor: '#D4A636',
+    borderColor: colors.warning,
+    shadowColor: colors.warning,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
@@ -678,13 +678,13 @@ const styles = StyleSheet.create({
   thisYearBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D4A636',
+    backgroundColor: colors.warning,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
   thisYearBadgeText: {
-    color: colors.navy[900],
+    color: colors.text,
     fontWeight: '600',
     fontSize: 12,
   },

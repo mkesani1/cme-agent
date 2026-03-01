@@ -17,7 +17,7 @@ const BUBBLES = [
 
 const FILL_COLORS = {
   gold: 'rgba(255, 255, 255, 1)',
-  navy: 'rgba(166, 139, 91, 1)',
+  navy: 'rgba(0, 119, 182, 1)',
 } as const;
 
 interface BubbleOverlayProps {

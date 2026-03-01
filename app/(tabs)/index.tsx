@@ -23,7 +23,7 @@ import { useDemo } from '../../src/hooks/useDemo';
 import { colors, spacing, typography, CMECategory, cmeCategories } from '../../src/lib/theme';
 import { getStateName } from '../../src/lib/demoData';
 import { useFadeInUp } from '../../src/lib/animations';
-import { getUrgencyLevel, getDaysUntilExpiry, GOLD_GRADIENT, UrgencyLevel } from '../../src/lib/license-utils';
+import { getUrgencyLevel, getDaysUntilExpiry, TEAL_GRADIENT, UrgencyLevel } from '../../src/lib/license-utils';
 import { BubbleOverlay, PressableCard, PressableButton } from '../../src/components/ui';
 
 interface LicenseWithProgress {
@@ -395,7 +395,7 @@ export default function DashboardScreen() {
                   heroUrgency === 'thisYear' && styles.heroCardThisYear,
                 ]}>
                   <LinearGradient
-                    colors={[...GOLD_GRADIENT]}
+                    colors={[...TEAL_GRADIENT]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.heroCard}
@@ -651,8 +651,8 @@ const styles = StyleSheet.create({
   },
   heroCardThisYear: {
     borderWidth: 2,
-    borderColor: '#D4A636',
-    shadowColor: '#D4A636',
+    borderColor: colors.warning,
+    shadowColor: colors.warning,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   urgencyBadgeYellow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D4A636',
+    backgroundColor: colors.warning,
     paddingVertical: 3,
     paddingHorizontal: 8,
     borderRadius: 10,
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   urgencyBadgeYellowText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.navy[900],
+    color: colors.text,
   },
 
   // License rows — remaining licenses
@@ -803,8 +803,8 @@ const styles = StyleSheet.create({
   },
   licenseRowThisYear: {
     borderWidth: 2,
-    borderColor: '#D4A636',
-    shadowColor: '#D4A636',
+    borderColor: colors.warning,
+    shadowColor: colors.warning,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    backgroundColor: 'rgba(0, 119, 182, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(184, 92, 92, 0.15)',
   },
   licenseIconThisYear: {
-    backgroundColor: 'rgba(212, 166, 54, 0.15)',
+    backgroundColor: 'rgba(196, 136, 58, 0.15)',
   },
   licenseRowState: {
     fontSize: 16,
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.risk,
   },
   miniProgressYellow: {
-    backgroundColor: '#D4A636',
+    backgroundColor: colors.warning,
   },
   miniProgressText: {
     fontSize: 11,
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    backgroundColor: 'rgba(0, 119, 182, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    backgroundColor: 'rgba(0, 119, 182, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,

@@ -133,7 +133,7 @@ export function UpgradeModal({
 
         {/* Header with gradient */}
         <LinearGradient
-          colors={['#C4A574', '#A68B5B', '#8B7349']}
+          colors={['#00B4D8', '#0077B6', '#0064A6']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}

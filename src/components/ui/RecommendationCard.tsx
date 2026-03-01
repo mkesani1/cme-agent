@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   insightContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(166, 139, 91, 0.1)',
+    backgroundColor: 'rgba(0, 119, 182, 0.1)',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,

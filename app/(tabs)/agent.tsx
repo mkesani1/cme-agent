@@ -224,7 +224,7 @@ export default function AgentScreen() {
 
   const headerGlowColor = headerGlowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(166, 139, 91, 0.0)', 'rgba(166, 139, 91, 0.15)'],
+    outputRange: ['rgba(0, 119, 182, 0.0)', 'rgba(0, 119, 182, 0.15)'],
   });
 
   return (

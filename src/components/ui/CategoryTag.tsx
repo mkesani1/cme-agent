@@ -8,7 +8,7 @@ interface CategoryTagProps {
   style?: ViewStyle;
 }
 
-const fallbackCategory = { label: 'General', color: '#A68B5B' };
+const fallbackCategory = { label: 'General', color: '#0077B6' };
 
 export function CategoryTag({ category, size = 'md', style }: CategoryTagProps) {
   const categoryInfo = cmeCategories[category] || fallbackCategory;

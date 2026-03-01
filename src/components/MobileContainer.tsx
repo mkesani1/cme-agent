@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     width: 430,
     height: '100%',
     maxHeight: 932,
-    backgroundColor: '#FAF8F5',
+    backgroundColor: '#F0F7FA',
     borderRadius: 40,
     overflow: 'hidden',
     // @ts-ignore - web only shadow

@@ -1,38 +1,36 @@
-// CME Agent - Premium Sand & Navy Theme
+// CME Agent - Meridian Teal (Light Mode)
 // Design System Colors and Constants
 
 export const colors = {
-  // Navy palette - for backgrounds, cards, depth
-  navy: {
-    900: '#0D1321',  // Deepest background
-    800: '#151E2F',  // Card backgrounds
-    700: '#1D2A3F',  // Elevated surfaces
-    600: '#2A3A52',  // Borders, dividers
-    500: '#3D4F6A',  // Secondary text
-    400: '#5A6F8A',  // Muted text
+  // Meridian palette - light backgrounds, teal accents
+  primary: {
+    900: '#003D5C',  // Deepest teal
+    800: '#005A9C',  // Dark teal
+    700: '#0064A6',  // Medium-dark teal
+    600: '#0077B6',  // Primary accent
+    500: '#0096C7',  // Medium teal
+    400: '#00B4D8',  // Light teal
+  },
+  neutral: {
+    50: '#F0F7FA',   // App background
+    100: '#E8EEF2',  // Subtle highlight
+    200: '#D0DEE6',  // Border light
+    300: '#B0C4CE',  // Muted
+    400: '#7A93A8',  // Secondary text
+    500: '#4A6074',  // Body text
+    600: '#1A2B3C',  // Primary text
+    700: '#0A1628',  // Headings
   },
 
-  // Sand palette - for accents, highlights
-  sand: {
-    50: '#FDFCFB',   // Lightest
-    100: '#FAF8F5',  // Light background
-    200: '#F5F0E8',  // Subtle highlight
-    300: '#E8E0D5',  // Border light
-    400: '#D4C4B0',  // Muted accent
-    500: '#A68B5B',  // Primary accent
-    600: '#8B7349',  // Darker accent
-    700: '#705C3A',  // Deep accent
-  },
-
-  // Semantic colors (dark mode - navy backgrounds)
-  background: '#0D1321',
-  backgroundElevated: '#151E2F',
-  backgroundCard: '#1D2A3F',
-  text: '#FAF8F5',
-  textSecondary: '#D4C4B0',
-  textMuted: '#5A6F8A',
-  accent: '#A68B5B',
-  accentLight: '#D4C4B0',
+  // Semantic colors (light mode)
+  background: '#F0F7FA',
+  backgroundElevated: '#FFFFFF',
+  backgroundCard: '#FFFFFF',
+  text: '#0A1628',
+  textSecondary: '#4A6074',
+  textMuted: '#7A93A8',
+  accent: '#0077B6',
+  accentLight: '#00B4D8',
 
   // Status colors - slightly muted for elegance
   success: '#5D8A66',
@@ -43,15 +41,35 @@ export const colors = {
   riskLight: 'rgba(184, 92, 92, 0.15)',
 
   // UI colors
-  card: '#1D2A3F',
-  cardHover: '#2A3A52',
-  border: '#2A3A52',
-  borderLight: 'rgba(166, 139, 91, 0.2)',
-  divider: '#1D2A3F',
+  card: '#FFFFFF',
+  cardHover: '#F0F7FA',
+  border: 'rgba(0, 119, 182, 0.15)',
+  borderLight: 'rgba(0, 119, 182, 0.08)',
+  divider: '#E8EEF2',
 
   // Special
-  glow: 'rgba(166, 139, 91, 0.3)',
-  overlay: 'rgba(13, 19, 33, 0.8)',
+  glow: 'rgba(0, 119, 182, 0.2)',
+  overlay: 'rgba(10, 22, 40, 0.8)',
+
+  // Backward compatibility aliases (legacy navy/sand references)
+  navy: {
+    900: '#0A1628',  // Now the dark text color
+    800: '#FFFFFF',  // Now white (was card bg)
+    700: '#FFFFFF',  // Now white (was elevated)
+    600: 'rgba(0, 119, 182, 0.15)',  // Border tint
+    500: '#4A6074',  // Body text
+    400: '#7A93A8',  // Muted text
+  },
+  sand: {
+    50: '#F0F7FA',   // Background (was light)
+    100: '#F0F7FA',  // Background
+    200: '#E8EEF2',  // Subtle highlight
+    300: '#D0DEE6',  // Border light
+    400: '#4A6074',  // Text secondary (was muted accent)
+    500: '#0077B6',  // Primary accent (now teal)
+    600: '#0064A6',  // Darker (now teal)
+    700: '#005A9C',  // Deep (now teal)
+  },
 } as const;
 
 export const spacing = {

@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   iconContainerFocused: {
-    backgroundColor: 'rgba(166, 139, 91, 0.15)',
+    backgroundColor: 'rgba(0, 119, 182, 0.15)',
   },
   tabLabel: {
     fontSize: 11,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   centerIconContainerActive: {
-    backgroundColor: '#D4B896', // Lighter gold when active
+    backgroundColor: '#0096C7', // Lighter teal when active
     shadowOpacity: 0.6,
   },
   centerTabLabel: {
@@ -211,6 +211,6 @@ const styles = StyleSheet.create({
     color: colors.accent,
   },
   centerTabLabelActive: {
-    color: '#D4B896',
+    color: '#0096C7',
   },
 });

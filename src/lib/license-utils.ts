@@ -21,5 +21,5 @@ export function getDaysUntilExpiry(dateStr: string | null): number | null {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-/** Gold gradient used on hero cards and profile headers. */
-export const GOLD_GRADIENT = ['#C4A574', '#A68B5B', '#8B7349', '#705C3A'] as const;
+/** Teal gradient used on hero cards and profile headers. */
+export const TEAL_GRADIENT = ['#00B4D8', '#0077B6', '#0064A6', '#005A9C'] as const;

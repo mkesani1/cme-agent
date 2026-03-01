@@ -5,7 +5,7 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#FAF8F5' },
+        contentStyle: { backgroundColor: '#F0F7FA' },
         animation: 'slide_from_right',
       }}
     >
