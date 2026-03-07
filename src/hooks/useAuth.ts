@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  connectionStatus: 'connected' | 'slow' | 'offline';
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -19,6 +20,50 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const SESSION_TIMEOUT_MS = 10000;
+const PROFILE_TIMEOUT_MS = 5000;
+const SAFETY_TIMEOUT_MS = 15000;
+const PROFILE_RETRY_DELAY_MS = 1000;
+
+const STORAGE_KEYS_TO_CLEAR = ['onboarding_completed', 'demo_mode_dismissed'];
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+function log(level: LogLevel, message: string, context?: Record<string, unknown>) {
+  const payload = {
+    scope: 'auth',
+    level,
+    message,
+    ...(context ? { context } : {}),
+    timestamp: new Date().toISOString(),
+  };
+
+  if (level === 'error') {
+    console.error(JSON.stringify(payload));
+  } else if (level === 'warn') {
+    console.warn(JSON.stringify(payload));
+  } else {
+    console.log(JSON.stringify(payload));
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<{ timedOut: boolean; result?: T }> {
+  const timeoutResult = await Promise.race<
+    { timedOut: true } | { timedOut: false; result: T }
+  >([
+    new Promise<{ timedOut: true }>((resolve) =>
+      setTimeout(() => resolve({ timedOut: true }), timeoutMs)
+    ),
+    promise.then((result) => ({ timedOut: false, result })),
+  ]);
+
+  return timeoutResult;
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -33,32 +78,102 @@ export function useAuthProvider() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'slow' | 'offline'>('connected');
 
   useEffect(() => {
     let mounted = true;
 
-    // BULLETPROOF safety net — app will NEVER hang longer than 5s.
-    // This timeout is only cleared on unmount, never by callbacks.
     const safetyTimeout = setTimeout(() => {
       if (mounted && loading) {
-        console.warn('[Auth] Safety timeout hit after 5s — forcing app to proceed');
+        log('warn', 'Safety timeout reached; proceeding to avoid app hang', {
+          timeoutMs: SAFETY_TIMEOUT_MS,
+        });
+        setConnectionStatus((prev) => (prev === 'offline' ? 'offline' : 'slow'));
         setLoading(false);
       }
-    }, 5000);
+    }, SAFETY_TIMEOUT_MS);
+
+    async function fetchProfileWithRetry(userId: string, fullName?: string | null): Promise<Profile | null> {
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        const profileRequest = supabase.from('profiles').select('*').eq('id', userId).single();
+        const profileOutcome = await withTimeout(profileRequest, PROFILE_TIMEOUT_MS);
+
+        if (profileOutcome.timedOut) {
+          log('warn', 'Profile fetch timed out', { attempt, timeoutMs: PROFILE_TIMEOUT_MS, userId });
+          if (attempt === 1) {
+            setConnectionStatus('slow');
+            await delay(PROFILE_RETRY_DELAY_MS);
+            continue;
+          }
+          return null;
+        }
+
+        const profileResult = profileOutcome.result;
+        if (profileResult?.data) {
+          setConnectionStatus('connected');
+          return profileResult.data as Profile;
+        }
+
+        const code = (profileResult as any)?.error?.code;
+        if (code === 'PGRST116') {
+          log('warn', 'Profile missing; creating fallback', { userId });
+          const insertOutcome = await withTimeout(
+            supabase
+              .from('profiles')
+              .insert({ id: userId, full_name: fullName || '' })
+              .select()
+              .single(),
+            PROFILE_TIMEOUT_MS
+          );
+
+          if (insertOutcome.timedOut) {
+            log('warn', 'Fallback profile creation timed out', { userId, timeoutMs: PROFILE_TIMEOUT_MS });
+            setConnectionStatus('slow');
+            return null;
+          }
+
+          const insertResult = insertOutcome.result as any;
+          if (insertResult?.data) {
+            setConnectionStatus('connected');
+            return insertResult.data as Profile;
+          }
+        }
+
+        if ((profileResult as any)?.error) {
+          log('warn', 'Profile fetch failed', {
+            attempt,
+            userId,
+            error: (profileResult as any).error,
+          });
+          if (attempt === 1) {
+            await delay(PROFILE_RETRY_DELAY_MS);
+            continue;
+          }
+        }
+      }
+
+      return null;
+    }
 
     async function initAuth() {
       try {
-        // Step 1: Get session (max 3s before we give up)
-        const sessionResult = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
-        ]);
+        const sessionOutcome = await withTimeout(supabase.auth.getSession(), SESSION_TIMEOUT_MS);
 
         if (!mounted) return;
 
-        // If getSession timed out or returned no session, go to login
-        if (!sessionResult || !('data' in sessionResult) || !sessionResult.data.session?.user) {
-          console.log('[Auth] No session — showing login');
+        if (sessionOutcome.timedOut) {
+          log('warn', 'Session fetch timed out; connection appears slow', {
+            timeoutMs: SESSION_TIMEOUT_MS,
+          });
+          setConnectionStatus('slow');
+          setLoading(false);
+          return;
+        }
+
+        const sessionResult = sessionOutcome.result;
+        if (!sessionResult?.data?.session?.user) {
+          log('info', 'No active session found');
+          setConnectionStatus('connected');
           setLoading(false);
           return;
         }
@@ -67,97 +182,63 @@ export function useAuthProvider() {
         setSession(sess);
         setUser(sess.user);
 
-        // Step 2: Load profile (max 2s before we proceed without it)
-        try {
-          const profileResult = await Promise.race([
-            supabase.from('profiles').select('*').eq('id', sess.user.id).single(),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-          ]);
+        const loadedProfile = await fetchProfileWithRetry(
+          sess.user.id,
+          sess.user.user_metadata?.full_name || ''
+        );
 
-          if (mounted && profileResult && 'data' in profileResult && profileResult.data) {
-            setProfile(profileResult.data as Profile);
-          } else if (mounted && profileResult && 'error' in profileResult && profileResult.error?.code === 'PGRST116') {
-            // Profile missing — create fallback
-            console.warn('[Auth] Profile missing on init, creating fallback');
-            const fullName = sess.user.user_metadata?.full_name || '';
-            const { data: newProfile } = await supabase
-              .from('profiles')
-              .insert({ id: sess.user.id, full_name: fullName })
-              .select()
-              .single();
-            if (newProfile && mounted) {
-              setProfile(newProfile as Profile);
-            }
-          }
-        } catch (profileErr) {
-          console.warn('[Auth] Profile load failed:', profileErr);
+        if (mounted) {
+          setProfile(loadedProfile);
+          setLoading(false);
         }
-
-        if (mounted) setLoading(false);
       } catch (err) {
-        console.warn('[Auth] initAuth failed:', err);
-        if (mounted) setLoading(false);
+        log('error', 'initAuth failed', { error: err instanceof Error ? err.message : String(err) });
+        if (mounted) {
+          setConnectionStatus('offline');
+          setLoading(false);
+        }
       }
     }
 
     initAuth();
 
-    // Listen for FUTURE auth changes (sign-in, sign-out, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        if (!mounted) return;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (!mounted) return;
 
-        // CRITICAL: Set loading=true immediately on sign-in so index.tsx
-        // shows the spinner while we process session + profile.
-        // Without this, there's a race where index.tsx sees session=null
-        // + loading=false and redirects back to login.
-        if (_event === 'SIGNED_IN' && newSession?.user) {
-          setLoading(true);
-        }
-
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-
-        if (newSession?.user) {
-          try {
-            // Fetch profile with timeout protection (max 2s) — same as initAuth()
-            const profileResult = await Promise.race([
-              supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', newSession.user.id)
-                .single(),
-              new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-            ]);
-
-            if (mounted && profileResult && 'data' in profileResult && profileResult.data) {
-              setProfile(profileResult.data as Profile);
-            } else if (mounted && profileResult && 'error' in profileResult && profileResult.error?.code === 'PGRST116') {
-              // Profile doesn't exist — trigger may have failed. Create it now.
-              console.warn('[Auth] Profile missing, creating fallback profile');
-              const fullName = newSession.user.user_metadata?.full_name || '';
-              const insertResult = await Promise.race([
-                supabase
-                  .from('profiles')
-                  .insert({ id: newSession.user.id, full_name: fullName })
-                  .select()
-                  .single(),
-                new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-              ]);
-              if (insertResult && 'data' in insertResult && insertResult.data && mounted) {
-                setProfile(insertResult.data as Profile);
-              }
-            }
-          } catch (err) {
-            console.warn('[Auth] Profile load in onAuthStateChange failed:', err);
-          }
-        } else {
-          setProfile(null);
-        }
-
-        if (mounted) setLoading(false);
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        setLoading(true);
       }
-    );
+
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        try {
+          const loadedProfile = await fetchProfileWithRetry(
+            newSession.user.id,
+            newSession.user.user_metadata?.full_name || ''
+          );
+
+          if (mounted) {
+            setProfile(loadedProfile);
+          }
+        } catch (err) {
+          log('warn', 'Profile load during auth state change failed', {
+            event,
+            error: err instanceof Error ? err.message : String(err),
+          });
+          if (mounted) {
+            setConnectionStatus('slow');
+          }
+        }
+      } else {
+        setProfile(null);
+      }
+
+      if (mounted) setLoading(false);
+    });
 
     return () => {
       mounted = false;
@@ -186,16 +267,28 @@ export function useAuthProvider() {
   }
 
   async function signOut() {
-    // Clear all user-specific data from AsyncStorage BEFORE signing out
-    // This prevents the next user from inheriting previous user's state
     try {
-      await AsyncStorage.multiRemove([
-        'onboarding_completed',
-        'demo_mode_dismissed',
-      ]);
+      await AsyncStorage.multiRemove(STORAGE_KEYS_TO_CLEAR);
     } catch (e) {
-      console.warn('[Auth] Failed to clear AsyncStorage on signOut:', e);
+      log('error', 'AsyncStorage multiRemove failed during signOut', {
+        error: e instanceof Error ? e.message : String(e),
+        operation: 'multiRemove',
+        keys: STORAGE_KEYS_TO_CLEAR,
+      });
+
+      for (const key of STORAGE_KEYS_TO_CLEAR) {
+        try {
+          await AsyncStorage.removeItem(key);
+        } catch (removeErr) {
+          log('error', 'AsyncStorage removeItem fallback failed', {
+            error: removeErr instanceof Error ? removeErr.message : String(removeErr),
+            operation: 'removeItem',
+            key,
+          });
+        }
+      }
     }
+
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
@@ -204,14 +297,10 @@ export function useAuthProvider() {
 
   async function updateProfile(updates: Partial<Profile>) {
     if (!user) return { error: new Error('Not authenticated') };
-
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', user.id);
+    const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
 
     if (!error) {
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null));
     }
     return { error: error as Error | null };
   }
@@ -233,16 +322,15 @@ export function useAuthProvider() {
   async function refreshProfile() {
     if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+
       if (!error && data) {
         setProfile(data as Profile);
       }
     } catch (err) {
-      console.warn('[Auth] Profile refresh failed:', err);
+      log('warn', 'Profile refresh failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -251,6 +339,7 @@ export function useAuthProvider() {
     user,
     profile,
     loading,
+    connectionStatus,
     signUp,
     signIn,
     signOut,

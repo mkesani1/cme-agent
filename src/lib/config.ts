@@ -1,11 +1,26 @@
 // ─── Centralized Configuration ───
 // All Supabase and service URLs in one place.
+// 
+// SECURITY: Credentials are loaded from environment variables.
+// Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
+// in your .env file or Vercel/EAS environment settings.
+//
 // The anon key is PUBLIC by design — security comes from RLS policies.
+// However, it should still be loaded from env vars to:
+// 1. Keep it out of version control
+// 2. Allow easy rotation without code changes
+// 3. Support different environments (dev/staging/prod)
 
-export const SUPABASE_URL = 'https://drwpnasiqgzqdubmlwxj.supabase.co';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-export const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyd3BuYXNpcWd6cWR1Ym1sd3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzE5MzAsImV4cCI6MjA4NTgwNzkzMH0.26RVUHuFDcYfMBLTsodSP9jUE01qYRn9bfQ-nfqtt7Y';
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error(
+    'Missing Supabase configuration. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your environment.'
+  );
+}
+
+export { SUPABASE_URL, SUPABASE_ANON_KEY };
 
 export const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1`;
 
